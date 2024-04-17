@@ -313,7 +313,10 @@ export class Challenger {
       await this.deleteOutputProposal(outputIndex)
     }
 
-    await notifySlack(`${outputIndex}-${this.bridgeId}`, buildChallengerNotification(challengedOutput));
-    process.exit();
+    await notifySlack(
+      `${outputIndex}-${this.bridgeId}`,
+      buildChallengerNotification(challengedOutput)
+    )
+    process.exit()
   }
 }

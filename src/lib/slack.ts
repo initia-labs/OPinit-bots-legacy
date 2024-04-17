@@ -15,25 +15,32 @@ const ax = axios.create({
   timeout: 15000
 })
 
-export async function notifySlack(key: string, text: { text: string }, isError: boolean = true) {
-  if (config.SLACK_WEB_HOOK === undefined || config.SLACK_WEB_HOOK === '') return
+export async function notifySlack(
+  key: string,
+  text: { text: string },
+  isError: boolean = true
+) {
+  if (config.SLACK_WEB_HOOK === undefined || config.SLACK_WEB_HOOK === '')
+    return
 
   const keyExists = postedKeys.has(key)
 
   if (isError) {
-      if (!keyExists) {
-        await ax.post(config.SLACK_WEB_HOOK, text)
-        postedKeys.add(key)
-      }
+    if (!keyExists) {
+      await ax.post(config.SLACK_WEB_HOOK, text)
+      postedKeys.add(key)
+    }
   } else {
-      if (keyExists) { 
-        await ax.post(config.SLACK_WEB_HOOK, text)
-        postedKeys.delete(key)
-      }
+    if (keyExists) {
+      await ax.post(config.SLACK_WEB_HOOK, text)
+      postedKeys.delete(key)
+    }
   }
 }
 
-export function buildResolveErrorNotification(description: string): { text: string } {
+export function buildResolveErrorNotification(description: string): {
+  text: string;
+} {
   let notification = '```'
   notification += `[INFO] Error Resolved Notification\n`
   notification += `\n`
@@ -43,7 +50,6 @@ export function buildResolveErrorNotification(description: string): { text: stri
     text: notification
   }
 }
-
 
 export function buildNotEnoughBalanceNotification(
   wallet: Wallet,

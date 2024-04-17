@@ -6,7 +6,11 @@ import { DataSource } from 'typeorm'
 import Bluebird from 'bluebird'
 import winston from 'winston'
 import { TxWallet, WalletType, getWallet, initWallet } from '../../lib/wallet'
-import { buildFailedTxNotification, buildResolveErrorNotification, notifySlack } from '../../lib/slack'
+import {
+  buildFailedTxNotification,
+  buildResolveErrorNotification,
+  notifySlack
+} from '../../lib/slack'
 
 export class Resurrector {
   private db: DataSource
@@ -35,7 +39,9 @@ export class Resurrector {
     )
   }
 
-  async resubmitFailedDepositTx(unconfirmedTx: UnconfirmedTxEntity): Promise<void> {
+  async resubmitFailedDepositTx(
+    unconfirmedTx: UnconfirmedTxEntity
+  ): Promise<void> {
     const txKey = `${unconfirmedTx.sender}-${unconfirmedTx.receiver}-${unconfirmedTx.amount}`
     const msg = new MsgFinalizeTokenDeposit(
       this.executor.key.accAddress,
@@ -50,7 +56,13 @@ export class Resurrector {
     try {
       await this.executor.transaction([msg])
       await this.updateProcessed(unconfirmedTx)
-      await notifySlack(txKey, buildResolveErrorNotification(`[INFO] Transaction successfully resubmitted and processed for ${unconfirmedTx.sender} to ${unconfirmedTx.receiver} of amount ${unconfirmedTx.amount}.`), false)
+      await notifySlack(
+        txKey,
+        buildResolveErrorNotification(
+          `[INFO] Transaction successfully resubmitted and processed for ${unconfirmedTx.sender} to ${unconfirmedTx.receiver} of amount ${unconfirmedTx.amount}.`
+        ),
+        false
+      )
     } catch (err) {
       if (this.errorCounter++ < 20) {
         await Bluebird.delay(5 * 1000)
