@@ -30,6 +30,13 @@ export class L1Monitor extends Monitor {
     return 'executor_l1_monitor'
   }
 
+  public async prepareMonitor(): Promise<void> {
+    const bridgeInfoL1 = await config.l1lcd.ophost.bridgeInfo(config.BRIDGE_ID)
+    const bridgeInfoL2 = await this.executor.lcd.opchild.bridgeInfo()
+    console.log(bridgeInfoL1, bridgeInfoL2)
+    process.exit(0)
+  }
+
   public async handleInitiateTokenDeposit(
     manager: EntityManager,
     data: { [key: string]: string }

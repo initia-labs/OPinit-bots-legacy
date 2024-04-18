@@ -2,7 +2,9 @@ import {
   MsgCreateBridge,
   BridgeConfig,
   Duration,
-  BatchInfo
+  BatchInfo,
+  BridgeInfo,
+  MsgSetBridgeInfo
 } from '@initia/initia.js'
 import {
   getDB as getExecutorDB,
@@ -29,8 +31,9 @@ import {
   RecordEntity,
   ChallengeEntity
 } from '../../orm'
-import { executor, challenger, outputSubmitter } from './helper'
+import { executor, challenger, outputSubmitter, executorL2 } from './helper'
 import { sendTx } from '../../lib/tx'
+import { config } from '../../config'
 
 class Bridge {
   executorDB: DataSource
@@ -94,6 +97,10 @@ class Bridge {
     return new MsgCreateBridge(executor.key.accAddress, bridgeConfig)
   }
 
+  MsgSetBridgeInfo(bridgeInfo: BridgeInfo) {
+    return new MsgSetBridgeInfo(executorL2.key.accAddress, bridgeInfo)
+  }
+
   async tx(metadata: string) {
     const msgs = [
       this.MsgCreateBridge(
@@ -103,7 +110,31 @@ class Bridge {
       )
     ]
 
-    return await sendTx(executor, msgs)
+    const txRes = await sendTx(executor, msgs)
+
+    // load bridge info from l1 chain and send to l2 chain
+    let bridgeID = 0
+    const txInfo = await config.l1lcd.tx.txInfo(txRes.txhash)
+    for (const e of txInfo.events) {
+      if (e.type !== 'create_bridge') {
+        continue
+      }
+
+      for (const attr of e.attributes) {
+        if (attr.key !== 'bridge_id') {
+          continue
+        }
+
+        bridgeID = parseInt(attr.value, 10)
+      }
+
+      break
+    }
+
+    const bridgeInfo = await config.l1lcd.ophost.bridgeInfo(bridgeID)
+    const l2Msgs = [this.MsgSetBridgeInfo(bridgeInfo)]
+
+    await sendTx(executorL2, l2Msgs)
   }
 }
 
