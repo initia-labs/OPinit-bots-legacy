@@ -111,30 +111,7 @@ class Bridge {
     ]
 
     const txRes = await sendTx(executor, msgs)
-
-    // load bridge info from l1 chain and send to l2 chain
-    let bridgeID = 0
-    const txInfo = await config.l1lcd.tx.txInfo(txRes.txhash)
-    for (const e of txInfo.events) {
-      if (e.type !== 'create_bridge') {
-        continue
-      }
-
-      for (const attr of e.attributes) {
-        if (attr.key !== 'bridge_id') {
-          continue
-        }
-
-        bridgeID = parseInt(attr.value, 10)
-      }
-
-      break
-    }
-
-    const bridgeInfo = await config.l1lcd.ophost.bridgeInfo(bridgeID)
-    const l2Msgs = [this.MsgSetBridgeInfo(bridgeInfo)]
-
-    await sendTx(executorL2, l2Msgs)
+    console.log('Bridge deployed :', txRes.txhash)
   }
 }
 
