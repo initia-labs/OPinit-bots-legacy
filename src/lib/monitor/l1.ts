@@ -1,5 +1,10 @@
 import { Monitor } from './monitor'
-import { Coin, Msg, MsgFinalizeTokenDeposit } from '@initia/initia.js'
+import {
+  Coin,
+  Msg,
+  MsgFinalizeTokenDeposit,
+  MsgSetBridgeInfo
+} from '@initia/initia.js'
 import {
   ExecutorDepositTxEntity,
   ExecutorUnconfirmedTxEntity,
@@ -28,6 +33,23 @@ export class L1Monitor extends Monitor {
 
   public name(): string {
     return 'executor_l1_monitor'
+  }
+
+  public async prepareMonitor(): Promise<void> {
+    const bridgeInfoL1 = await config.l1lcd.ophost.bridgeInfo(config.BRIDGE_ID)
+    try {
+      await this.executor.lcd.opchild.bridgeInfo()
+    } catch (err) {
+      const errMsg = err.response?.data
+        ? JSON.stringify(err.response?.data)
+        : err.toString()
+      if (errMsg.includes('bridge info not found')) {
+        const l2Msgs = [
+          new MsgSetBridgeInfo(this.executor.key.accAddress, bridgeInfoL1)
+        ]
+        this.executor.transaction(l2Msgs)
+      }
+    }
   }
 
   public async handleInitiateTokenDeposit(

@@ -69,6 +69,7 @@ export abstract class Monitor {
   }
 
   public async monitor(): Promise<void> {
+    await this.prepareMonitor()
     while (this.isRunning) {
       try {
         const latestHeight = this.socket.latestHeight
@@ -126,6 +127,9 @@ export abstract class Monitor {
 
   // eslint-disable-next-line
   public async handleBlock(manager: EntityManager): Promise<void> {}
+
+  // eslint-disable-next-line
+  public async prepareMonitor(): Promise<void> {}
 
   // eslint-disable-next-line
   public name(): string {
