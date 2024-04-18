@@ -9,11 +9,11 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: opinit
+  IMAGE_NAME: opinit-bots
 
 jobs:
-  opinit:
-    name: opinit
+  opinit-bots:
+    name: opinit-bots
     runs-on: ubuntu-latest
     
     permissions:
