@@ -17,10 +17,6 @@ export const executor = new Wallet(
   config.l1lcd,
   new MnemonicKey({ mnemonic: config.EXECUTOR_MNEMONIC })
 )
-export const executorL2 = new Wallet(
-  config.l2lcd,
-  new MnemonicKey({ mnemonic: config.EXECUTOR_MNEMONIC })
-)
 export const challenger = new Wallet(
   config.l1lcd,
   new MnemonicKey({ mnemonic: config.CHALLENGER_MNEMONIC })

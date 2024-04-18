@@ -2,9 +2,7 @@ import {
   MsgCreateBridge,
   BridgeConfig,
   Duration,
-  BatchInfo,
-  BridgeInfo,
-  MsgSetBridgeInfo
+  BatchInfo
 } from '@initia/initia.js'
 import {
   getDB as getExecutorDB,
@@ -31,7 +29,7 @@ import {
   RecordEntity,
   ChallengeEntity
 } from '../../orm'
-import { executor, challenger, outputSubmitter, executorL2 } from './helper'
+import { executor, challenger, outputSubmitter } from './helper'
 import { sendTx } from '../../lib/tx'
 
 class Bridge {
@@ -94,10 +92,6 @@ class Bridge {
       metadata
     )
     return new MsgCreateBridge(executor.key.accAddress, bridgeConfig)
-  }
-
-  MsgSetBridgeInfo(bridgeInfo: BridgeInfo) {
-    return new MsgSetBridgeInfo(executorL2.key.accAddress, bridgeInfo)
   }
 
   async tx(metadata: string) {
