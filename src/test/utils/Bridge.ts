@@ -33,7 +33,6 @@ import {
 } from '../../orm'
 import { executor, challenger, outputSubmitter, executorL2 } from './helper'
 import { sendTx } from '../../lib/tx'
-import { config } from '../../config'
 
 class Bridge {
   executorDB: DataSource
@@ -110,8 +109,7 @@ class Bridge {
       )
     ]
 
-    const txRes = await sendTx(executor, msgs)
-    console.log('Bridge deployed :', txRes.txhash)
+    return await sendTx(executor, msgs)
   }
 }
 
