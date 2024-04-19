@@ -3,7 +3,8 @@ import {
   Coin,
   Msg,
   MsgFinalizeTokenDeposit,
-  MsgSetBridgeInfo
+  MsgSetBridgeInfo,
+  MsgUpdateOracle,
 } from '@initia/initia.js'
 import {
   ExecutorDepositTxEntity,
@@ -49,6 +50,33 @@ export class L1Monitor extends Monitor {
         ]
         this.executor.transaction(l2Msgs)
       }
+    }
+  }
+
+  public async handleNewBlock(): Promise<void> {
+    let latestHeight = this.socket.latestHeight;
+    let latestTx0 = this.socket.latestTx0;
+
+    if(!latestHeight || !latestTx0) return;
+
+    const msgs = [new MsgUpdateOracle(
+      this.executor.key.accAddress,
+      latestHeight,
+      latestTx0,
+    )];
+
+    try {
+      await this.executor.transaction(msgs)
+      this.logger.info(
+        `Succeeded to update oracle tx in height: ${this.currentHeight} ${latestHeight} ${latestTx0}`
+      )
+    } catch (err) {
+      const errMsg = err.response?.data
+        ? JSON.stringify(err.response?.data)
+        : err.toString()
+      this.logger.info(
+        `Failed to submit tx in height: ${this.currentHeight}\nMsg: ${latestHeight} ${latestTx0}\nError: ${errMsg}`
+      )
     }
   }
 

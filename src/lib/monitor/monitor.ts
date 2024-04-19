@@ -74,6 +74,9 @@ export abstract class Monitor {
       try {
         const latestHeight = this.socket.latestHeight
         if (!latestHeight || !(latestHeight > this.syncedHeight)) continue
+        
+        await this.handleNewBlock();
+
         const blockchainData = await this.rpcClient.getBlockchain(
           this.syncedHeight + 1,
           // cap the query to fetch 20 blocks at maximum
@@ -127,6 +130,9 @@ export abstract class Monitor {
 
   // eslint-disable-next-line
   public async handleBlock(manager: EntityManager): Promise<void> {}
+
+  // eslint-disable-next-line
+  public async handleNewBlock(): Promise<void> {}
 
   // eslint-disable-next-line
   public async prepareMonitor(): Promise<void> {}

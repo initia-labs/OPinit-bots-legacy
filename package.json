@@ -45,7 +45,7 @@
   },
   "homepage": "https://github.com/initia-labs/batch-submitter#readme",
   "devDependencies": {
-    "@initia/initia.js": "^0.1.43",
+    "@initia/initia.js": "^0.1.45",
     "@koa/cors": "^5.0.0",
     "@sentry/node": "^7.109.0",
     "@testcontainers/postgresql": "^10.8.1",
@@ -104,7 +104,6 @@
     "winston-daily-rotate-file": "^5.0.0"
   },
   "dependencies": {
-    "@initia/initia.js": "^0.1.41",
     "@koa/router": "^12.0.1",
     "@sentry/node": "^7.109.0",
     "@sideway/address": "^5.0.0",
