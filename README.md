@@ -15,6 +15,13 @@ Initia Optimistic Rollup Bots.
 - Node.js 16+
 - Node LCD/RPC (L1 and L2)
 
+TO run OPinit bots, you should check the following version. This is needed to ensure that the bots are compatible with the node version.
+
+| L1 Node | L2 Node | OPinit-bots |
+| ------- | ------- | ----------- |
+| v0.2.3  | v0.2.6  | v0.1.0      |
+
+
 ### Step1. Create Bridge
 
 Before running rollup bots, you should create bridge between L1 and L2. If you use `initia.js`, you can create bridge using `MsgCreateBridge` message as follows.
@@ -54,6 +61,7 @@ You should set `.env` file for each bot in `bots/worker`. To transfer assets bet
 | EXECUTOR_PORT              | Executor port                              | 5000                     |
 | EXECUTOR_MNEMONIC          | Mnemonic seed for executor                 | ''                       |
 | SLACK_WEB_HOOK             | Slack web hook for notification (optional) | ''                       |
+| BATCH_SUBMITTER_ADDR       | Batch submitter address                    | ''                       |
 | EXECUTOR_L1_MONITOR_HEIGHT | L1 monitor start height (optional)         | 0                        |
 | EXECUTOR_L2_MONITOR_HEIGHT | L2 monitor start height (optional)         | 0                        |
 | ENABLE_API_ONLY            | Enable API only mode (optional)            | false                    |
@@ -68,7 +76,7 @@ You should set `.env` file for each bot in `bots/worker`. To transfer assets bet
 | L1_RPC_URI                | L1 node RPC URI                            | <http://127.0.0.1:26657> |
 | BRIDGE_ID                 | Bridge ID                                  | ''                       |
 | OUTPUT_SUBMITTER_MNEMONIC | Mnemonic seed for output submitter         | ''                       |
-| EXECUTOR_URI              | Executor URI                               | <http://localhost:5000>  |
+| EXECUTOR_URI              | Executor URI                               | <http://127.0.0.1:5000>  |
 | SLACK_WEB_HOOK            | Slack web hook for notification (optional) | ''                       |
 
 - `.env.batch`
@@ -102,7 +110,6 @@ You should set `.env` file for each bot in `bots/worker`. To transfer assets bet
 | L2_RPC_URI             | L2 node RPC URI                            | <http://127.0.0.1:26657> |
 | BRIDGE_ID              | Bridge ID                                  | ''                       |
 | CHALLENGER_MNEMONIC    | Mnemonic seed for challenger               | ''                       |
-| DELETE_OUTPUT_PROPOSAL | Enable delete output proposal instantly    | ''                       |
 | SLACK_WEB_HOOK         | Slack web hook for notification (optional) | ''                       |
 
 ### Step3. Run Bots

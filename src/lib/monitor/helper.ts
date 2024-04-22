@@ -1,4 +1,4 @@
-import { BlockInfo, Event, LCDClient, TxInfo } from '@initia/initia.js'
+import { BlockInfo } from 'initia-l2'
 import { getLatestOutputFromExecutor, getOutputFromExecutor } from '../query'
 import { WithdrawStorage } from '../storage'
 import { WithdrawalTx } from '../types'
@@ -95,38 +95,19 @@ class MonitorHelper {
   ///
   ///  UTIL
   ///
-  public async fetchEvents(
-    lcd: LCDClient,
-    height: number,
-    eventType: string
-  ): Promise<[boolean, any[]]> {
-    const searchRes = await lcd.tx.search({
-      query: [{ key: 'tx.height', value: height.toString() }]
-    })
-
-    const extractEvents = (txs: TxInfo[]) =>
-      txs
-        .filter((tx: TxInfo) => tx.events && tx.events.length > 0)
-        .flatMap((tx: TxInfo) => tx.events ?? [])
-        .filter((event: Event) => event.type === eventType)
-    const isEmpty = searchRes.txs.length === 0
-    const events = extractEvents(searchRes.txs)
-
-    return [isEmpty, events]
-  }
 
   public async fetchAllEvents(
-    lcd: LCDClient,
+    lcd: any,
     height: number
   ): Promise<[boolean, any[]]> {
     const searchRes = await lcd.tx.search({
       query: [{ key: 'tx.height', value: height.toString() }]
     })
 
-    const extractAllEvents = (txs: TxInfo[]) =>
+    const extractAllEvents = (txs: any[]) =>
       txs
-        .filter((tx: TxInfo) => tx.events && tx.events.length > 0)
-        .flatMap((tx: TxInfo) => tx.events ?? [])
+        .filter((tx) => tx.events && tx.events.length > 0)
+        .flatMap((tx) => tx.events ?? [])
     const isEmpty = searchRes.txs.length === 0
     const events = extractAllEvents(searchRes.txs)
 
@@ -153,6 +134,7 @@ class MonitorHelper {
   ///
   /// L2 HELPER
   ///
+
   public calculateOutputEntity(
     outputIndex: number,
     blockInfo: BlockInfo,

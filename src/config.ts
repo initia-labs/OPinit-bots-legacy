@@ -1,4 +1,5 @@
-import { LCDClient } from '@initia/initia.js'
+import { LCDClient as LCDClientL1 } from 'initia-l1'
+import { LCDClient as LCDClientL2 } from 'initia-l2'
 import { validateCelestiaConfig } from './celestia/utils'
 import * as dotenv from 'dotenv'
 
@@ -44,6 +45,7 @@ const {
   SLACK_NOT_ENOUGH_BALANCE_THRESHOLD,
   EXECUTOR_L1_MONITOR_HEIGHT,
   EXECUTOR_L2_MONITOR_HEIGHT,
+  BATCH_SUBMITTER_ADDR,
   ENABLE_API_ONLY
 } = process.env
 
@@ -52,18 +54,18 @@ const supportedPublishBatchTargets = ['l1', 'celestia']
 export const config = {
   EXECUTOR_PORT: EXECUTOR_PORT ? parseInt(EXECUTOR_PORT) : 5000,
   BATCH_PORT: BATCH_PORT ? parseInt(BATCH_PORT) : 5001,
-  L1_LCD_URI: L1_LCD_URI ? L1_LCD_URI.split(',') : ['http://localhost:1317'],
-  L1_RPC_URI: L1_RPC_URI ? L1_RPC_URI.split(',') : ['http://localhost:26657'],
-  L2_LCD_URI: L2_LCD_URI ? L2_LCD_URI.split(',') : ['http://localhost:1317'],
-  L2_RPC_URI: L2_RPC_URI ? L2_RPC_URI.split(',') : ['http://localhost:26657'],
+  L1_LCD_URI: L1_LCD_URI ? L1_LCD_URI.split(',') : ['http://127.0.0.1:1317'],
+  L1_RPC_URI: L1_RPC_URI ? L1_RPC_URI.split(',') : ['http://127.0.0.1:26657'],
+  L2_LCD_URI: L2_LCD_URI ? L2_LCD_URI.split(',') : ['http://127.0.0.1:1317'],
+  L2_RPC_URI: L2_RPC_URI ? L2_RPC_URI.split(',') : ['http://127.0.0.1:26657'],
   BATCH_LCD_URI: BATCH_LCD_URI
     ? BATCH_LCD_URI.split(',')
-    : ['http://localhost:1317'],
+    : ['http://127.0.0.1:1317'],
   BATCH_CHAIN_RPC_URI: (() => {
     if (process.env.WORKER_NAME !== 'batch') {
       return undefined
     }
-    if (PUBLISH_BATCH_TARGET == 'l1') {
+    if (!PUBLISH_BATCH_TARGET || PUBLISH_BATCH_TARGET == 'l1') {
       return L1_RPC_URI
     } else if (
       BATCH_CHAIN_RPC_URI == undefined ||
@@ -90,7 +92,7 @@ export const config = {
     }
     return target
   })(),
-  EXECUTOR_URI: EXECUTOR_URI || 'http://localhost:5000',
+  EXECUTOR_URI: EXECUTOR_URI || 'http://127.0.0.1:5000',
   BRIDGE_ID: BRIDGE_ID ? parseInt(BRIDGE_ID) : 1,
   OUTPUT_SUBMITTER_MNEMONIC: OUTPUT_SUBMITTER_MNEMONIC
     ? OUTPUT_SUBMITTER_MNEMONIC.replace(/'/g, '')
@@ -107,16 +109,16 @@ export const config = {
   USE_LOG_FILE: USE_LOG_FILE ? JSON.parse(USE_LOG_FILE) : false,
   L1_CHAIN_ID: L1_CHAIN_ID ? L1_CHAIN_ID : 'local-initia',
   L2_CHAIN_ID: L2_CHAIN_ID ? L2_CHAIN_ID : 'local-minitia',
-  l1lcd: new LCDClient(
-    L1_LCD_URI ? L1_LCD_URI.split(',')[0] : 'http://localhost:1317',
+  l1lcd: new LCDClientL1(
+    L1_LCD_URI ? L1_LCD_URI.split(',')[0] : 'http://127.0.0.1:1317',
     {
       gasPrices: '0.15uinit',
       gasAdjustment: '2',
       chainId: L1_CHAIN_ID
     }
   ),
-  l2lcd: new LCDClient(
-    L2_LCD_URI ? L2_LCD_URI.split(',')[0] : 'http://localhost:1317',
+  l2lcd: new LCDClientL2(
+    L2_LCD_URI ? L2_LCD_URI.split(',')[0] : 'http://127.0.0.1:1317',
     {
       gasPrices: L2_GAS_PRICES || '0.15umin',
       gasAdjustment: '2',
@@ -124,8 +126,8 @@ export const config = {
     }
   ),
   batchlcd: (() => {
-    return new LCDClient(
-      BATCH_LCD_URI ? BATCH_LCD_URI.split(',')[0] : 'http://localhost:1317',
+    return new LCDClientL2(
+      BATCH_LCD_URI ? BATCH_LCD_URI.split(',')[0] : 'http://127.0.0.1:1317',
       {
         gasPrices: BATCH_GAS_PRICES || `0.2${BATCH_DENOM}`,
         gasAdjustment: '2',
@@ -153,6 +155,7 @@ export const config = {
   EXECUTOR_L2_MONITOR_HEIGHT: EXECUTOR_L2_MONITOR_HEIGHT
     ? parseInt(EXECUTOR_L2_MONITOR_HEIGHT)
     : 0,
+  BATCH_SUBMITTER_ADDR: BATCH_SUBMITTER_ADDR || '',
   ENABLE_API_ONLY: ENABLE_API_ONLY ? ENABLE_API_ONLY == 'true' : false
 }
 

@@ -1,4 +1,3 @@
-import { Wallet } from '@initia/initia.js'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import { config } from '../config'
@@ -52,7 +51,7 @@ export function buildResolveErrorNotification(description: string): {
 }
 
 export function buildNotEnoughBalanceNotification(
-  wallet: Wallet,
+  wallet: any,
   balance: number,
   denom: string
 ): { text: string } {

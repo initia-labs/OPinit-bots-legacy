@@ -1,7 +1,7 @@
 import Bridge from './utils/Bridge'
 import { config } from '../config'
 import { TxBot } from './utils/TxBot'
-import { Coin } from '@initia/initia.js'
+import { Coin } from 'initia-l1'
 import { startBatch } from '../worker/batchSubmitter'
 import { startExecutor } from '../worker/bridgeExecutor'
 import { startOutput } from '../worker/outputSubmitter'
