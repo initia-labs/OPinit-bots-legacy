@@ -9,7 +9,7 @@
   "scripts": {
     "executor": "WORKER_NAME=executor node dist/worker/bridgeExecutor/index.js",
     "batch": "WORKER_NAME=batch node dist/worker/batchSubmitter/index.js",
-    "challenger": "WORKER_NAME=challenge node dist/worker/challenger/index.js",
+    "challenger": "WORKER_NAME=challenger node dist/worker/challenger/index.js",
     "output": "WORKER_NAME=output node dist/worker/outputSubmitter/index.js",
     "test": "jest",
     "test:integration": "export NODE_ENV=test && node --stack_size=4096 --max-old-space-size=4096 -r ts-node/register/transpile-only -r tsconfig-paths/register src/test/integration.ts",

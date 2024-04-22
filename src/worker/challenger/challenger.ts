@@ -147,7 +147,7 @@ export class Challenger {
     if (!depositFinalizeTxFromChallenger) {
       this.missCount += 1
       this.logger.info(
-        `[L1 Challenger] deposit tx with sequence "${this.l1DepositSequenceToCheck}" is not finialized`
+        `[L1 Challenger] deposit tx with sequence "${this.l1DepositSequenceToCheck}" is not finalized`
       )
       if (this.missCount <= THRESHOLD_MISS_INTERVAL || !lastOutputInfo) {
         return await delay(this.submissionIntervalMs)

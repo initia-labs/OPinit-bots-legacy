@@ -65,7 +65,6 @@ export const config = {
     if (process.env.WORKER_NAME !== 'batch') {
       return undefined
     }
-    console.log()
     if (!PUBLISH_BATCH_TARGET || PUBLISH_BATCH_TARGET == 'l1') {
       return L1_RPC_URI
     } else if (
