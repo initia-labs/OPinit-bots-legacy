@@ -19,7 +19,7 @@ TO run OPinit bots, you should check the following version. This is needed to en
 
 | L1 Node | L2 Node | OPinit-bots |
 | ------- | ------- | ----------- |
-| v0.2.3  | v0.2.5  | v0.1.0      |
+| v0.2.3  | v0.2.6  | v0.1.0      |
 
 
 ### Step1. Create Bridge
@@ -61,6 +61,7 @@ You should set `.env` file for each bot in `bots/worker`. To transfer assets bet
 | EXECUTOR_PORT              | Executor port                              | 5000                     |
 | EXECUTOR_MNEMONIC          | Mnemonic seed for executor                 | ''                       |
 | SLACK_WEB_HOOK             | Slack web hook for notification (optional) | ''                       |
+| BATCH_SUBMITTER_ADDR       | Batch submitter address                    | ''                       |
 | EXECUTOR_L1_MONITOR_HEIGHT | L1 monitor start height (optional)         | 0                        |
 | EXECUTOR_L2_MONITOR_HEIGHT | L2 monitor start height (optional)         | 0                        |
 | ENABLE_API_ONLY            | Enable API only mode (optional)            | false                    |
@@ -75,7 +76,7 @@ You should set `.env` file for each bot in `bots/worker`. To transfer assets bet
 | L1_RPC_URI                | L1 node RPC URI                            | <http://127.0.0.1:26657> |
 | BRIDGE_ID                 | Bridge ID                                  | ''                       |
 | OUTPUT_SUBMITTER_MNEMONIC | Mnemonic seed for output submitter         | ''                       |
-| EXECUTOR_URI              | Executor URI                               | <http://localhost:5000>  |
+| EXECUTOR_URI              | Executor URI                               | <http://127.0.0.1:5000>  |
 | SLACK_WEB_HOOK            | Slack web hook for notification (optional) | ''                       |
 
 - `.env.batch`

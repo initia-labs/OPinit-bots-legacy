@@ -106,14 +106,14 @@ class MonitorHelper {
 
     const extractAllEvents = (txs: any[]) =>
       txs
-        .filter(tx => tx.events && tx.events.length > 0)
-        .flatMap(tx => tx.events ?? [])
+        .filter((tx) => tx.events && tx.events.length > 0)
+        .flatMap((tx) => tx.events ?? [])
     const isEmpty = searchRes.txs.length === 0
     const events = extractAllEvents(searchRes.txs)
 
     return [isEmpty, events]
   }
-  
+
   public eventsToAttrMap(event: any): { [key: string]: string } {
     return event.attributes.reduce((obj, attr) => {
       obj[attr.key] = attr.value
@@ -126,7 +126,7 @@ class MonitorHelper {
   } {
     return JSON.parse(attrMap['data'])
   }
-  
+
   ///
   /// L1 HELPER
   ///

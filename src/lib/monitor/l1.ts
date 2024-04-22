@@ -22,7 +22,7 @@ import { TxWalletL2, WalletType, getWallet, initWallet } from '../walletL2'
 
 export class L1Monitor extends Monitor {
   executorL2: TxWalletL2
-  
+
   constructor(
     public socket: RPCSocket,
     public rpcClient: RPCClient,
@@ -46,23 +46,32 @@ export class L1Monitor extends Monitor {
       const errMsg = err.response?.data
         ? JSON.stringify(err.response?.data)
         : err.toString()
-      if (errMsg.includes('bridge info not found') && config.BATCH_SUBMITTER_ADDR && config.PUBLISH_BATCH_TARGET) {
+      if (
+        errMsg.includes('bridge info not found') &&
+        config.BATCH_SUBMITTER_ADDR &&
+        config.PUBLISH_BATCH_TARGET
+      ) {
         const l2Msgs = [
-          new MsgSetBridgeInfo(this.executorL2.key.accAddress, new BridgeInfo(
-            bridgeInfoL1.bridge_id,
-            bridgeInfoL1.bridge_addr,
-            new BridgeConfig(
-              bridgeInfoL1.bridge_config.challenger,
-              bridgeInfoL1.bridge_config.proposer,
-              new BatchInfo(
-                config.BATCH_SUBMITTER_ADDR, config.PUBLISH_BATCH_TARGET
-              ),
-              bridgeInfoL1.bridge_config.submission_interval,
-              bridgeInfoL1.bridge_config.finalization_period,
-              bridgeInfoL1.bridge_config.submission_start_time,
-              bridgeInfoL1.bridge_config.metadata
+          new MsgSetBridgeInfo(
+            this.executorL2.key.accAddress,
+            new BridgeInfo(
+              bridgeInfoL1.bridge_id,
+              bridgeInfoL1.bridge_addr,
+              new BridgeConfig(
+                bridgeInfoL1.bridge_config.challenger,
+                bridgeInfoL1.bridge_config.proposer,
+                new BatchInfo(
+                  // TODO: convert not to use config after on L1 v0.2.4
+                  config.BATCH_SUBMITTER_ADDR,
+                  config.PUBLISH_BATCH_TARGET
+                ),
+                bridgeInfoL1.bridge_config.submission_interval,
+                bridgeInfoL1.bridge_config.finalization_period,
+                bridgeInfoL1.bridge_config.submission_start_time,
+                bridgeInfoL1.bridge_config.metadata
+              )
             )
-          ))
+          )
         ]
         this.executorL2.transaction(l2Msgs)
       }

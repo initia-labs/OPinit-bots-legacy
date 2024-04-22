@@ -1,8 +1,4 @@
-import {
-  MsgCreateBridge,
-  BridgeConfig,
-  Duration,
-} from 'initia-l1'
+import { MsgCreateBridge, BridgeConfig, Duration } from 'initia-l1'
 import {
   getDB as getExecutorDB,
   initORM as initExecutorORM
@@ -100,7 +96,7 @@ class Bridge {
         metadata
       )
     ]
-    
+
     return await sendTx(executorL1, l1Msgs)
   }
 }

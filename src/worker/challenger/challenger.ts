@@ -20,7 +20,12 @@ import {
 } from '../../lib/query'
 import MonitorHelper from '../../lib/monitor/helper'
 import winston from 'winston'
-import { TxWalletL1, WalletType, getWallet, initWallet } from '../../lib/walletL1'
+import {
+  TxWalletL1,
+  WalletType,
+  getWallet,
+  initWallet
+} from '../../lib/walletL1'
 import { buildChallengerNotification, notifySlack } from '../../lib/slack'
 
 const THRESHOLD_MISS_INTERVAL = 5
@@ -172,7 +177,11 @@ export class Challenger {
       await this.handleChallengedOutputProposal(
         manager,
         lastOutputInfo.output_index,
-        `not equal deposit tx between L1 and L2`
+        `
+        not equal deposit tx between L1 and L2 
+        actual: ${depositFinalizeTxFromChallenger}
+        challenger: ${depositTxFromChallenger}
+        `
       )
     }
 
@@ -300,18 +309,25 @@ export class Challenger {
   async handleChallengedOutputProposal(
     manager: EntityManager,
     outputIndex: number,
-    reason?: string
+    reason = 'unknown'
   ) {
     const challengedOutput: ChallengedOutputEntity = {
       outputIndex,
       bridgeId: this.bridgeId.toString(),
-      reason: reason ?? 'unknown'
+      reason
     }
     await manager.getRepository(ChallengedOutputEntity).save(challengedOutput)
-    
+
     // if (config.DELETE_OUTPUT_PROPOSAL === 'true') {
     //   await this.deleteOutputProposal(outputIndex)
     // }
+
+    logger.warn(
+      `
+      [Challenger] challenged output proposal in output index ${outputIndex} 
+      reason: ${reason}
+      `
+    )
 
     await notifySlack(
       `${outputIndex}-${this.bridgeId}`,

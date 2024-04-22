@@ -1,10 +1,5 @@
-import {
-  MsgInitiateTokenDeposit,
-  Coin,
-} from 'initia-l1'
-import { 
-  MsgInitiateTokenWithdrawal
-} from 'initia-l2'
+import { MsgInitiateTokenDeposit, Coin } from 'initia-l1'
+import { MsgInitiateTokenWithdrawal } from 'initia-l2'
 import { makeFinalizeMsg } from './helper'
 import { sendTx } from '../../lib/tx'
 import {
@@ -50,7 +45,7 @@ export class TxBot {
 
     const { account_number: accountNumber, sequence } =
       await sender.accountNumberAndSequence()
-    
+
     return await sendTx(
       sender,
       [finalizeMsg],

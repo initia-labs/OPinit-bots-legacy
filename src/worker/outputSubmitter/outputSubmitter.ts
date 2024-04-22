@@ -9,7 +9,12 @@ import { getLastOutputInfo } from '../../lib/query'
 import MonitorHelper from '../../lib/monitor/helper'
 import { DataSource, EntityManager } from 'typeorm'
 import { getDB } from './db'
-import { TxWalletL1, WalletType, getWallet, initWallet } from '../../lib/walletL1'
+import {
+  TxWalletL1,
+  WalletType,
+  getWallet,
+  initWallet
+} from '../../lib/walletL1'
 
 export class OutputSubmitter {
   private db: DataSource

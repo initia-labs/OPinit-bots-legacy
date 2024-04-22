@@ -12,7 +12,7 @@ export async function sendTx(
     accountNumber,
     sequence
   })
-  
+
   const broadcastResult = await wallet.lcd.tx.broadcast(signedTx, timeout)
   if (broadcastResult['code']) throw new Error(broadcastResult.raw_log)
   return broadcastResult

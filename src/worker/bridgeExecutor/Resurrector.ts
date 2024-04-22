@@ -5,7 +5,12 @@ import { INTERVAL_MONITOR, config } from '../../config'
 import { DataSource } from 'typeorm'
 import Bluebird from 'bluebird'
 import winston from 'winston'
-import { TxWalletL2, WalletType, getWallet, initWallet } from '../../lib/walletL2'
+import {
+  TxWalletL2,
+  WalletType,
+  getWallet,
+  initWallet
+} from '../../lib/walletL2'
 import {
   buildFailedTxNotification,
   buildResolveErrorNotification,

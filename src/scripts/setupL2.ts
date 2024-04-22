@@ -3,14 +3,9 @@ import {
   BridgeConfig,
   Duration,
   Wallet,
-  MnemonicKey,
-  BridgeInfo,
+  MnemonicKey
 } from 'initia-l1'
-import {
-  MsgSetBridgeInfo,
-  MnemonicKey as MnemonicKeyL2,
-  Wallet as WalletL2,
-} from 'initia-l2'
+import { MnemonicKey as MnemonicKeyL2, Wallet as WalletL2 } from 'initia-l2'
 
 import { sendTx } from '../lib/tx'
 import { config } from '../config'
@@ -68,7 +63,8 @@ class L2Initializer {
     ]
 
     const txRes = await sendTx(executor, msgs)
-
+    console.log('Bridge created: ', txRes)
+    
     // TODO: not used on L1 v0.2.3
     // load bridge info from l1 chain and send to l2 chain
     // let bridgeID = 0

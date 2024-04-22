@@ -13,7 +13,7 @@ import {
   Coins,
   BlobTx,
   TxAPI
-} from 'initia-l1'
+} from 'initia-l2'
 import { delay } from 'bluebird'
 import { INTERVAL_BATCH } from '../../config'
 import { config } from '../../config'
@@ -244,7 +244,7 @@ export class BatchSubmitter {
           `Error saving record ${record.bridgeId} batch ${batchIndex} to database: ${error}`
         )
       })
-      
+
     return record
   }
 }
