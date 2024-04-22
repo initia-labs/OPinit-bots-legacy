@@ -2,8 +2,7 @@ import {
   MsgCreateBridge,
   BridgeConfig,
   Duration,
-  BatchInfo
-} from 'initia-l2'
+} from 'initia-l1'
 import {
   getDB as getExecutorDB,
   initORM as initExecutorORM
@@ -29,7 +28,7 @@ import {
   RecordEntity,
   ChallengeEntity
 } from '../../orm'
-import { executor, challenger, outputSubmitter } from './helper'
+import { executorL1, challengerL1, outputSubmitterL1 } from './helper'
 import { sendTx } from '../../lib/tx'
 
 class Bridge {
@@ -83,19 +82,18 @@ class Bridge {
     metadata: string
   ) {
     const bridgeConfig = new BridgeConfig(
-      challenger.key.accAddress,
-      outputSubmitter.key.accAddress,
-      new BatchInfo('submitter', 'chain'),
+      challengerL1.key.accAddress,
+      outputSubmitterL1.key.accAddress,
       Duration.fromString(submissionInterval.toString()),
       Duration.fromString(finalizedTime.toString()),
       new Date(),
       metadata
     )
-    return new MsgCreateBridge(executor.key.accAddress, bridgeConfig)
+    return new MsgCreateBridge(executorL1.key.accAddress, bridgeConfig)
   }
 
   async tx(metadata: string) {
-    const msgs = [
+    const l1Msgs = [
       this.MsgCreateBridge(
         this.submissionInterval,
         this.finalizedTime,
@@ -103,7 +101,7 @@ class Bridge {
       )
     ]
     
-    return await sendTx(executor, msgs)
+    return await sendTx(executorL1, l1Msgs)
   }
 }
 

@@ -244,7 +244,7 @@ export class BatchSubmitter {
           `Error saving record ${record.bridgeId} batch ${batchIndex} to database: ${error}`
         )
       })
-
+      
     return record
   }
 }

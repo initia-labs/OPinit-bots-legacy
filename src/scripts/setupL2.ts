@@ -1,13 +1,17 @@
 import {
   MsgCreateBridge,
   BridgeConfig,
-  BatchInfo,
   Duration,
   Wallet,
   MnemonicKey,
   BridgeInfo,
-  MsgSetBridgeInfo
 } from 'initia-l1'
+import {
+  MsgSetBridgeInfo,
+  MnemonicKey as MnemonicKeyL2,
+  Wallet as WalletL2,
+} from 'initia-l2'
+
 import { sendTx } from '../lib/tx'
 import { config } from '../config'
 
@@ -15,9 +19,9 @@ export const executor = new Wallet(
   config.l1lcd,
   new MnemonicKey({ mnemonic: config.EXECUTOR_MNEMONIC })
 )
-export const executorL2 = new Wallet(
+export const executorL2 = new WalletL2(
   config.l2lcd,
-  new MnemonicKey({ mnemonic: config.EXECUTOR_MNEMONIC })
+  new MnemonicKeyL2({ mnemonic: config.EXECUTOR_MNEMONIC })
 )
 export const challenger = new Wallet(
   config.l1lcd,
@@ -44,7 +48,7 @@ class L2Initializer {
     const bridgeConfig = new BridgeConfig(
       challenger.key.accAddress,
       outputSubmitter.key.accAddress,
-      new BatchInfo(batchSubmitter.accAddress, config.PUBLISH_BATCH_TARGET),
+      // new BatchInfo(batchSubmitter.accAddress, config.PUBLISH_BATCH_TARGET), // TODO: not used on L1 v0.2.3
       Duration.fromString(submissionInterval.toString()),
       Duration.fromString(finalizedTime.toString()),
       new Date(),
@@ -53,9 +57,10 @@ class L2Initializer {
     return new MsgCreateBridge(executor.key.accAddress, bridgeConfig)
   }
 
-  MsgSetBridgeInfo(bridgeInfo: BridgeInfo) {
-    return new MsgSetBridgeInfo(executorL2.key.accAddress, bridgeInfo)
-  }
+  // TODO: not used on L1 v0.2.3
+  // MsgSetBridgeInfo(bridgeInfo: BridgeInfo) {
+  //   return new MsgSetBridgeInfo(executorL2.key.accAddress, bridgeInfo)
+  // }
 
   async initialize() {
     const msgs = [
@@ -64,29 +69,30 @@ class L2Initializer {
 
     const txRes = await sendTx(executor, msgs)
 
+    // TODO: not used on L1 v0.2.3
     // load bridge info from l1 chain and send to l2 chain
-    let bridgeID = 0
-    const txInfo = await config.l1lcd.tx.txInfo(txRes.txhash)
-    for (const e of txInfo.events) {
-      if (e.type !== 'create_bridge') {
-        continue
-      }
+    // let bridgeID = 0
+    // const txInfo = await config.l1lcd.tx.txInfo(txRes.txhash)
+    // for (const e of txInfo.events) {
+    //   if (e.type !== 'create_bridge') {
+    //     continue
+    //   }
 
-      for (const attr of e.attributes) {
-        if (attr.key !== 'bridge_id') {
-          continue
-        }
+    //   for (const attr of e.attributes) {
+    //     if (attr.key !== 'bridge_id') {
+    //       continue
+    //     }
 
-        bridgeID = parseInt(attr.value, 10)
-      }
+    //     bridgeID = parseInt(attr.value, 10)
+    //   }
 
-      break
-    }
+    //   break
+    // }
 
-    const bridgeInfo = await config.l1lcd.ophost.bridgeInfo(bridgeID)
-    const l2Msgs = [this.MsgSetBridgeInfo(bridgeInfo)]
+    // const bridgeInfo = await config.l1lcd.ophost.bridgeInfo(bridgeID)
+    // const l2Msgs = [this.MsgSetBridgeInfo(bridgeInfo)]
 
-    await sendTx(executorL2, l2Msgs)
+    // await sendTx(executorL2, l2Msgs)
   }
 }
 

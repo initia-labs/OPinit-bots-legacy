@@ -20,7 +20,7 @@ import {
 } from '../../lib/query'
 import MonitorHelper from '../../lib/monitor/helper'
 import winston from 'winston'
-import { TxWallet, WalletType, getWallet, initWallet } from '../../lib/wallet'
+import { TxWalletL1, WalletType, getWallet, initWallet } from '../../lib/walletL1'
 import { buildChallengerNotification, notifySlack } from '../../lib/slack'
 
 const THRESHOLD_MISS_INTERVAL = 5
@@ -40,7 +40,7 @@ export class Challenger {
   missCount: number // count of miss interval to finalize deposit tx
   threshold: number // threshold of miss interval to finalize deposit tx
   helper: MonitorHelper
-  challenger: TxWallet
+  challenger: TxWalletL1
 
   constructor(public logger: winston.Logger) {
     [this.db] = getDB()

@@ -5,7 +5,7 @@ import { INTERVAL_MONITOR, config } from '../../config'
 import { DataSource } from 'typeorm'
 import Bluebird from 'bluebird'
 import winston from 'winston'
-import { TxWallet, WalletType, getWallet, initWallet } from '../../lib/wallet'
+import { TxWalletL2, WalletType, getWallet, initWallet } from '../../lib/walletL2'
 import {
   buildFailedTxNotification,
   buildResolveErrorNotification,
@@ -15,13 +15,13 @@ import {
 export class Resurrector {
   private db: DataSource
   isRunning = true
-  executor: TxWallet
+  executorL2: TxWalletL2
   errorCounter = 0
 
   constructor(public logger: winston.Logger) {
     [this.db] = getDB()
     initWallet(WalletType.Executor, config.l2lcd)
-    this.executor = getWallet(WalletType.Executor)
+    this.executorL2 = getWallet(WalletType.Executor)
   }
 
   async updateProcessed(unconfirmedTx: UnconfirmedTxEntity): Promise<void> {
@@ -44,7 +44,7 @@ export class Resurrector {
   ): Promise<void> {
     const txKey = `${unconfirmedTx.sender}-${unconfirmedTx.receiver}-${unconfirmedTx.amount}`
     const msg = new MsgFinalizeTokenDeposit(
-      this.executor.key.accAddress,
+      this.executorL2.key.accAddress,
       unconfirmedTx.sender,
       unconfirmedTx.receiver,
       new Coin(unconfirmedTx.l2Denom, unconfirmedTx.amount),
@@ -54,7 +54,7 @@ export class Resurrector {
       Buffer.from(unconfirmedTx.data, 'hex').toString('base64')
     )
     try {
-      await this.executor.transaction([msg])
+      await this.executorL2.transaction([msg])
       await this.updateProcessed(unconfirmedTx)
       await notifySlack(
         txKey,

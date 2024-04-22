@@ -23,10 +23,10 @@ export enum WalletType {
 }
 
 export const wallets: {
-  challenger: TxWallet | undefined;
-  executor: TxWallet | undefined;
-  batchSubmitter: TxWallet | undefined;
-  outputSubmitter: TxWallet | undefined;
+  challenger: TxWalletL1 | undefined;
+  executor: TxWalletL1 | undefined;
+  batchSubmitter: TxWalletL1 | undefined;
+  outputSubmitter: TxWalletL1 | undefined;
 } = {
   challenger: undefined,
   executor: undefined,
@@ -39,25 +39,25 @@ export function initWallet(type: WalletType, lcd: LCDClient): void {
 
   switch (type) {
     case WalletType.Challenger:
-      wallets[type] = new TxWallet(
+      wallets[type] = new TxWalletL1(
         lcd,
         new MnemonicKey({ mnemonic: config.CHALLENGER_MNEMONIC })
       )
       break
     case WalletType.Executor:
-      wallets[type] = new TxWallet(
+      wallets[type] = new TxWalletL1(
         lcd,
         new MnemonicKey({ mnemonic: config.EXECUTOR_MNEMONIC })
       )
       break
     case WalletType.BatchSubmitter:
-      wallets[type] = new TxWallet(
+      wallets[type] = new TxWalletL1(
         lcd,
         new MnemonicKey({ mnemonic: config.BATCH_SUBMITTER_MNEMONIC })
       )
       break
     case WalletType.OutputSubmitter:
-      wallets[type] = new TxWallet(
+      wallets[type] = new TxWalletL1(
         lcd,
         new MnemonicKey({ mnemonic: config.OUTPUT_SUBMITTER_MNEMONIC })
       )
@@ -66,7 +66,7 @@ export function initWallet(type: WalletType, lcd: LCDClient): void {
 }
 
 // Access the wallets
-export function getWallet(type: WalletType): TxWallet {
+export function getWallet(type: WalletType): TxWalletL1 {
   if (!wallets[type]) {
     throw new Error(`Wallet ${type} not initialized`)
   }
@@ -74,7 +74,7 @@ export function getWallet(type: WalletType): TxWallet {
   return wallets[type]!
 }
 
-export class TxWallet extends Wallet {
+export class TxWalletL1 extends Wallet {
   private managedAccountNumber
   private managedSequence
 

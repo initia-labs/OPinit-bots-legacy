@@ -1,12 +1,7 @@
-import {
-  Fee,
-  LCDClient,
-} from 'initia-l1'
-
 export async function sendTx(
   wallet: any,
   msgs: any[],
-  fee?: Fee,
+  fee?: any,
   accountNumber?: number,
   sequence?: number,
   timeout = 10_000
@@ -17,6 +12,7 @@ export async function sendTx(
     accountNumber,
     sequence
   })
+  
   const broadcastResult = await wallet.lcd.tx.broadcast(signedTx, timeout)
   if (broadcastResult['code']) throw new Error(broadcastResult.raw_log)
   return broadcastResult
@@ -33,7 +29,7 @@ export async function sendRawTx(
 }
 
 // check whether batch submission interval is met
-export async function getLatestBlockHeight(client: LCDClient): Promise<number> {
+export async function getLatestBlockHeight(client: any): Promise<number> {
   const block = await client.tendermint.blockInfo().catch((error) => {
     throw new Error(`Error getting block info from L2: ${error}`)
   })

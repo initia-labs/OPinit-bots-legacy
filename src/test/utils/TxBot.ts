@@ -1,5 +1,4 @@
 import {
-  Wallet,
   MsgInitiateTokenDeposit,
   Coin,
 } from 'initia-l1'
@@ -20,7 +19,7 @@ export class TxBot {
 
   constructor(public bridgeId: number) {}
 
-  async deposit(sender: Wallet, reciever: Wallet, coin: Coin) {
+  async deposit(sender: any, reciever: any, coin: Coin) {
     const msg = new MsgInitiateTokenDeposit(
       sender.key.accAddress,
       this.bridgeId,
@@ -31,7 +30,7 @@ export class TxBot {
     return await sendTx(sender, [msg])
   }
 
-  async withdrawal(sender: Wallet, receiver: Wallet, coin: Coin) {
+  async withdrawal(sender: any, receiver: any, coin: Coin) {
     const msg = new MsgInitiateTokenWithdrawal(
       sender.key.accAddress,
       receiver.key.accAddress,
@@ -41,7 +40,7 @@ export class TxBot {
     return await sendTx(sender, [msg])
   }
 
-  async claim(sender: Wallet, txSequence: number, outputIndex: number) {
+  async claim(sender: any, txSequence: number, outputIndex: number) {
     const txRes = await getWithdrawalTxFromExecutor(this.bridgeId, txSequence)
     const outputRes: any = await getOutputFromExecutor(outputIndex)
     const finalizeMsg = await makeFinalizeMsg(
@@ -51,6 +50,7 @@ export class TxBot {
 
     const { account_number: accountNumber, sequence } =
       await sender.accountNumberAndSequence()
+    
     return await sendTx(
       sender,
       [finalizeMsg],
