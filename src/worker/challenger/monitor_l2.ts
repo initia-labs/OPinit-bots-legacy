@@ -3,7 +3,7 @@ import {
   ChallengerOutputEntity,
   ChallengerWithdrawalTxEntity
 } from '../../orm'
-import { OutputInfo } from '@initia/initia.js'
+import { OutputInfo } from 'initia-l2'
 import { Monitor } from '../../lib/monitor'
 import { EntityManager } from 'typeorm'
 import { RPCClient, RPCSocket } from '../../lib/rpc'

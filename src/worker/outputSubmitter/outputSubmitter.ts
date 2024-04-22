@@ -1,4 +1,4 @@
-import { MsgProposeOutput } from '@initia/initia.js'
+import { MsgProposeOutput } from 'initia-l1'
 import { INTERVAL_OUTPUT } from '../../config'
 import { ExecutorOutputEntity } from '../../orm'
 import { delay } from 'bluebird'

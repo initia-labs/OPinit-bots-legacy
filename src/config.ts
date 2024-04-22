@@ -1,4 +1,5 @@
-import { LCDClient } from '@initia/initia.js'
+import { LCDClient as LCDClientL1} from 'initia-l1'
+import { LCDClient as LCDClientL2} from 'initia-l2'
 import { validateCelestiaConfig } from './celestia/utils'
 import * as dotenv from 'dotenv'
 
@@ -107,7 +108,7 @@ export const config = {
   USE_LOG_FILE: USE_LOG_FILE ? JSON.parse(USE_LOG_FILE) : false,
   L1_CHAIN_ID: L1_CHAIN_ID ? L1_CHAIN_ID : 'local-initia',
   L2_CHAIN_ID: L2_CHAIN_ID ? L2_CHAIN_ID : 'local-minitia',
-  l1lcd: new LCDClient(
+  l1lcd: new LCDClientL1(
     L1_LCD_URI ? L1_LCD_URI.split(',')[0] : 'http://localhost:1317',
     {
       gasPrices: '0.15uinit',
@@ -115,7 +116,7 @@ export const config = {
       chainId: L1_CHAIN_ID
     }
   ),
-  l2lcd: new LCDClient(
+  l2lcd: new LCDClientL2(
     L2_LCD_URI ? L2_LCD_URI.split(',')[0] : 'http://localhost:1317',
     {
       gasPrices: L2_GAS_PRICES || '0.15umin',
@@ -124,7 +125,7 @@ export const config = {
     }
   ),
   batchlcd: (() => {
-    return new LCDClient(
+    return new LCDClientL1(
       BATCH_LCD_URI ? BATCH_LCD_URI.split(',')[0] : 'http://localhost:1317',
       {
         gasPrices: BATCH_GAS_PRICES || `0.2${BATCH_DENOM}`,

@@ -1,6 +1,6 @@
 import { getDB } from './db'
 import UnconfirmedTxEntity from '../../orm/executor/UnconfirmedTxEntity'
-import { Coin, MsgFinalizeTokenDeposit } from '@initia/initia.js'
+import { Coin, MsgFinalizeTokenDeposit } from 'initia-l2'
 import { INTERVAL_MONITOR, config } from '../../config'
 import { DataSource } from 'typeorm'
 import Bluebird from 'bluebird'

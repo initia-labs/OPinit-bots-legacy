@@ -1,7 +1,7 @@
 import { MerkleTree } from 'merkletreejs'
 import { sha3_256 } from './util'
 import { WithdrawalTx } from './types'
-import { AccAddress } from '@initia/initia.js'
+import { AccAddress } from 'initia-l1'
 
 function convertHexToBase64(hex: string): string {
   return Buffer.from(hex, 'hex').toString('base64')

@@ -13,7 +13,7 @@ import {
   Coins,
   BlobTx,
   TxAPI
-} from '@initia/initia.js'
+} from 'initia-l1'
 import { delay } from 'bluebird'
 import { INTERVAL_BATCH } from '../../config'
 import { config } from '../../config'

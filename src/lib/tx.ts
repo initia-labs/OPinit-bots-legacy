@@ -1,19 +1,16 @@
 import {
   Fee,
   LCDClient,
-  Msg,
-  WaitTxBroadcastResult,
-  Wallet
-} from '@initia/initia.js'
+} from 'initia-l1'
 
 export async function sendTx(
-  wallet: Wallet,
-  msgs: Msg[],
+  wallet: any,
+  msgs: any[],
   fee?: Fee,
   accountNumber?: number,
   sequence?: number,
   timeout = 10_000
-): Promise<WaitTxBroadcastResult> {
+): Promise<any> {
   const signedTx = await wallet.createAndSignTx({
     msgs,
     fee,
@@ -26,10 +23,10 @@ export async function sendTx(
 }
 
 export async function sendRawTx(
-  wallet: Wallet,
+  wallet: any,
   txBytes: string,
   timeout = 10_000
-): Promise<WaitTxBroadcastResult> {
+): Promise<any> {
   const broadcastResult = await wallet.lcd.tx.broadcast(txBytes, timeout)
   if (broadcastResult['code']) throw new Error(broadcastResult.raw_log)
   return broadcastResult

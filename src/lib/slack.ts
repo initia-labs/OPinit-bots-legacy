@@ -1,4 +1,4 @@
-import { Wallet } from '@initia/initia.js'
+import { Wallet } from 'initia-l1'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import { config } from '../config'

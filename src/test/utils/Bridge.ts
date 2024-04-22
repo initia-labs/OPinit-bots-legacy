@@ -3,7 +3,7 @@ import {
   BridgeConfig,
   Duration,
   BatchInfo
-} from '@initia/initia.js'
+} from 'initia-l2'
 import {
   getDB as getExecutorDB,
   initORM as initExecutorORM
@@ -102,7 +102,7 @@ class Bridge {
         metadata
       )
     ]
-
+    
     return await sendTx(executor, msgs)
   }
 }

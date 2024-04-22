@@ -2,7 +2,7 @@ import { sequenceLenBytes, shareInfoBytes, shareSize } from './builder'
 import { createCommitment } from './commitment'
 import { namespaceSize } from './namespace'
 import { config } from '../config'
-import { Blob } from '@initia/initia.js'
+import { Blob } from 'initia-l1'
 
 // constants
 const defaultGasPerBlobByte = 8

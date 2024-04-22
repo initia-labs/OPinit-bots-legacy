@@ -1,4 +1,4 @@
-import { MnemonicKey } from '@initia/initia.js'
+import { MnemonicKey } from 'initia-l1'
 import { config } from '../../config'
 import { TxWallet } from '../../lib/wallet'
 

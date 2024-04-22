@@ -1,4 +1,4 @@
-import { BridgeInfo, MsgDeleteOutput } from '@initia/initia.js'
+import { BridgeInfo, MsgDeleteOutput } from 'initia-l1'
 import { DataSource, MoreThan } from 'typeorm'
 import { getDB } from './db'
 import {
@@ -308,10 +308,10 @@ export class Challenger {
       reason: reason ?? 'unknown'
     }
     await manager.getRepository(ChallengedOutputEntity).save(challengedOutput)
-
-    if (config.DELETE_OUTPUT_PROPOSAL === 'true') {
-      await this.deleteOutputProposal(outputIndex)
-    }
+    
+    // if (config.DELETE_OUTPUT_PROPOSAL === 'true') {
+    //   await this.deleteOutputProposal(outputIndex)
+    // }
 
     await notifySlack(
       `${outputIndex}-${this.bridgeId}`,

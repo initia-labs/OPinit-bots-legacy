@@ -5,7 +5,7 @@ import {
   Msg,
   MsgFinalizeTokenWithdrawal,
   Coin
-} from '@initia/initia.js'
+} from 'initia-l1'
 
 import { config } from '../../config'
 import { sha3_256 } from '../../lib/util'

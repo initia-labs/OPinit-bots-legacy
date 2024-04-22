@@ -7,7 +7,7 @@ import {
   MnemonicKey,
   BridgeInfo,
   MsgSetBridgeInfo
-} from '@initia/initia.js'
+} from 'initia-l1'
 import { sendTx } from '../lib/tx'
 import { config } from '../config'
 

@@ -6,7 +6,7 @@ import {
   LCDClient,
   WaitTxBroadcastResult,
   Coins
-} from '@initia/initia.js'
+} from 'initia-l1'
 import { sendTx } from './tx'
 import { config } from '../config'
 import {

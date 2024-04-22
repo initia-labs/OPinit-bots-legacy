@@ -2,8 +2,10 @@ import {
   Wallet,
   MsgInitiateTokenDeposit,
   Coin,
+} from 'initia-l1'
+import { 
   MsgInitiateTokenWithdrawal
-} from '@initia/initia.js'
+} from 'initia-l2'
 import { makeFinalizeMsg } from './helper'
 import { sendTx } from '../../lib/tx'
 import {
