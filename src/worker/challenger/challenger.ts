@@ -59,7 +59,7 @@ export class Challenger {
   }
 
   public name(): string {
-    return 'challenge'
+    return 'challenger'
   }
 
   public stop(): void {
@@ -94,7 +94,7 @@ export class Challenger {
   }
 
   public async run(): Promise<void> {
-    await this.init()
+    await this.init()    
     while (this.isRunning) {
       try {
         await this.db.transaction(async (manager: EntityManager) => {
@@ -318,9 +318,9 @@ export class Challenger {
     }
     await manager.getRepository(ChallengedOutputEntity).save(challengedOutput)
 
-    // if (config.DELETE_OUTPUT_PROPOSAL === 'true') {
-    //   await this.deleteOutputProposal(outputIndex)
-    // }
+    if (config.DELETE_OUTPUT_PROPOSAL === 'true') {
+      await this.deleteOutputProposal(outputIndex)
+    }
 
     logger.warn(
       `

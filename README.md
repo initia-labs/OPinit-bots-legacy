@@ -110,6 +110,7 @@ You should set `.env` file for each bot in `bots/worker`. To transfer assets bet
 | L2_RPC_URI             | L2 node RPC URI                            | <http://127.0.0.1:26657> |
 | BRIDGE_ID              | Bridge ID                                  | ''                       |
 | CHALLENGER_MNEMONIC    | Mnemonic seed for challenger               | ''                       |
+| DELETE_OUTPUT_PROPOSAL | Delete output proposal                     | false                    |
 | SLACK_WEB_HOOK         | Slack web hook for notification (optional) | ''                       |
 
 ### Step3. Run Bots
