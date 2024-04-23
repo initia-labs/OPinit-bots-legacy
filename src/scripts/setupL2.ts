@@ -2,33 +2,37 @@ import {
   MsgCreateBridge,
   BridgeConfig,
   Duration,
-  Wallet,
-  MnemonicKey
+  MnemonicKey,
+  BatchInfo,
+  BridgeInfo
 } from 'initia-l1'
-import { MnemonicKey as MnemonicKeyL2, Wallet as WalletL2 } from 'initia-l2'
+import { MnemonicKey as MnemonicKeyL2, MsgSetBridgeInfo } from 'initia-l2'
 
-import { sendTx } from '../lib/tx'
 import { config } from '../config'
+import { TxWalletL1 } from '../lib/walletL1'
+import { TxWalletL2 } from '../lib/walletL2'
 
-export const executor = new Wallet(
+export const executor = new TxWalletL1(
   config.l1lcd,
   new MnemonicKey({ mnemonic: config.EXECUTOR_MNEMONIC })
 )
-export const executorL2 = new WalletL2(
+export const executorL2 = new TxWalletL2(
   config.l2lcd,
   new MnemonicKeyL2({ mnemonic: config.EXECUTOR_MNEMONIC })
 )
-export const challenger = new Wallet(
+export const challenger = new TxWalletL1(
   config.l1lcd,
   new MnemonicKey({ mnemonic: config.CHALLENGER_MNEMONIC })
 )
-export const outputSubmitter = new Wallet(
+export const outputSubmitter = new TxWalletL1(
   config.l1lcd,
   new MnemonicKey({ mnemonic: config.OUTPUT_SUBMITTER_MNEMONIC })
 )
-export const batchSubmitter = new MnemonicKey({
-  mnemonic: config.BATCH_SUBMITTER_MNEMONIC
-})
+
+export const batchSubmitter = new TxWalletL1(
+  config.l1lcd,
+  new MnemonicKey({ mnemonic: config.BATCH_SUBMITTER_MNEMONIC })
+)
 
 class L2Initializer {
   bridgeId = config.BRIDGE_ID
@@ -43,7 +47,7 @@ class L2Initializer {
     const bridgeConfig = new BridgeConfig(
       challenger.key.accAddress,
       outputSubmitter.key.accAddress,
-      // new BatchInfo(batchSubmitter.accAddress, config.PUBLISH_BATCH_TARGET), // TODO: not used on L1 v0.2.3
+      new BatchInfo(batchSubmitter.key.accAddress, config.PUBLISH_BATCH_TARGET),
       Duration.fromString(submissionInterval.toString()),
       Duration.fromString(finalizedTime.toString()),
       new Date(),
@@ -52,43 +56,39 @@ class L2Initializer {
     return new MsgCreateBridge(executor.key.accAddress, bridgeConfig)
   }
 
-  // TODO: not used on L1 v0.2.3
-  // MsgSetBridgeInfo(bridgeInfo: BridgeInfo) {
-  //   return new MsgSetBridgeInfo(executorL2.key.accAddress, bridgeInfo)
-  // }
+  MsgSetBridgeInfo(bridgeInfo: BridgeInfo) {
+    return new MsgSetBridgeInfo(executorL2.key.accAddress, bridgeInfo)
+  }
 
   async initialize() {
     const msgs = [
       this.MsgCreateBridge(this.submissionInterval, this.finalizedTime)
     ]
 
-    const txRes = await sendTx(executor, msgs)
-    console.log('Bridge created: ', txRes)
+    const txRes = await executor.transaction(msgs)
 
-    // TODO: not used on L1 v0.2.3
-    // load bridge info from l1 chain and send to l2 chain
-    // let bridgeID = 0
-    // const txInfo = await config.l1lcd.tx.txInfo(txRes.txhash)
-    // for (const e of txInfo.events) {
-    //   if (e.type !== 'create_bridge') {
-    //     continue
-    //   }
+    let bridgeID = 0
+    const txInfo = await config.l1lcd.tx.txInfo(txRes.txhash)
+    for (const e of txInfo.events) {
+      if (e.type !== 'create_bridge') {
+        continue
+      }
 
-    //   for (const attr of e.attributes) {
-    //     if (attr.key !== 'bridge_id') {
-    //       continue
-    //     }
+      for (const attr of e.attributes) {
+        if (attr.key !== 'bridge_id') {
+          continue
+        }
 
-    //     bridgeID = parseInt(attr.value, 10)
-    //   }
+        bridgeID = parseInt(attr.value, 10)
+      }
 
-    //   break
-    // }
+      break
+    }
 
-    // const bridgeInfo = await config.l1lcd.ophost.bridgeInfo(bridgeID)
-    // const l2Msgs = [this.MsgSetBridgeInfo(bridgeInfo)]
+    const bridgeInfo = await config.l1lcd.ophost.bridgeInfo(bridgeID)
+    const l2Msgs = [this.MsgSetBridgeInfo(bridgeInfo)]
 
-    // await sendTx(executorL2, l2Msgs)
+    await executorL2.transaction(l2Msgs)
   }
 }
 
