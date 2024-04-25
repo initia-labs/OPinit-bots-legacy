@@ -48,6 +48,22 @@ You should set `.env` file for each bot in `bots/worker`. To transfer assets bet
 > In OPinit bots, we use [.dotenv](https://www.npmjs.com/package/dotenv) for managing environment variable for development. If you want to set `.env` by worker, you should name it as `.env.{WORKER_NAME}` and set `WORKER_NAME` in [`executor`, `output`, `batch`, `challenger`].
 > For example, if you want to set `.env` for `executor`, you should name it as `.env.executor` and set `WORKER_NAME=executor` in local environment. `.env` files should be located in `OPinit/bots` directory.
 
+- typeorm setting
+
+> :exclamation: You should set common settings for typeorm in `.env.xxx` file :exclamation:
+
+```bash
+TYPEORM_CONNECTION=postgres               # database connection (currently only support `postgres`)
+TYPEORM_HOST=localhost                    # database host
+TYPEORM_USERNAME=username                 # database username
+TYPEORM_PASSWORD=password                 # database password
+TYPEORM_DATABASE=rollup                   # database name
+TYPEORM_PORT=5432                         # database port
+TYPEORM_SYNCHRONIZE=true                  # synchronize database schema
+TYPEORM_LOGGING=false                     # enable logging
+TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
+```
+
 - `.env.executor`
 
 | Name                       | Description                                | Default                  |
