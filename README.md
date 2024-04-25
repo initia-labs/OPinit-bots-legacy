@@ -50,10 +50,10 @@ You should set `.env` file for each bot in `bots/worker`. To transfer assets bet
 
 - typeorm setting
 
-:exclamation: You should set common settings for typeorm in `.env.xxx` file. Currently, `OPinit-bots` support only `postgres` for database.
+> :exclamation: You should set common settings for typeorm in `.env.xxx` file :exclamation:
 
 ```bash
-TYPEORM_CONNECTION=postgres               # database connection
+TYPEORM_CONNECTION=postgres               # database connection (currently only support `postgres`)
 TYPEORM_HOST=localhost                    # database host
 TYPEORM_USERNAME=username                 # database username
 TYPEORM_PASSWORD=password                 # database password
