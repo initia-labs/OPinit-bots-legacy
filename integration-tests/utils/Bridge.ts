@@ -2,12 +2,12 @@ import { MsgCreateBridge, BridgeConfig, Duration, BatchInfo } from 'initia-l1'
 import {
   getDB as getExecutorDB,
   initORM as initExecutorORM
-} from '../../worker/bridgeExecutor/db'
+} from '../../src/worker/bridgeExecutor/db'
 import {
   getDB as getChallengerDB,
   initORM as initChallengerORM
-} from '../../worker/challenger/db'
-import { getDB as getBatchDB, initORM as initBatchORM } from '../../lib/db'
+} from '../../src/worker/challenger/db'
+import { getDB as getBatchDB, initORM as initBatchORM } from '../../src/lib/db'
 import { DataSource, EntityManager } from 'typeorm'
 import {
   ExecutorOutputEntity,
@@ -23,7 +23,7 @@ import {
   ChallengedOutputEntity,
   RecordEntity,
   ChallengeEntity
-} from '../../orm'
+} from '../../src/orm'
 import { executorL1, challengerL1, outputSubmitterL1 } from './helper'
 
 class Bridge {

@@ -6,11 +6,11 @@ import {
   Coin
 } from 'initia-l1'
 
-import { config } from '../../config'
-import { sha3_256 } from '../../lib/util'
-import { ExecutorOutputEntity } from '../../orm/index'
-import WithdrawalTxEntity from '../../orm/executor/WithdrawalTxEntity'
-import { TxWalletL1 } from '../../lib/walletL1'
+import { config } from '../../src/config'
+import { sha3_256 } from '../../src/lib/util'
+import { ExecutorOutputEntity } from '../../src/orm/index'
+import WithdrawalTxEntity from '../../src/orm/executor/WithdrawalTxEntity'
+import { TxWalletL1 } from '../../src/lib/walletL1'
 
 export const bcs = BCS.getInstance()
 export const executorL1 = new TxWalletL1(

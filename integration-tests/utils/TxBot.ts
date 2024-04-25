@@ -4,10 +4,10 @@ import { makeFinalizeMsg } from './helper'
 import {
   getOutputFromExecutor,
   getWithdrawalTxFromExecutor
-} from '../../lib/query'
+} from '../../src/lib/query'
 import { L1_SENDER, L2_RECEIVER } from './consts'
-import { TxWalletL1 } from '../../lib/walletL1'
-import { TxWalletL2 } from '../../lib/walletL2'
+import { TxWalletL1 } from '../../src/lib/walletL1'
+import { TxWalletL2 } from '../../src/lib/walletL2'
 
 export class TxBot {
   l1sender = L1_SENDER

@@ -1,9 +1,9 @@
 import { MnemonicKey as MnemonicKeyL1 } from 'initia-l1'
 import { MnemonicKey as MnemonicKeyL2 } from 'initia-l2'
-import { config } from '../../config'
-import { TxWalletL1 } from '../../lib/walletL1'
-import { TxWalletL2 } from '../../lib/walletL2'
 
+import { TxWalletL1 } from '../../src/lib/walletL1'
+import { TxWalletL2 } from '../../src/lib/walletL2'
+import { config } from '../../src/config'
 export const { DEPOSITOR_MNEMONIC } = process.env
 
 export const L1_SENDER = new TxWalletL1(
