@@ -5,9 +5,9 @@ import {
   MnemonicKey,
   LCDClient,
   WaitTxBroadcastResult,
-  Coins
+  Coins,
+  Fee
 } from 'initia-l1'
-import { sendTx } from './tx'
 import { config } from '../config'
 import {
   buildNotEnoughBalanceNotification,
@@ -111,6 +111,31 @@ export class TxWalletL1 extends Wallet {
     }
   }
 
+  async sendTx(
+    msgs: Msg[],
+    fee?: Fee,
+    accountNumber?: number,
+    sequence?: number,
+    timeout = 10_000
+  ): Promise<WaitTxBroadcastResult> {
+    const signedTx = await this.createAndSignTx({
+      msgs,
+      fee,
+      accountNumber,
+      sequence
+    })
+
+    const broadcastResult = await this.lcd.tx.broadcast(signedTx, timeout)
+    if (broadcastResult['code']) throw new Error(broadcastResult.raw_log)
+    return broadcastResult
+  }
+
+  async sendRawTx(txBytes: string, timeout = 10_000): Promise<any> {
+    const broadcastResult = await this.lcd.tx.broadcast(txBytes, timeout)
+    if (broadcastResult['code']) throw new Error(broadcastResult.raw_log)
+    return broadcastResult
+  }
+
   async transaction(msgs: Msg[]): Promise<WaitTxBroadcastResult> {
     if (!this.managedAccountNumber && !this.managedSequence) {
       const { account_number: accountNumber, sequence } =
@@ -121,8 +146,7 @@ export class TxWalletL1 extends Wallet {
 
     try {
       await this.checkEnoughBalance()
-      const txInfo = await sendTx(
-        this,
+      const txInfo = await this.sendTx(
         msgs,
         undefined,
         this.managedAccountNumber,

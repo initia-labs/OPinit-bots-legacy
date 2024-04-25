@@ -12,7 +12,7 @@
     "challenger": "WORKER_NAME=challenger node dist/worker/challenger/index.js",
     "output": "WORKER_NAME=output node dist/worker/outputSubmitter/index.js",
     "test": "jest",
-    "test:integration": "export NODE_ENV=test && node --stack_size=4096 --max-old-space-size=4096 -r ts-node/register/transpile-only -r tsconfig-paths/register src/test/integration.ts",
+    "test:integration": "export NODE_ENV=test && node --stack_size=4096 --max-old-space-size=4096 -r ts-node/register/transpile-only -r tsconfig-paths/register integration-tests/integration.ts",
     "prettier": "prettier --write './src/**/*.ts'",
     "lint": "eslint --fix src",
     "do": "npm run build && node -r tsconfig-paths/register ./dist/loader/generateApiDoc.js",
@@ -94,7 +94,7 @@
     "winston-daily-rotate-file": "^5.0.0"
   },
   "dependencies": {
-    "initia-l1": "npm:@initia/initia.js@0.1.30",
+    "initia-l1": "npm:@initia/initia.js@0.1.45",
     "initia-l2": "npm:@initia/initia.js@0.1.45",
     "@koa/router": "^12.0.1",
     "@sentry/node": "^7.109.0",

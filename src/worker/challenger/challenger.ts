@@ -94,7 +94,7 @@ export class Challenger {
   }
 
   public async run(): Promise<void> {
-    await this.init()    
+    await this.init()
     while (this.isRunning) {
       try {
         await this.db.transaction(async (manager: EntityManager) => {

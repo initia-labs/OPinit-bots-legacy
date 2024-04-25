@@ -1,5 +1,4 @@
 import {
-  Wallet,
   MnemonicKey,
   BCS,
   Msg,
@@ -7,21 +6,22 @@ import {
   Coin
 } from 'initia-l1'
 
-import { config } from '../../config'
-import { sha3_256 } from '../../lib/util'
-import { ExecutorOutputEntity } from '../../orm/index'
-import WithdrawalTxEntity from '../../orm/executor/WithdrawalTxEntity'
+import { config } from '../../src/config'
+import { sha3_256 } from '../../src/lib/util'
+import { ExecutorOutputEntity } from '../../src/orm/index'
+import WithdrawalTxEntity from '../../src/orm/executor/WithdrawalTxEntity'
+import { TxWalletL1 } from '../../src/lib/walletL1'
 
 export const bcs = BCS.getInstance()
-export const executorL1 = new Wallet(
+export const executorL1 = new TxWalletL1(
   config.l1lcd,
   new MnemonicKey({ mnemonic: config.EXECUTOR_MNEMONIC })
 )
-export const challengerL1 = new Wallet(
+export const challengerL1 = new TxWalletL1(
   config.l1lcd,
   new MnemonicKey({ mnemonic: config.CHALLENGER_MNEMONIC })
 )
-export const outputSubmitterL1 = new Wallet(
+export const outputSubmitterL1 = new TxWalletL1(
   config.l1lcd,
   new MnemonicKey({ mnemonic: config.OUTPUT_SUBMITTER_MNEMONIC })
 )
