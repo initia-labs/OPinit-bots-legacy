@@ -1,18 +1,13 @@
-import {
-  MsgCreateBridge,
-  BridgeConfig,
-  Duration,
-  BatchInfo
-} from '@initia/initia.js'
+import { MsgCreateBridge, BridgeConfig, Duration, BatchInfo } from 'initia-l1'
 import {
   getDB as getExecutorDB,
   initORM as initExecutorORM
-} from '../../worker/bridgeExecutor/db'
+} from '../../src/worker/bridgeExecutor/db'
 import {
   getDB as getChallengerDB,
   initORM as initChallengerORM
-} from '../../worker/challenger/db'
-import { getDB as getBatchDB, initORM as initBatchORM } from '../../lib/db'
+} from '../../src/worker/challenger/db'
+import { getDB as getBatchDB, initORM as initBatchORM } from '../../src/lib/db'
 import { DataSource, EntityManager } from 'typeorm'
 import {
   ExecutorOutputEntity,
@@ -28,9 +23,8 @@ import {
   ChallengedOutputEntity,
   RecordEntity,
   ChallengeEntity
-} from '../../orm'
-import { executor, challenger, outputSubmitter } from './helper'
-import { sendTx } from '../../lib/tx'
+} from '../../src/orm'
+import { executorL1, challengerL1, outputSubmitterL1 } from './helper'
 
 class Bridge {
   executorDB: DataSource
@@ -83,19 +77,19 @@ class Bridge {
     metadata: string
   ) {
     const bridgeConfig = new BridgeConfig(
-      challenger.key.accAddress,
-      outputSubmitter.key.accAddress,
+      challengerL1.key.accAddress,
+      outputSubmitterL1.key.accAddress,
       new BatchInfo('submitter', 'chain'),
       Duration.fromString(submissionInterval.toString()),
       Duration.fromString(finalizedTime.toString()),
       new Date(),
       metadata
     )
-    return new MsgCreateBridge(executor.key.accAddress, bridgeConfig)
+    return new MsgCreateBridge(executorL1.key.accAddress, bridgeConfig)
   }
 
   async tx(metadata: string) {
-    const msgs = [
+    const l1Msgs = [
       this.MsgCreateBridge(
         this.submissionInterval,
         this.finalizedTime,
@@ -103,7 +97,7 @@ class Bridge {
       )
     ]
 
-    return await sendTx(executor, msgs)
+    return await executorL1.transaction(l1Msgs)
   }
 }
 

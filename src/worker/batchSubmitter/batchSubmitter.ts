@@ -5,7 +5,6 @@ import { BlockBulk, RawCommit, RPCClient } from '../../lib/rpc'
 import { compress } from '../../lib/compressor'
 import { ExecutorOutputEntity, RecordEntity } from '../../orm'
 import {
-  Wallet,
   MnemonicKey,
   MsgRecordBatch,
   MsgPayForBlobs,
@@ -13,14 +12,14 @@ import {
   Coins,
   BlobTx,
   TxAPI
-} from '@initia/initia.js'
+} from 'initia-l2'
 import { delay } from 'bluebird'
 import { INTERVAL_BATCH } from '../../config'
 import { config } from '../../config'
-import { sendRawTx } from '../../lib/tx'
 import MonitorHelper from '../../lib/monitor/helper'
 import { createBlob, getCelestiaFeeGasLimit } from '../../celestia/utils'
 import { bech32 } from 'bech32'
+import { TxWalletL2 } from '../../lib/walletL2'
 
 const base = 200000
 const perByte = 10
@@ -30,7 +29,7 @@ export class BatchSubmitter {
   private submitterAddress: string
   private batchIndex = 0
   private db: DataSource
-  private submitter: Wallet
+  private submitter: TxWalletL2
   private bridgeId: number
   private isRunning = false
   private rpcClient: RPCClient
@@ -39,7 +38,7 @@ export class BatchSubmitter {
   async init() {
     [this.db] = getDB()
     this.rpcClient = new RPCClient(config.L2_RPC_URI, batchLogger)
-    this.submitter = new Wallet(
+    this.submitter = new TxWalletL2(
       config.batchlcd,
       new MnemonicKey({ mnemonic: config.BATCH_SUBMITTER_MNEMONIC })
     )
@@ -158,7 +157,7 @@ export class BatchSubmitter {
             )
         }
 
-        const batchInfo = await sendRawTx(this.submitter, txBytes)
+        const batchInfo = await this.submitter.sendRawTx(txBytes)
         batchInfos.push(batchInfo.txhash)
 
         await delay(1000) // break for each tx ended
@@ -249,7 +248,7 @@ export class BatchSubmitter {
   }
 }
 
-function getFee(wallet: Wallet, gasLimit: number): Fee {
+function getFee(wallet: TxWalletL2, gasLimit: number): Fee {
   const gasPrices = new Coins(wallet.lcd.config.gasPrices).toArray()
   if (gasPrices.length === 0) {
     throw Error('gasPrices must be set')

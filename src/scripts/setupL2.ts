@@ -1,35 +1,38 @@
 import {
   MsgCreateBridge,
   BridgeConfig,
-  BatchInfo,
   Duration,
-  Wallet,
   MnemonicKey,
-  BridgeInfo,
-  MsgSetBridgeInfo
-} from '@initia/initia.js'
-import { sendTx } from '../lib/tx'
-import { config } from '../config'
+  BatchInfo,
+  BridgeInfo
+} from 'initia-l1'
+import { MnemonicKey as MnemonicKeyL2, MsgSetBridgeInfo } from 'initia-l2'
 
-export const executor = new Wallet(
+import { config } from '../config'
+import { TxWalletL1 } from '../lib/walletL1'
+import { TxWalletL2 } from '../lib/walletL2'
+
+export const executor = new TxWalletL1(
   config.l1lcd,
   new MnemonicKey({ mnemonic: config.EXECUTOR_MNEMONIC })
 )
-export const executorL2 = new Wallet(
+export const executorL2 = new TxWalletL2(
   config.l2lcd,
-  new MnemonicKey({ mnemonic: config.EXECUTOR_MNEMONIC })
+  new MnemonicKeyL2({ mnemonic: config.EXECUTOR_MNEMONIC })
 )
-export const challenger = new Wallet(
+export const challenger = new TxWalletL1(
   config.l1lcd,
   new MnemonicKey({ mnemonic: config.CHALLENGER_MNEMONIC })
 )
-export const outputSubmitter = new Wallet(
+export const outputSubmitter = new TxWalletL1(
   config.l1lcd,
   new MnemonicKey({ mnemonic: config.OUTPUT_SUBMITTER_MNEMONIC })
 )
-export const batchSubmitter = new MnemonicKey({
-  mnemonic: config.BATCH_SUBMITTER_MNEMONIC
-})
+
+export const batchSubmitter = new TxWalletL1(
+  config.l1lcd,
+  new MnemonicKey({ mnemonic: config.BATCH_SUBMITTER_MNEMONIC })
+)
 
 class L2Initializer {
   bridgeId = config.BRIDGE_ID
@@ -44,7 +47,7 @@ class L2Initializer {
     const bridgeConfig = new BridgeConfig(
       challenger.key.accAddress,
       outputSubmitter.key.accAddress,
-      new BatchInfo(batchSubmitter.accAddress, config.PUBLISH_BATCH_TARGET),
+      new BatchInfo(batchSubmitter.key.accAddress, config.PUBLISH_BATCH_TARGET),
       Duration.fromString(submissionInterval.toString()),
       Duration.fromString(finalizedTime.toString()),
       new Date(),
@@ -62,9 +65,8 @@ class L2Initializer {
       this.MsgCreateBridge(this.submissionInterval, this.finalizedTime)
     ]
 
-    const txRes = await sendTx(executor, msgs)
+    const txRes = await executor.transaction(msgs)
 
-    // load bridge info from l1 chain and send to l2 chain
     let bridgeID = 0
     const txInfo = await config.l1lcd.tx.txInfo(txRes.txhash)
     for (const e of txInfo.events) {
@@ -86,7 +88,7 @@ class L2Initializer {
     const bridgeInfo = await config.l1lcd.ophost.bridgeInfo(bridgeID)
     const l2Msgs = [this.MsgSetBridgeInfo(bridgeInfo)]
 
-    await sendTx(executorL2, l2Msgs)
+    await executorL2.transaction(l2Msgs)
   }
 }
 

@@ -15,6 +15,13 @@ Initia Optimistic Rollup Bots.
 - Node.js 16+
 - Node LCD/RPC (L1 and L2)
 
+TO run OPinit bots, you should check the following version. This is needed to ensure that the bots are compatible with the node version.
+
+| L1 Node | L2 Node | OPinit-bots |
+| ------- | ------- | ----------- |
+| v0.2.3  | v0.2.6  | v0.1.0      |
+
+
 ### Step1. Create Bridge
 
 Before running rollup bots, you should create bridge between L1 and L2. If you use `initia.js`, you can create bridge using `MsgCreateBridge` message as follows.
@@ -41,6 +48,22 @@ You should set `.env` file for each bot in `bots/worker`. To transfer assets bet
 > In OPinit bots, we use [.dotenv](https://www.npmjs.com/package/dotenv) for managing environment variable for development. If you want to set `.env` by worker, you should name it as `.env.{WORKER_NAME}` and set `WORKER_NAME` in [`executor`, `output`, `batch`, `challenger`].
 > For example, if you want to set `.env` for `executor`, you should name it as `.env.executor` and set `WORKER_NAME=executor` in local environment. `.env` files should be located in `OPinit/bots` directory.
 
+- typeorm setting
+
+> :exclamation: You should set common settings for typeorm in `.env.xxx` file :exclamation:
+
+```bash
+TYPEORM_CONNECTION=postgres               # database connection (currently only support `postgres`)
+TYPEORM_HOST=localhost                    # database host
+TYPEORM_USERNAME=username                 # database username
+TYPEORM_PASSWORD=password                 # database password
+TYPEORM_DATABASE=rollup                   # database name
+TYPEORM_PORT=5432                         # database port
+TYPEORM_SYNCHRONIZE=true                  # synchronize database schema
+TYPEORM_LOGGING=false                     # enable logging
+TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
+```
+
 - `.env.executor`
 
 | Name                       | Description                                | Default                  |
@@ -54,6 +77,7 @@ You should set `.env` file for each bot in `bots/worker`. To transfer assets bet
 | EXECUTOR_PORT              | Executor port                              | 5000                     |
 | EXECUTOR_MNEMONIC          | Mnemonic seed for executor                 | ''                       |
 | SLACK_WEB_HOOK             | Slack web hook for notification (optional) | ''                       |
+| BATCH_SUBMITTER_ADDR       | Batch submitter address                    | ''                       |
 | EXECUTOR_L1_MONITOR_HEIGHT | L1 monitor start height (optional)         | 0                        |
 | EXECUTOR_L2_MONITOR_HEIGHT | L2 monitor start height (optional)         | 0                        |
 | ENABLE_API_ONLY            | Enable API only mode (optional)            | false                    |
@@ -68,7 +92,7 @@ You should set `.env` file for each bot in `bots/worker`. To transfer assets bet
 | L1_RPC_URI                | L1 node RPC URI                            | <http://127.0.0.1:26657> |
 | BRIDGE_ID                 | Bridge ID                                  | ''                       |
 | OUTPUT_SUBMITTER_MNEMONIC | Mnemonic seed for output submitter         | ''                       |
-| EXECUTOR_URI              | Executor URI                               | <http://localhost:5000>  |
+| EXECUTOR_URI              | Executor URI                               | <http://127.0.0.1:5000>  |
 | SLACK_WEB_HOOK            | Slack web hook for notification (optional) | ''                       |
 
 - `.env.batch`
@@ -102,7 +126,7 @@ You should set `.env` file for each bot in `bots/worker`. To transfer assets bet
 | L2_RPC_URI             | L2 node RPC URI                            | <http://127.0.0.1:26657> |
 | BRIDGE_ID              | Bridge ID                                  | ''                       |
 | CHALLENGER_MNEMONIC    | Mnemonic seed for challenger               | ''                       |
-| DELETE_OUTPUT_PROPOSAL | Enable delete output proposal instantly    | ''                       |
+| DELETE_OUTPUT_PROPOSAL | Delete output proposal                     | false                    |
 | SLACK_WEB_HOOK         | Slack web hook for notification (optional) | ''                       |
 
 ### Step3. Run Bots

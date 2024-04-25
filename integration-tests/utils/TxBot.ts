@@ -1,16 +1,13 @@
-import {
-  Wallet,
-  MsgInitiateTokenDeposit,
-  Coin,
-  MsgInitiateTokenWithdrawal
-} from '@initia/initia.js'
+import { MsgInitiateTokenDeposit, Coin } from 'initia-l1'
+import { MsgInitiateTokenWithdrawal } from 'initia-l2'
 import { makeFinalizeMsg } from './helper'
-import { sendTx } from '../../lib/tx'
 import {
   getOutputFromExecutor,
   getWithdrawalTxFromExecutor
-} from '../../lib/query'
+} from '../../src/lib/query'
 import { L1_SENDER, L2_RECEIVER } from './consts'
+import { TxWalletL1 } from '../../src/lib/walletL1'
+import { TxWalletL2 } from '../../src/lib/walletL2'
 
 export class TxBot {
   l1sender = L1_SENDER
@@ -18,7 +15,7 @@ export class TxBot {
 
   constructor(public bridgeId: number) {}
 
-  async deposit(sender: Wallet, reciever: Wallet, coin: Coin) {
+  async deposit(sender: TxWalletL1, reciever: TxWalletL2, coin: Coin) {
     const msg = new MsgInitiateTokenDeposit(
       sender.key.accAddress,
       this.bridgeId,
@@ -26,20 +23,20 @@ export class TxBot {
       coin
     )
 
-    return await sendTx(sender, [msg])
+    return await sender.transaction([msg])
   }
 
-  async withdrawal(sender: Wallet, receiver: Wallet, coin: Coin) {
+  async withdrawal(sender: TxWalletL2, receiver: TxWalletL1, coin: Coin) {
     const msg = new MsgInitiateTokenWithdrawal(
       sender.key.accAddress,
       receiver.key.accAddress,
       coin
     )
 
-    return await sendTx(sender, [msg])
+    return await sender.transaction([msg])
   }
 
-  async claim(sender: Wallet, txSequence: number, outputIndex: number) {
+  async claim(sender: TxWalletL1, txSequence: number, outputIndex: number) {
     const txRes = await getWithdrawalTxFromExecutor(this.bridgeId, txSequence)
     const outputRes: any = await getOutputFromExecutor(outputIndex)
     const finalizeMsg = await makeFinalizeMsg(
@@ -47,14 +44,6 @@ export class TxBot {
       outputRes.output
     )
 
-    const { account_number: accountNumber, sequence } =
-      await sender.accountNumberAndSequence()
-    return await sendTx(
-      sender,
-      [finalizeMsg],
-      undefined,
-      accountNumber,
-      sequence
-    )
+    return await sender.transaction([finalizeMsg])
   }
 }

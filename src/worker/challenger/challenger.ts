@@ -1,4 +1,4 @@
-import { BridgeInfo, MsgDeleteOutput } from '@initia/initia.js'
+import { BridgeInfo, MsgDeleteOutput } from 'initia-l1'
 import { DataSource, MoreThan } from 'typeorm'
 import { getDB } from './db'
 import {
@@ -20,7 +20,12 @@ import {
 } from '../../lib/query'
 import MonitorHelper from '../../lib/monitor/helper'
 import winston from 'winston'
-import { TxWallet, WalletType, getWallet, initWallet } from '../../lib/wallet'
+import {
+  TxWalletL1,
+  WalletType,
+  getWallet,
+  initWallet
+} from '../../lib/walletL1'
 import { buildChallengerNotification, notifySlack } from '../../lib/slack'
 
 const THRESHOLD_MISS_INTERVAL = 5
@@ -40,7 +45,7 @@ export class Challenger {
   missCount: number // count of miss interval to finalize deposit tx
   threshold: number // threshold of miss interval to finalize deposit tx
   helper: MonitorHelper
-  challenger: TxWallet
+  challenger: TxWalletL1
 
   constructor(public logger: winston.Logger) {
     [this.db] = getDB()
@@ -54,7 +59,7 @@ export class Challenger {
   }
 
   public name(): string {
-    return 'challenge'
+    return 'challenger'
   }
 
   public stop(): void {
@@ -142,7 +147,7 @@ export class Challenger {
     if (!depositFinalizeTxFromChallenger) {
       this.missCount += 1
       this.logger.info(
-        `[L1 Challenger] deposit tx with sequence "${this.l1DepositSequenceToCheck}" is not finialized`
+        `[L1 Challenger] deposit tx with sequence "${this.l1DepositSequenceToCheck}" is not finalized`
       )
       if (this.missCount <= THRESHOLD_MISS_INTERVAL || !lastOutputInfo) {
         return await delay(this.submissionIntervalMs)
@@ -172,7 +177,11 @@ export class Challenger {
       await this.handleChallengedOutputProposal(
         manager,
         lastOutputInfo.output_index,
-        `not equal deposit tx between L1 and L2`
+        `
+        not equal deposit tx between L1 and L2 
+        actual: ${depositFinalizeTxFromChallenger}
+        challenger: ${depositTxFromChallenger}
+        `
       )
     }
 
@@ -300,18 +309,25 @@ export class Challenger {
   async handleChallengedOutputProposal(
     manager: EntityManager,
     outputIndex: number,
-    reason?: string
+    reason = 'unknown'
   ) {
     const challengedOutput: ChallengedOutputEntity = {
       outputIndex,
       bridgeId: this.bridgeId.toString(),
-      reason: reason ?? 'unknown'
+      reason
     }
     await manager.getRepository(ChallengedOutputEntity).save(challengedOutput)
 
     if (config.DELETE_OUTPUT_PROPOSAL === 'true') {
       await this.deleteOutputProposal(outputIndex)
     }
+
+    logger.warn(
+      `
+      [Challenger] challenged output proposal in output index ${outputIndex} 
+      reason: ${reason}
+      `
+    )
 
     await notifySlack(
       `${outputIndex}-${this.bridgeId}`,

@@ -1,11 +1,14 @@
 import { Monitor } from './monitor'
 import {
+  BatchInfo,
+  BridgeConfig,
+  BridgeInfo,
   Coin,
   Msg,
   MsgFinalizeTokenDeposit,
   MsgSetBridgeInfo,
   MsgUpdateOracle,
-} from '@initia/initia.js'
+} from 'initia-l2'
 import {
   ExecutorDepositTxEntity,
   ExecutorUnconfirmedTxEntity,
@@ -16,10 +19,10 @@ import { RPCClient, RPCSocket } from '../rpc'
 import { getDB } from '../../worker/bridgeExecutor/db'
 import winston from 'winston'
 import { config } from '../../config'
-import { TxWallet, WalletType, getWallet, initWallet } from '../wallet'
+import { TxWalletL2, WalletType, getWallet, initWallet } from '../walletL2'
 
 export class L1Monitor extends Monitor {
-  executor: TxWallet
+  executorL2: TxWalletL2
 
   constructor(
     public socket: RPCSocket,
@@ -29,7 +32,7 @@ export class L1Monitor extends Monitor {
     super(socket, rpcClient, logger);
     [this.db] = getDB()
     initWallet(WalletType.Executor, config.l2lcd)
-    this.executor = getWallet(WalletType.Executor)
+    this.executorL2 = getWallet(WalletType.Executor)
   }
 
   public name(): string {
@@ -39,16 +42,23 @@ export class L1Monitor extends Monitor {
   public async prepareMonitor(): Promise<void> {
     const bridgeInfoL1 = await config.l1lcd.ophost.bridgeInfo(config.BRIDGE_ID)
     try {
-      await this.executor.lcd.opchild.bridgeInfo()
+      await this.executorL2.lcd.opchild.bridgeInfo()
     } catch (err) {
       const errMsg = err.response?.data
         ? JSON.stringify(err.response?.data)
         : err.toString()
-      if (errMsg.includes('bridge info not found')) {
+      if (
+        errMsg.includes('bridge info not found') &&
+        config.BATCH_SUBMITTER_ADDR &&
+        config.PUBLISH_BATCH_TARGET
+      ) {
         const l2Msgs = [
-          new MsgSetBridgeInfo(this.executor.key.accAddress, bridgeInfoL1)
+          new MsgSetBridgeInfo(
+            this.executorL2.key.accAddress,
+            bridgeInfoL1
+          )
         ]
-        this.executor.transaction(l2Msgs)
+        this.executorL2.transaction(l2Msgs)
       }
     }
   }
@@ -60,13 +70,13 @@ export class L1Monitor extends Monitor {
     if(!latestHeight || !latestTx0) return;
 
     const msgs = [new MsgUpdateOracle(
-      this.executor.key.accAddress,
+      this.executorL2.key.accAddress,
       latestHeight,
       latestTx0,
     )];
 
     try {
-      await this.executor.transaction(msgs)
+      await this.executorL2.transaction(msgs)
       this.logger.info(
         `Succeeded to update oracle tx in height: ${this.currentHeight} ${latestHeight} ${latestTx0}`
       )
@@ -105,7 +115,7 @@ export class L1Monitor extends Monitor {
     return [
       entity,
       new MsgFinalizeTokenDeposit(
-        this.executor.key.accAddress,
+        this.executorL2.key.accAddress,
         data['from'],
         data['to'],
         new Coin(data['l2_denom'], data['amount']),
@@ -125,7 +135,7 @@ export class L1Monitor extends Monitor {
 
     if (isEmpty) return false
 
-    const msgs: Msg[] = []
+    const l2Msgs: Msg[] = []
     const depositEntities: ExecutorDepositTxEntity[] = []
 
     const depositEvents = events.filter(
@@ -134,16 +144,16 @@ export class L1Monitor extends Monitor {
     for (const evt of depositEvents) {
       const attrMap = this.helper.eventsToAttrMap(evt)
       if (attrMap['bridge_id'] !== this.bridgeId.toString()) continue
-      const [entity, msg] = await this.handleInitiateTokenDeposit(
+      const [entity, l2Msg] = await this.handleInitiateTokenDeposit(
         manager,
         attrMap
       )
 
       depositEntities.push(entity)
-      if (msg) msgs.push(msg)
+      if (l2Msg) l2Msgs.push(l2Msg)
     }
 
-    await this.processMsgs(manager, msgs, depositEntities)
+    await this.processMsgs(manager, l2Msgs, depositEntities)
     return true
   }
 
@@ -159,7 +169,7 @@ export class L1Monitor extends Monitor {
         await this.helper.saveEntity(manager, ExecutorDepositTxEntity, entity)
       }
 
-      await this.executor.transaction(msgs)
+      await this.executorL2.transaction(msgs)
       this.logger.info(
         `Succeeded to submit tx in height: ${this.currentHeight} ${stringfyMsgs}`
       )
@@ -167,7 +177,7 @@ export class L1Monitor extends Monitor {
       const errMsg = err.response?.data
         ? JSON.stringify(err.response?.data)
         : err.toString()
-      this.logger.info(
+      this.logger.warn(
         `Failed to submit tx in height: ${this.currentHeight}\nMsg: ${stringfyMsgs}\nError: ${errMsg}`
       )
 

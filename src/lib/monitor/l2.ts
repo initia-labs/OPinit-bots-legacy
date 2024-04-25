@@ -1,9 +1,7 @@
 import { ExecutorOutputEntity, ExecutorWithdrawalTxEntity } from '../../orm'
 import { Monitor } from './monitor'
-import { WithdrawStorage } from '../storage'
-import { WithdrawalTx } from '../types'
 import { EntityManager } from 'typeorm'
-import { BlockInfo } from '@initia/initia.js'
+import { BlockInfo } from 'initia-l2'
 import { getDB } from '../../worker/bridgeExecutor/db'
 import { RPCClient, RPCSocket } from '../rpc'
 import winston from 'winston'
@@ -91,35 +89,6 @@ export class L2Monitor extends Monitor {
     return true
   }
 
-  private async saveMerkleRootAndProof(
-    manager: EntityManager,
-    entities: ExecutorWithdrawalTxEntity[]
-  ): Promise<string> {
-    const txs: WithdrawalTx[] = entities.map(
-      (entity: ExecutorWithdrawalTxEntity) => ({
-        bridge_id: BigInt(entity.bridgeId),
-        sequence: BigInt(entity.sequence),
-        sender: entity.sender,
-        receiver: entity.receiver,
-        l1_denom: entity.l1Denom,
-        amount: BigInt(entity.amount)
-      })
-    )
-
-    const storage = new WithdrawStorage(txs)
-    const merkleRoot = storage.getMerkleRoot()
-    for (let i = 0; i < entities.length; i++) {
-      entities[i].merkleRoot = merkleRoot
-      entities[i].merkleProof = storage.getMerkleProof(txs[i])
-      await this.helper.saveEntity(
-        manager,
-        ExecutorWithdrawalTxEntity,
-        entities[i]
-      )
-    }
-    return merkleRoot
-  }
-
   public async handleBlock(manager: EntityManager): Promise<void> {
     if (this.getCurTimeSec() < this.nextSubmissionTimeSec) return
     const lastOutput = await this.helper.getLastOutputFromDB(
@@ -147,7 +116,11 @@ export class L2Monitor extends Monitor {
       outputIndex
     )
 
-    const merkleRoot = await this.saveMerkleRootAndProof(manager, txEntities)
+    const merkleRoot = await this.helper.saveMerkleRootAndProof(
+      manager,
+      ExecutorWithdrawalTxEntity,
+      txEntities
+    )
 
     const outputEntity = this.helper.calculateOutputEntity(
       outputIndex,

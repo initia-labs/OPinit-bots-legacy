@@ -1,4 +1,4 @@
-import { BridgeInfo, OutputInfo, TokenPair } from '@initia/initia.js'
+import { BridgeInfo, OutputInfo, TokenPair } from 'initia-l1'
 import { config } from '../config'
 import {
   DepositTxResponse,

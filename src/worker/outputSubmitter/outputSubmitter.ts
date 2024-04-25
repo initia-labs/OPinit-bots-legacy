@@ -1,4 +1,4 @@
-import { MsgProposeOutput } from '@initia/initia.js'
+import { MsgProposeOutput } from 'initia-l1'
 import { INTERVAL_OUTPUT } from '../../config'
 import { ExecutorOutputEntity } from '../../orm'
 import { delay } from 'bluebird'
@@ -9,11 +9,16 @@ import { getLastOutputInfo } from '../../lib/query'
 import MonitorHelper from '../../lib/monitor/helper'
 import { DataSource, EntityManager } from 'typeorm'
 import { getDB } from './db'
-import { TxWallet, WalletType, getWallet, initWallet } from '../../lib/wallet'
+import {
+  TxWalletL1,
+  WalletType,
+  getWallet,
+  initWallet
+} from '../../lib/walletL1'
 
 export class OutputSubmitter {
   private db: DataSource
-  private submitter: TxWallet
+  private submitter: TxWalletL1
   private syncedOutputIndex = 1
   private processedBlockNumber = 1
   private isRunning = false
