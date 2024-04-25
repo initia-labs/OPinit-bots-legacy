@@ -1,13 +1,10 @@
 import { Monitor } from './monitor'
 import {
-  BatchInfo,
-  BridgeConfig,
-  BridgeInfo,
   Coin,
   Msg,
   MsgFinalizeTokenDeposit,
   MsgSetBridgeInfo,
-  MsgUpdateOracle,
+  MsgUpdateOracle
 } from 'initia-l2'
 import {
   ExecutorDepositTxEntity,
@@ -47,16 +44,9 @@ export class L1Monitor extends Monitor {
       const errMsg = err.response?.data
         ? JSON.stringify(err.response?.data)
         : err.toString()
-      if (
-        errMsg.includes('bridge info not found') &&
-        config.BATCH_SUBMITTER_ADDR &&
-        config.PUBLISH_BATCH_TARGET
-      ) {
+      if (errMsg.includes('bridge info not found')) {
         const l2Msgs = [
-          new MsgSetBridgeInfo(
-            this.executorL2.key.accAddress,
-            bridgeInfoL1
-          )
+          new MsgSetBridgeInfo(this.executorL2.key.accAddress, bridgeInfoL1)
         ]
         this.executorL2.transaction(l2Msgs)
       }
@@ -64,16 +54,18 @@ export class L1Monitor extends Monitor {
   }
 
   public async handleNewBlock(): Promise<void> {
-    let latestHeight = this.socket.latestHeight;
-    let latestTx0 = this.socket.latestTx0;
+    const latestHeight = this.socket.latestHeight
+    const latestTx0 = this.socket.latestTx0
 
-    if(!latestHeight || !latestTx0) return;
+    if (!latestHeight || !latestTx0) return
 
-    const msgs = [new MsgUpdateOracle(
-      this.executorL2.key.accAddress,
-      latestHeight,
-      latestTx0,
-    )];
+    const msgs = [
+      new MsgUpdateOracle(
+        this.executorL2.key.accAddress,
+        latestHeight,
+        latestTx0
+      )
+    ]
 
     try {
       await this.executorL2.transaction(msgs)

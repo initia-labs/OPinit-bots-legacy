@@ -74,8 +74,8 @@ export abstract class Monitor {
       try {
         const latestHeight = this.socket.latestHeight
         if (!latestHeight || !(latestHeight > this.syncedHeight)) continue
-        
-        await this.handleNewBlock();
+
+        await this.handleNewBlock()
 
         const blockchainData = await this.rpcClient.getBlockchain(
           this.syncedHeight + 1,

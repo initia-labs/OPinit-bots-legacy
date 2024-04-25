@@ -146,11 +146,9 @@ export class RPCSocket {
 
     try {
       if (data['result']?.['data']?.['value']) {
-        let block = data['result']['data']['value']['block'];
-        this.latestHeight = Number.parseInt(
-          block['header']['height']
-        )
-        this.latestTx0 = block['data']['txs'][0];
+        const block = data['result']['data']['value']['block']
+        this.latestHeight = Number.parseInt(block['header']['height'])
+        this.latestTx0 = block['data']['txs'][0]
       }
     } catch (error) {
       this.logger.info(error)
