@@ -65,6 +65,8 @@ export class L1Monitor extends Monitor {
   }
 
   public async handleNewBlock(): Promise<void> {
+    if(!config.ENABLE_ORACLE) return
+
     const latestHeight = this.socket.latestHeight
     const latestTx0 = this.socket.latestTx0
 

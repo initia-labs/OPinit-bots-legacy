@@ -81,6 +81,7 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | EXECUTOR_L1_MONITOR_HEIGHT | L1 monitor start height (optional)         | 0                        |
 | EXECUTOR_L2_MONITOR_HEIGHT | L2 monitor start height (optional)         | 0                        |
 | ENABLE_API_ONLY            | Enable API only mode (optional)            | false                    |
+| ENABLE_ORACLE              | Enable Oracle (optional)                   | true                     |
 
 > Note that if `EXECUTOR_L1_MONITOR_HEIGHT` and `EXECUTOR_L2_MONITOR_HEIGHT` are not set, `executor` will start monitoring from height stored on `state` table. If you want to start monitoring from specific height, you should set them in `.env.executor` file.
 

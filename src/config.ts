@@ -47,7 +47,8 @@ const {
   EXECUTOR_L1_MONITOR_HEIGHT,
   EXECUTOR_L2_MONITOR_HEIGHT,
   BATCH_SUBMITTER_ADDR,
-  ENABLE_API_ONLY
+  ENABLE_API_ONLY,
+  ENABLE_ORACLE,
 } = process.env
 
 const supportedPublishBatchTargets = ['l1', 'celestia']
@@ -158,7 +159,8 @@ export const config = {
     ? parseInt(EXECUTOR_L2_MONITOR_HEIGHT)
     : 0,
   BATCH_SUBMITTER_ADDR: BATCH_SUBMITTER_ADDR || '',
-  ENABLE_API_ONLY: ENABLE_API_ONLY ? ENABLE_API_ONLY == 'true' : false
+  ENABLE_API_ONLY: ENABLE_API_ONLY ? ENABLE_API_ONLY == 'true' : false,
+  ENABLE_ORACLE: ENABLE_ORACLE ? ENABLE_ORACLE != 'false' : true,
 }
 
 // check celestia config
