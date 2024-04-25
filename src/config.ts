@@ -160,7 +160,7 @@ export const config = {
     : 0,
   BATCH_SUBMITTER_ADDR: BATCH_SUBMITTER_ADDR || '',
   ENABLE_API_ONLY: ENABLE_API_ONLY ? ENABLE_API_ONLY == 'true' : false,
-  ENABLE_ORACLE: ENABLE_ORACLE ? ENABLE_ORACLE != 'false' : true,
+  ENABLE_ORACLE: ENABLE_ORACLE ? ENABLE_ORACLE == 'true' : false,
 }
 
 // check celestia config
