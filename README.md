@@ -53,16 +53,15 @@ You should set `.env` file for each bot in `bots/worker`. To transfer assets bet
 > You should set common settings for typeorm in `.env.xxx` file. Currently, `OPinit-bots` supports `postgres` for database.
 
 ```bash
-TYPEORM_CONNECTION=postgres
-TYPEORM_HOST=localhost
-TYPEORM_USERNAME=username
-TYPEORM_PASSWORD=password
-TYPEORM_DATABASE=rollup
-TYPEORM_PORT=5432
-TYPEORM_SYNCHRONIZE=true
-TYPEORM_LOGGING=false
-TYPEORM_ENTITIES=src/orm/*Entity.ts
-USE_LOG_FILE=false
+TYPEORM_CONNECTION=postgres               # database connection
+TYPEORM_HOST=localhost                    # database host
+TYPEORM_USERNAME=username                 # database username
+TYPEORM_PASSWORD=password                 # database password
+TYPEORM_DATABASE=rollup                   # database name
+TYPEORM_PORT=5432                         # database port
+TYPEORM_SYNCHRONIZE=true                  # synchronize database schema
+TYPEORM_LOGGING=false                     # enable logging
+TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 ```
 
 - `.env.executor`
