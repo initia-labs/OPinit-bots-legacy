@@ -1,12 +1,11 @@
 import { Monitor } from './monitor'
 import {
-  BatchInfo,
-  BridgeConfig,
   BridgeInfo,
   Coin,
   Msg,
   MsgFinalizeTokenDeposit,
-  MsgSetBridgeInfo
+  MsgSetBridgeInfo,
+  MsgUpdateOracle
 } from 'initia-l2'
 import {
   ExecutorDepositTxEntity,
@@ -40,41 +39,65 @@ export class L1Monitor extends Monitor {
 
   public async prepareMonitor(): Promise<void> {
     const bridgeInfoL1 = await config.l1lcd.ophost.bridgeInfo(config.BRIDGE_ID)
+
     try {
       await this.executorL2.lcd.opchild.bridgeInfo()
     } catch (err) {
       const errMsg = err.response?.data
         ? JSON.stringify(err.response?.data)
         : err.toString()
-      if (
-        errMsg.includes('bridge info not found') &&
-        config.BATCH_SUBMITTER_ADDR &&
-        config.PUBLISH_BATCH_TARGET
-      ) {
+      if (errMsg.includes('bridge info not found')) {
         const l2Msgs = [
           new MsgSetBridgeInfo(
             this.executorL2.key.accAddress,
             new BridgeInfo(
               bridgeInfoL1.bridge_id,
               bridgeInfoL1.bridge_addr,
-              new BridgeConfig(
-                bridgeInfoL1.bridge_config.challenger,
-                bridgeInfoL1.bridge_config.proposer,
-                new BatchInfo(
-                  // TODO: convert not to use config after on L1 v0.2.4
-                  config.BATCH_SUBMITTER_ADDR,
-                  config.PUBLISH_BATCH_TARGET
-                ),
-                bridgeInfoL1.bridge_config.submission_interval,
-                bridgeInfoL1.bridge_config.finalization_period,
-                bridgeInfoL1.bridge_config.submission_start_time,
-                bridgeInfoL1.bridge_config.metadata
-              )
+              config.L1_CHAIN_ID,
+              config.L1_CLIENT_ID,
+              bridgeInfoL1.bridge_config
             )
           )
         ]
         this.executorL2.transaction(l2Msgs)
       }
+    }
+  }
+
+  public async handleNewBlock(): Promise<void> {
+    if(!config.ENABLE_ORACLE) return
+
+    const latestHeight = this.socket.latestHeight
+    const latestTx0 = this.socket.latestTx0
+
+    if (!latestHeight || !latestTx0) return
+
+    const msgs = [
+      new MsgUpdateOracle(
+        this.executorL2.key.accAddress,
+        latestHeight,
+        latestTx0
+      )
+    ]
+
+    try {
+      await this.executorL2.transaction(msgs)
+      this.logger.info(
+        `
+          Succeeded to update oracle tx in height: ${this.currentHeight} ${latestHeight} ${latestTx0}
+        `
+      )
+    } catch (err) {
+      const errMsg = err.response?.data
+        ? JSON.stringify(err.response?.data)
+        : err.toString()
+      this.logger.warn(
+        `
+          Failed to submit tx in height: ${this.currentHeight}
+          Msg: ${latestHeight} ${latestTx0}
+          Error: ${errMsg}
+        `
+      )
     }
   }
 
@@ -159,14 +182,21 @@ export class L1Monitor extends Monitor {
 
       await this.executorL2.transaction(msgs)
       this.logger.info(
-        `Succeeded to submit tx in height: ${this.currentHeight} ${stringfyMsgs}`
+        `
+          Succeeded to submit tx in height: ${this.currentHeight} 
+          ${stringfyMsgs}
+        `
       )
     } catch (err) {
       const errMsg = err.response?.data
         ? JSON.stringify(err.response?.data)
         : err.toString()
       this.logger.warn(
-        `Failed to submit tx in height: ${this.currentHeight}\nMsg: ${stringfyMsgs}\nError: ${errMsg}`
+        `
+          Failed to submit tx in height: ${this.currentHeight}
+          Msg: ${stringfyMsgs}
+          Error: ${errMsg}
+        `
       )
 
       for (const entity of depositEntities) {

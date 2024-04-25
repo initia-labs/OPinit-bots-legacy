@@ -10,6 +10,7 @@ export class RPCSocket {
   public alivedAt: number
   public updateTimer: NodeJS.Timeout
   public latestHeight?: number
+  public latestTx0?: string
   logger: winston.Logger
   rpcUrl: string
   curRPCUrlIndex: number
@@ -145,9 +146,9 @@ export class RPCSocket {
 
     try {
       if (data['result']?.['data']?.['value']) {
-        this.latestHeight = Number.parseInt(
-          data['result']?.['data']?.['value']['block']['header']['height']
-        )
+        const block = data['result']['data']['value']['block']
+        this.latestHeight = Number.parseInt(block['header']['height'])
+        this.latestTx0 = block['data']['txs'][0]
       }
     } catch (error) {
       this.logger.info(error)

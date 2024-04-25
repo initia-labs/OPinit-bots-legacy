@@ -65,30 +65,7 @@ class L2Initializer {
       this.MsgCreateBridge(this.submissionInterval, this.finalizedTime)
     ]
 
-    const txRes = await executor.transaction(msgs)
-
-    let bridgeID = 0
-    const txInfo = await config.l1lcd.tx.txInfo(txRes.txhash)
-    for (const e of txInfo.events) {
-      if (e.type !== 'create_bridge') {
-        continue
-      }
-
-      for (const attr of e.attributes) {
-        if (attr.key !== 'bridge_id') {
-          continue
-        }
-
-        bridgeID = parseInt(attr.value, 10)
-      }
-
-      break
-    }
-
-    const bridgeInfo = await config.l1lcd.ophost.bridgeInfo(bridgeID)
-    const l2Msgs = [this.MsgSetBridgeInfo(bridgeInfo)]
-
-    await executorL2.transaction(l2Msgs)
+    await executor.transaction(msgs)
   }
 }
 
