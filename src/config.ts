@@ -37,6 +37,7 @@ const {
   L2_GAS_PRICES,
   L1_CHAIN_ID,
   L2_CHAIN_ID,
+  L1_CLIENT_ID,
   SLACK_WEB_HOOK,
   SUBMISSION_INTERVAL,
   FINALIZATION_PERIOD,
@@ -109,6 +110,7 @@ export const config = {
   USE_LOG_FILE: USE_LOG_FILE ? JSON.parse(USE_LOG_FILE) : false,
   L1_CHAIN_ID: L1_CHAIN_ID ? L1_CHAIN_ID : 'local-initia',
   L2_CHAIN_ID: L2_CHAIN_ID ? L2_CHAIN_ID : 'local-minitia',
+  L1_CLIENT_ID: L1_CLIENT_ID ? L1_CLIENT_ID : '',
   l1lcd: new LCDClientL1(
     L1_LCD_URI ? L1_LCD_URI.split(',')[0] : 'http://127.0.0.1:1317',
     {

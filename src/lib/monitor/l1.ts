@@ -1,5 +1,6 @@
 import { Monitor } from './monitor'
 import {
+  BridgeInfo,
   Coin,
   Msg,
   MsgFinalizeTokenDeposit,
@@ -38,6 +39,7 @@ export class L1Monitor extends Monitor {
 
   public async prepareMonitor(): Promise<void> {
     const bridgeInfoL1 = await config.l1lcd.ophost.bridgeInfo(config.BRIDGE_ID)
+
     try {
       await this.executorL2.lcd.opchild.bridgeInfo()
     } catch (err) {
@@ -46,7 +48,16 @@ export class L1Monitor extends Monitor {
         : err.toString()
       if (errMsg.includes('bridge info not found')) {
         const l2Msgs = [
-          new MsgSetBridgeInfo(this.executorL2.key.accAddress, bridgeInfoL1)
+          new MsgSetBridgeInfo(
+            this.executorL2.key.accAddress,
+            new BridgeInfo(
+              bridgeInfoL1.bridge_id,
+              bridgeInfoL1.bridge_addr,
+              config.L1_CHAIN_ID,
+              config.L1_CLIENT_ID,
+              bridgeInfoL1.bridge_config
+            )
+          )
         ]
         this.executorL2.transaction(l2Msgs)
       }
@@ -70,14 +81,20 @@ export class L1Monitor extends Monitor {
     try {
       await this.executorL2.transaction(msgs)
       this.logger.info(
-        `Succeeded to update oracle tx in height: ${this.currentHeight} ${latestHeight} ${latestTx0}`
+        `
+          Succeeded to update oracle tx in height: ${this.currentHeight} ${latestHeight} ${latestTx0}
+        `
       )
     } catch (err) {
       const errMsg = err.response?.data
         ? JSON.stringify(err.response?.data)
         : err.toString()
-      this.logger.info(
-        `Failed to submit tx in height: ${this.currentHeight}\nMsg: ${latestHeight} ${latestTx0}\nError: ${errMsg}`
+      this.logger.warn(
+        `
+          Failed to submit tx in height: ${this.currentHeight}
+          Msg: ${latestHeight} ${latestTx0}
+          Error: ${errMsg}
+        `
       )
     }
   }
@@ -163,14 +180,21 @@ export class L1Monitor extends Monitor {
 
       await this.executorL2.transaction(msgs)
       this.logger.info(
-        `Succeeded to submit tx in height: ${this.currentHeight} ${stringfyMsgs}`
+        `
+          Succeeded to submit tx in height: ${this.currentHeight} 
+          ${stringfyMsgs}
+        `
       )
     } catch (err) {
       const errMsg = err.response?.data
         ? JSON.stringify(err.response?.data)
         : err.toString()
       this.logger.warn(
-        `Failed to submit tx in height: ${this.currentHeight}\nMsg: ${stringfyMsgs}\nError: ${errMsg}`
+        `
+          Failed to submit tx in height: ${this.currentHeight}
+          Msg: ${stringfyMsgs}
+          Error: ${errMsg}
+        `
       )
 
       for (const entity of depositEntities) {
