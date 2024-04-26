@@ -37,35 +37,45 @@ export class L1Monitor extends Monitor {
     return 'executor_l1_monitor'
   }
 
+  private async setBridgeInfo(bridgeInfoL1: BridgeInfo): Promise<void> {
+    const l2Msgs = [
+      new MsgSetBridgeInfo(
+        this.executorL2.key.accAddress,
+        new BridgeInfo(
+          bridgeInfoL1.bridge_id,
+          bridgeInfoL1.bridge_addr,
+          config.L1_CHAIN_ID,
+          config.L1_CLIENT_ID,
+          bridgeInfoL1.bridge_config
+        )
+      )
+    ]
+    await this.executorL2.transaction(l2Msgs)
+  }
+
   public async prepareMonitor(): Promise<void> {
     const bridgeInfoL1 = await config.l1lcd.ophost.bridgeInfo(config.BRIDGE_ID)
 
     try {
-      await this.executorL2.lcd.opchild.bridgeInfo()
+      const bridgeInfoL2 = await this.executorL2.lcd.opchild.bridgeInfo()
+      if (
+        config.ENABLE_ORACLE &&
+        config.L1_CLIENT_ID &&
+        bridgeInfoL2.l1_client_id == ''
+      ) {
+        await this.setBridgeInfo(bridgeInfoL1)
+      }
     } catch (err) {
-      const errMsg = err.response?.data
-        ? JSON.stringify(err.response?.data)
-        : err.toString()
+      const errMsg = this.helper.extractErrorMessage(err)
       if (errMsg.includes('bridge info not found')) {
-        const l2Msgs = [
-          new MsgSetBridgeInfo(
-            this.executorL2.key.accAddress,
-            new BridgeInfo(
-              bridgeInfoL1.bridge_id,
-              bridgeInfoL1.bridge_addr,
-              config.L1_CHAIN_ID,
-              config.L1_CLIENT_ID,
-              bridgeInfoL1.bridge_config
-            )
-          )
-        ]
-        this.executorL2.transaction(l2Msgs)
+        // not found bridge info in l2, set bridge info
+        await this.setBridgeInfo(bridgeInfoL1)
       }
     }
   }
 
   public async handleNewBlock(): Promise<void> {
-    if(!config.ENABLE_ORACLE) return
+    if (!config.ENABLE_ORACLE) return
 
     const latestHeight = this.socket.latestHeight
     const latestTx0 = this.socket.latestTx0
@@ -88,9 +98,7 @@ export class L1Monitor extends Monitor {
         `
       )
     } catch (err) {
-      const errMsg = err.response?.data
-        ? JSON.stringify(err.response?.data)
-        : err.toString()
+      const errMsg = this.helper.extractErrorMessage(err)
       this.logger.warn(
         `
           Failed to submit tx in height: ${this.currentHeight}
@@ -188,9 +196,7 @@ export class L1Monitor extends Monitor {
         `
       )
     } catch (err) {
-      const errMsg = err.response?.data
-        ? JSON.stringify(err.response?.data)
-        : err.toString()
+      const errMsg = this.helper.extractErrorMessage(err)
       this.logger.warn(
         `
           Failed to submit tx in height: ${this.currentHeight}

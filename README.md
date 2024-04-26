@@ -94,7 +94,6 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | L1_RPC_URI                | L1 node RPC URI                            | <http://127.0.0.1:26657> |
 | BRIDGE_ID                 | Bridge ID                                  | ''                       |
 | OUTPUT_SUBMITTER_MNEMONIC | Mnemonic seed for output submitter         | ''                       |
-| EXECUTOR_URI              | Executor URI                               | <http://127.0.0.1:5000>  |
 | SLACK_WEB_HOOK            | Slack web hook for notification (optional) | ''                       |
 
 - `.env.batch`
