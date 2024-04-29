@@ -76,13 +76,14 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | BRIDGE_ID                  | Bridge ID                                  | ''                       |
 | EXECUTOR_PORT              | Executor port                              | 5000                     |
 | EXECUTOR_MNEMONIC          | Mnemonic seed for executor                 | ''                       |
-| SLACK_WEB_HOOK             | Slack web hook for notification (optional) | ''                       |
 | BATCH_SUBMITTER_ADDR       | Batch submitter address                    | ''                       |
+| ENABLE_ORACLE              | Enable Oracle                              | false                    |
+| L1_CLIENT_ID               | L1 client id for Oracle                    | ''                       |
+| L1_CHAIN_ID                | L1 chain id for Bridge Info                | ''                       |
 | EXECUTOR_L1_MONITOR_HEIGHT | L1 monitor start height (optional)         | 0                        |
 | EXECUTOR_L2_MONITOR_HEIGHT | L2 monitor start height (optional)         | 0                        |
 | ENABLE_API_ONLY            | Enable API only mode (optional)            | false                    |
-| ENABLE_ORACLE              | Enable Oracle (optional)                   | false                    |
-| L1_CLIENT_ID               | L1 client id for Oracle (optional)         | ''                       |
+| SLACK_WEB_HOOK             | Slack web hook for notification (optional) | ''                       |
 
 > Note that if `EXECUTOR_L1_MONITOR_HEIGHT` and `EXECUTOR_L2_MONITOR_HEIGHT` are not set, `executor` will start monitoring from height stored on `state` table. If you want to start monitoring from specific height, you should set them in `.env.executor` file.
 

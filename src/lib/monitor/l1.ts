@@ -37,7 +37,11 @@ export class L1Monitor extends Monitor {
     return 'executor_l1_monitor'
   }
 
-  private async setBridgeInfo(bridgeInfoL1: BridgeInfo): Promise<void> {
+  private async setBridgeInfo(
+    bridgeInfoL1: BridgeInfo,
+    l1ClientId: string
+  ): Promise<void> {
+    if (config.L1_CHAIN_ID == '') throw new Error('L1_CHAIN_ID is not set')
     const l2Msgs = [
       new MsgSetBridgeInfo(
         this.executorL2.key.accAddress,
@@ -45,7 +49,7 @@ export class L1Monitor extends Monitor {
           bridgeInfoL1.bridge_id,
           bridgeInfoL1.bridge_addr,
           config.L1_CHAIN_ID,
-          config.L1_CLIENT_ID,
+          l1ClientId,
           bridgeInfoL1.bridge_config
         )
       )
@@ -61,16 +65,22 @@ export class L1Monitor extends Monitor {
       if (
         config.ENABLE_ORACLE &&
         config.L1_CLIENT_ID &&
-        bridgeInfoL2.l1_client_id == ''
+        !bridgeInfoL2.l1_client_id
       ) {
-        await this.setBridgeInfo(bridgeInfoL1)
+        await this.setBridgeInfo(bridgeInfoL1, config.L1_CLIENT_ID)
       }
     } catch (err) {
       const errMsg = this.helper.extractErrorMessage(err)
       if (errMsg.includes('bridge info not found')) {
         // not found bridge info in l2, set bridge info
-        await this.setBridgeInfo(bridgeInfoL1)
+        await this.setBridgeInfo(bridgeInfoL1, '')
       }
+      this.logger.warn(
+        `
+          Failed to prepareMonitor in height: ${this.currentHeight}
+          Error: ${errMsg}
+        `
+      )
     }
   }
 
@@ -98,7 +108,9 @@ export class L1Monitor extends Monitor {
         `
       )
     } catch (err) {
-      const errMsg = this.helper.extractErrorMessage(err)
+      const errMsg = err.response?.data
+        ? JSON.stringify(err.response?.data)
+        : err.toString()
       this.logger.warn(
         `
           Failed to submit tx in height: ${this.currentHeight}
@@ -196,7 +208,9 @@ export class L1Monitor extends Monitor {
         `
       )
     } catch (err) {
-      const errMsg = this.helper.extractErrorMessage(err)
+      const errMsg = err.response?.data
+        ? JSON.stringify(err.response?.data)
+        : err.toString()
       this.logger.warn(
         `
           Failed to submit tx in height: ${this.currentHeight}
