@@ -20,6 +20,7 @@ TO run OPinit bots, you should check the following version. This is needed to en
 | L1 Node | L2 Node | OPinit-bots |
 | ------- | ------- | ----------- |
 | v0.2.3  | v0.2.6  | v0.1.0      |
+| v0.2.7  | v0.2.9  | v0.1.1      |
 
 
 ### Step1. Create Bridge
