@@ -20,6 +20,7 @@ import MonitorHelper from '../../lib/monitor/helper'
 import { createBlob, getCelestiaFeeGasLimit } from '../../celestia/utils'
 import { bech32 } from 'bech32'
 import { TxWalletL2 } from '../../lib/walletL2'
+import { TxWalletL1 } from '../../lib/walletL1'
 
 const base = 200000
 const perByte = 10
@@ -29,7 +30,8 @@ export class BatchSubmitter {
   private submitterAddress: string
   private batchIndex = 0
   private db: DataSource
-  private submitter: TxWalletL2
+  private submitterL2: TxWalletL2
+  private submitterL1: TxWalletL1
   private bridgeId: number
   private isRunning = false
   private rpcClient: RPCClient
@@ -38,8 +40,13 @@ export class BatchSubmitter {
   async init() {
     [this.db] = getDB()
     this.rpcClient = new RPCClient(config.L2_RPC_URI, batchLogger)
-    this.submitter = new TxWalletL2(
+    this.submitterL2 = new TxWalletL2(
       config.batchlcd,
+      new MnemonicKey({ mnemonic: config.BATCH_SUBMITTER_MNEMONIC })
+    )
+
+    this.submitterL1 = new TxWalletL1(
+      config.l1lcd,
       new MnemonicKey({ mnemonic: config.BATCH_SUBMITTER_MNEMONIC })
     )
 
@@ -157,7 +164,7 @@ export class BatchSubmitter {
             )
         }
 
-        const batchInfo = await this.submitter.sendRawTx(txBytes)
+        const batchInfo = await this.submitterL1.sendRawTx(txBytes)
         batchInfos.push(batchInfo.txhash)
 
         await delay(1000) // break for each tx ended
@@ -173,10 +180,10 @@ export class BatchSubmitter {
 
   async createL1BatchMessage(data: Buffer): Promise<string> {
     const gasLimit = Math.floor((base + perByte * data.length) * 1.2)
-    const fee = getFee(this.submitter, gasLimit)
+    const fee = getFee(this.submitterL2, gasLimit)
 
     if (!this.submitterAddress) {
-      this.submitterAddress = this.submitter.key.accAddress
+      this.submitterAddress = this.submitterL2.key.accAddress
     }
 
     const msg = new MsgRecordBatch(
@@ -185,16 +192,16 @@ export class BatchSubmitter {
       data.toString('base64')
     )
 
-    const signedTx = await this.submitter.createAndSignTx({ msgs: [msg], fee })
+    const signedTx = await this.submitterL2.createAndSignTx({ msgs: [msg], fee })
     return TxAPI.encode(signedTx)
   }
 
   async createCelestiaBatchMessage(data: Buffer): Promise<string> {
     const blob = createBlob(data)
     const gasLimit = getCelestiaFeeGasLimit(data.length)
-    const fee = getFee(this.submitter, gasLimit)
+    const fee = getFee(this.submitterL2, gasLimit)
 
-    const rawAddress = this.submitter.key.publicKey?.rawAddress()
+    const rawAddress = this.submitterL2.key.publicKey?.rawAddress()
     if (!rawAddress) {
       throw new Error('batch submitter public key not set')
     }
@@ -204,7 +211,7 @@ export class BatchSubmitter {
         'celestia',
         bech32.toWords(rawAddress)
       )
-      this.submitter.setAccountAddress(this.submitterAddress)
+      this.submitterL2.setAccountAddress(this.submitterAddress)
     }
 
     const msg = new MsgPayForBlobs(
@@ -214,7 +221,7 @@ export class BatchSubmitter {
       [blob.commitment],
       [blob.blob.share_version]
     )
-    const signedTx = await this.submitter.createAndSignTx({ msgs: [msg], fee })
+    const signedTx = await this.submitterL2.createAndSignTx({ msgs: [msg], fee })
     const blobTx = new BlobTx(signedTx, [blob.blob], 'BLOB')
     return Buffer.from(blobTx.toBytes()).toString('base64')
   }
