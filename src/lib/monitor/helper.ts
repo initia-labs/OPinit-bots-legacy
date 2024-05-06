@@ -96,6 +96,12 @@ class MonitorHelper {
   ///  UTIL
   ///
 
+  public extractErrorMessage(error: any): string {
+    return error.response?.data
+      ? JSON.stringify(error.response.data)
+      : error.toString()
+  }
+
   public async fetchAllEvents(
     lcd: any,
     height: number
