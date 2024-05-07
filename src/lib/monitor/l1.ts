@@ -75,11 +75,11 @@ export class L1Monitor extends Monitor {
         // not found bridge info in l2, set bridge info
         await this.setBridgeInfo(bridgeInfoL1, '')
       }
-      this.logger.warn(
+      this.logger.error(
         `
           Failed to prepareMonitor in height: ${this.currentHeight}
           Error: ${errMsg}
-        `
+        `, err
       )
     }
   }
@@ -111,12 +111,12 @@ export class L1Monitor extends Monitor {
       const errMsg = err.response?.data
         ? JSON.stringify(err.response?.data)
         : err.toString()
-      this.logger.warn(
+      this.logger.error(
         `
           Failed to submit tx in height: ${this.currentHeight}
           Msg: ${latestHeight} ${latestTx0}
           Error: ${errMsg}
-        `
+        `, err
       )
     }
   }
@@ -211,12 +211,12 @@ export class L1Monitor extends Monitor {
       const errMsg = err.response?.data
         ? JSON.stringify(err.response?.data)
         : err.toString()
-      this.logger.warn(
+      this.logger.error(
         `
           Failed to submit tx in height: ${this.currentHeight}
           Msg: ${stringfyMsgs}
           Error: ${errMsg}
-        `
+        `, err
       )
 
       for (const entity of depositEntities) {

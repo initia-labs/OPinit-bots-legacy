@@ -102,7 +102,7 @@ export class Challenger {
           await this.challengeOutputRoot(manager)
         })
       } catch (err) {
-        logger.error(`Challenger halted! ${err}`)
+        logger.error(`Challenger halted!`, err)
         this.stop()
       } finally {
         await delay(INTERVAL_MONITOR)
@@ -247,8 +247,8 @@ export class Challenger {
       )
       return outputInfo.output_proposal.output_root
     } catch (err) {
-      logger.info(
-        `[L2 Challenger] waiting for submitting output root in output index ${outputIndex}`
+      logger.error(
+        `[L2 Challenger] waiting for submitting output root in output index ${outputIndex}`, err
       )
       return null
     }

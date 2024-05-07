@@ -2,21 +2,41 @@ import * as winston from 'winston'
 import DailyRotateFile from 'winston-daily-rotate-file'
 import { config } from '../config'
 
+function safeStringify(obj: any, indent: number = 2) {
+  const cache = new Set();
+  const result = JSON.stringify(
+    obj,
+    (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (cache.has(value)) {
+          return '[Circular]';  // 순환 참조를 대체할 텍스트
+        }
+        cache.add(value);
+      }
+      return value;
+    },
+    indent
+  );
+  cache.clear();
+  return result;
+}
+
 function createLogger(name: string) {
-  const formats = [winston.format.errors({ stack: true })]
-
-  if (!config.USE_LOG_FILE) {
-    formats.push(winston.format.colorize())
-  }
-
-  formats.push(
+  const formats = [
+    winston.format.errors({ stack: true }),
     winston.format.timestamp(),
+    config.USE_LOG_FILE ? winston.format.uncolorize() : winston.format.colorize() ,
     winston.format.printf((info) => {
-      return `${info.timestamp} [${info.level} - ${name}]: ${
-        info.stack || info.message
-      }`
+      let message = `${info.timestamp} [${info.level} - ${name}]: ${info.message}`;
+      if (info.stack) {
+        message += `\nStack: ${info.stack}`;
+      }
+      if (info.response) {
+        message += `\nResponse: ${safeStringify(info.response, 2)}`;
+      }
+      return message;
     })
-  )
+  ]
 
   const logger = winston.createLogger({
     format: winston.format.combine(...formats),
@@ -39,10 +59,9 @@ function createLogger(name: string) {
         zippedArchive: true
       })
     )
-  } else {
-    logger.add(new winston.transports.Console())
   }
 
+  logger.add(new winston.transports.Console())
   return logger
 }
 

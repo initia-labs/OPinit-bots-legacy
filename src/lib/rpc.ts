@@ -139,8 +139,8 @@ export class RPCSocket {
 
     try {
       data = JSON.parse(raw)
-    } catch (error) {
-      this.logger.info(`${this.constructor.name}: JSON parse error ${raw}`)
+    } catch (err) {
+      this.logger.error(`${this.constructor.name}: JSON parse error ${raw}`, err)
       return
     }
 
@@ -150,8 +150,8 @@ export class RPCSocket {
         this.latestHeight = Number.parseInt(block['header']['height'])
         this.latestTx0 = block['data']['txs'][0]
       }
-    } catch (error) {
-      this.logger.info(error)
+    } catch (err) {
+      this.logger.error(err)
     }
 
     this.alive()
