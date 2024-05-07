@@ -9,7 +9,7 @@ function safeStringify(obj: any, indent: number = 2) {
     (key, value) => {
       if (typeof value === 'object' && value !== null) {
         if (cache.has(value)) {
-          return '[Circular]';  // 순환 참조를 대체할 텍스트
+          return '[Circular]';  // replace circular reference
         }
         cache.add(value);
       }
