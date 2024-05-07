@@ -118,7 +118,6 @@ export abstract class Monitor {
       } catch (err) {
         this.logger.error(err)
         this.stop()
-        throw new Error(`Error in ${this.name()} ${err}`)
       } finally {
         await Bluebird.delay(INTERVAL_MONITOR)
       }

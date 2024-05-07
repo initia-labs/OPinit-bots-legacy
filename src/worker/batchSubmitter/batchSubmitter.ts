@@ -89,8 +89,6 @@ export class BatchSubmitter {
           `${this.batchIndex}th batch (${output.startBlockNumber}, ${output.endBlockNumber}) is successfully saved`
         )
       })
-    } catch (err) {
-      throw new Error(`Error in BatchSubmitter: ${err}`)
     } finally {
       await delay(INTERVAL_BATCH)
     }
@@ -165,9 +163,8 @@ export class BatchSubmitter {
 
       return batchInfos
     } catch (err) {
-      throw new Error(
-        `Error publishing batch to ${config.PUBLISH_BATCH_TARGET}: ${err}`
-      )
+      logger.error(`Error publishing batch to ${config.PUBLISH_BATCH_TARGET}`)
+      throw err
     }
   }
 
@@ -238,10 +235,11 @@ export class BatchSubmitter {
     await manager
       .getRepository(RecordEntity)
       .save(record)
-      .catch((error) => {
-        throw new Error(
-          `Error saving record ${record.bridgeId} batch ${batchIndex} to database: ${error}`
+      .catch((err) => {
+        logger.error(
+          `Error saving record ${record.bridgeId} batch ${batchIndex} to database`
         )
+        throw err
       })
 
     return record
