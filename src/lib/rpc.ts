@@ -140,7 +140,10 @@ export class RPCSocket {
     try {
       data = JSON.parse(raw)
     } catch (err) {
-      this.logger.error(`${this.constructor.name}: JSON parse error ${raw}`, err)
+      this.logger.error(
+        `${this.constructor.name}: JSON parse error ${raw}`,
+        err
+      )
       return
     }
 
@@ -151,7 +154,7 @@ export class RPCSocket {
         this.latestTx0 = block['data']['txs'][0]
       }
     } catch (err) {
-      this.logger.error(err)
+      this.logger.error(`Block parse error from result rawdata ${data}`, err)
     }
 
     this.alive()

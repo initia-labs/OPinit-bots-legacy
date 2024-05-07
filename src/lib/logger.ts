@@ -2,39 +2,35 @@ import * as winston from 'winston'
 import DailyRotateFile from 'winston-daily-rotate-file'
 import { config } from '../config'
 
-function safeStringify(obj: any, indent: number = 2) {
-  const cache = new Set();
-  const result = JSON.stringify(
-    obj,
-    (key, value) => {
-      if (typeof value === 'object' && value !== null) {
-        if (cache.has(value)) {
-          return '[Circular]';  // replace circular reference
-        }
-        cache.add(value);
-      }
-      return value;
-    },
-    indent
-  );
-  cache.clear();
-  return result;
+function parseResponse(obj: any) {
+  const res = {
+    status: obj.status,
+    statusText: obj.statusText,
+    'config.method': obj.config.method,
+    'config.url': obj.config.url,
+    'config.data': obj.config.data,
+    data: obj.data
+  }
+
+  return JSON.stringify(res, null, 2)
 }
 
 function createLogger(name: string) {
   const formats = [
     winston.format.errors({ stack: true }),
     winston.format.timestamp(),
-    config.USE_LOG_FILE ? winston.format.uncolorize() : winston.format.colorize() ,
+    config.USE_LOG_FILE
+      ? winston.format.uncolorize()
+      : winston.format.colorize(),
     winston.format.printf((info) => {
-      let message = `${info.timestamp} [${info.level} - ${name}]: ${info.message}`;
+      let message = `${info.timestamp} [${info.level} - ${name}]: ${info.message}`
       if (info.stack) {
-        message += `\nStack: ${info.stack}`;
+        message += `\nStack: ${info.stack}`
       }
       if (info.response) {
-        message += `\nResponse: ${safeStringify(info.response, 2)}`;
+        message += `\nResponse: ${parseResponse(info.response)}`
       }
-      return message;
+      return message
     })
   ]
 

@@ -79,7 +79,8 @@ export class L1Monitor extends Monitor {
         `
           Failed to prepareMonitor in height: ${this.currentHeight}
           Error: ${errMsg}
-        `, err
+        `,
+        err
       )
     }
   }
@@ -108,15 +109,14 @@ export class L1Monitor extends Monitor {
         `
       )
     } catch (err) {
-      const errMsg = err.response?.data
-        ? JSON.stringify(err.response?.data)
-        : err.toString()
+      const errMsg = this.helper.extractErrorMessage(err)
       this.logger.error(
         `
           Failed to submit tx in height: ${this.currentHeight}
           Msg: ${latestHeight} ${latestTx0}
           Error: ${errMsg}
-        `, err
+        `,
+        err
       )
     }
   }
@@ -208,15 +208,14 @@ export class L1Monitor extends Monitor {
         `
       )
     } catch (err) {
-      const errMsg = err.response?.data
-        ? JSON.stringify(err.response?.data)
-        : err.toString()
+      const errMsg = this.helper.extractErrorMessage(err)
       this.logger.error(
         `
           Failed to submit tx in height: ${this.currentHeight}
           Msg: ${stringfyMsgs}
           Error: ${errMsg}
-        `, err
+        `,
+        err
       )
 
       for (const entity of depositEntities) {

@@ -248,7 +248,8 @@ export class Challenger {
       return outputInfo.output_proposal.output_root
     } catch (err) {
       logger.error(
-        `[L2 Challenger] waiting for submitting output root in output index ${outputIndex}`, err
+        `[L2 Challenger] waiting for submitting output root in output index ${outputIndex}`,
+        err
       )
       return null
     }
