@@ -65,43 +65,38 @@ export class BatchSubmitter {
 
     while (this.isRunning) {
       await this.processBatch()
+      await delay(INTERVAL_BATCH)
     }
   }
 
   async processBatch() {
-    try {
-      await this.db.transaction(async (manager: EntityManager) => {
-        const latestBatch = await this.getStoredBatch(manager)
-        this.batchIndex = latestBatch ? latestBatch.batchIndex + 1 : 1
-        const output = await this.helper.getOutputByIndex(
-          manager,
-          ExecutorOutputEntity,
-          this.batchIndex
-        )
+    await this.db.transaction(async (manager: EntityManager) => {
+      const latestBatch = await this.getStoredBatch(manager)
+      this.batchIndex = latestBatch ? latestBatch.batchIndex + 1 : 1
+      const output = await this.helper.getOutputByIndex(
+        manager,
+        ExecutorOutputEntity,
+        this.batchIndex
+      )
 
-        if (!output) return
+      if (!output) return
 
-        const batch = await this.getBatch(
-          output.startBlockNumber,
-          output.endBlockNumber
-        )
-        const batchInfo: string[] = await this.publishBatch(batch)
-        await this.saveBatchToDB(
-          manager,
-          batchInfo,
-          this.batchIndex,
-          output.startBlockNumber,
-          output.endBlockNumber
-        )
-        logger.info(
-          `${this.batchIndex}th batch (${output.startBlockNumber}, ${output.endBlockNumber}) is successfully saved`
-        )
-      })
-    } catch (err) {
-      this.handleError(err)
-    } finally {
-      await delay(INTERVAL_BATCH)
-    }
+      const batch = await this.getBatch(
+        output.startBlockNumber,
+        output.endBlockNumber
+      )
+      const batchInfo: string[] = await this.publishBatch(batch)
+      await this.saveBatchToDB(
+        manager,
+        batchInfo,
+        this.batchIndex,
+        output.startBlockNumber,
+        output.endBlockNumber
+      )
+      logger.info(
+        `${this.batchIndex}th batch (${output.startBlockNumber}, ${output.endBlockNumber}) is successfully saved`
+      )
+    })
   }
 
   // Get [start, end] batch from L2 and last commit info
@@ -238,21 +233,6 @@ export class BatchSubmitter {
     await manager.getRepository(RecordEntity).save(record)
 
     return record
-  }
-
-  handleError(err: Error) {
-    logger.error(err)
-    if (
-      err.message.includes(ERRORS.EBLOCK_BULK) ||
-      err.message.includes(ERRORS.ERAW_COMMIT) ||
-      err.message.includes(ERRORS.EUNKNOWN_TARGET) ||
-      err.message.includes(ERRORS.EPUBLIC_KEY_NOT_SET) ||
-      err.message.includes(ERRORS.EGAS_PRICES_NOT_SET)
-    ) {
-      return
-    } else {
-      throw err
-    }
   }
 }
 
