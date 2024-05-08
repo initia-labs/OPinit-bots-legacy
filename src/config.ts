@@ -60,9 +60,18 @@ export const config = {
   L1_RPC_URI: L1_RPC_URI ? L1_RPC_URI.split(',') : ['http://127.0.0.1:26657'],
   L2_LCD_URI: L2_LCD_URI ? L2_LCD_URI.split(',') : ['http://127.0.0.1:1317'],
   L2_RPC_URI: L2_RPC_URI ? L2_RPC_URI.split(',') : ['http://127.0.0.1:26657'],
-  BATCH_LCD_URI: BATCH_LCD_URI
-    ? BATCH_LCD_URI.split(',')
-    : ['http://127.0.0.1:1317'],
+  BATCH_LCD_URI: () => {
+    if (process.env.WORKER_NAME !== 'batch') {
+      return undefined
+    }
+    if (!PUBLISH_BATCH_TARGET || PUBLISH_BATCH_TARGET == 'l1') {
+      return L1_LCD_URI
+    } else if (BATCH_LCD_URI == undefined || BATCH_LCD_URI.length == 0) {
+      throw Error(
+        'Please check your configuration; BATCH_LCD_URI is needed but not given.'
+      )
+    }
+  },
   BATCH_CHAIN_RPC_URI: (() => {
     if (process.env.WORKER_NAME !== 'batch') {
       return undefined
@@ -129,12 +138,18 @@ export const config = {
     }
   ),
   batchlcd: (() => {
-    return new LCDClientL2(
-      BATCH_LCD_URI ? BATCH_LCD_URI.split(',')[0] : 'http://127.0.0.1:1317',
+    return new LCDClientL1(
+      !PUBLISH_BATCH_TARGET || PUBLISH_BATCH_TARGET == 'l1'
+        ? L1_LCD_URI
+          ? L1_LCD_URI.split(',')[0]
+          : 'http://127.0.0.1:1317'
+        : BATCH_LCD_URI
+          ? BATCH_LCD_URI.split(',')[0]
+          : 'http://127.0.0.1:1317',
       {
-        gasPrices: BATCH_GAS_PRICES || `0.2${BATCH_DENOM}`,
+        gasPrices: BATCH_GAS_PRICES || `0.2${BATCH_DENOM ?? 'uinit'}`,
         gasAdjustment: '2',
-        chainId: BATCH_CHAIN_ID
+        chainId: BATCH_CHAIN_ID ? BATCH_CHAIN_ID : L1_CHAIN_ID
       }
     )
   })(),

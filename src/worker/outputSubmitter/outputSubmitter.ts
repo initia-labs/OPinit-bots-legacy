@@ -63,12 +63,12 @@ export class OutputSubmitter {
       })
     } catch (err) {
       if (err.response?.data.type === ErrorTypes.NOT_FOUND_ERROR) {
-        logger.info(
+        logger.warn(
           `waiting for output index: ${this.syncedOutputIndex}, processed block number: ${this.processedBlockNumber}`
         )
         await delay(INTERVAL_OUTPUT)
       } else {
-        logger.error(`Output Submitter halted! ${err}`)
+        logger.error(`Output Submitter halted!`, err)
         this.stop()
       }
     }

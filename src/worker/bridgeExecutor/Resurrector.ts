@@ -75,6 +75,10 @@ export class Resurrector {
       }
       this.errorCounter = 0
       await notifySlack(txKey, buildFailedTxNotification(unconfirmedTx))
+      this.logger.error(
+        `Failed to resubmit tx: bridge id ${unconfirmedTx.bridgeId} sequence ${unconfirmedTx.sequence}`,
+        err
+      )
     }
   }
 
