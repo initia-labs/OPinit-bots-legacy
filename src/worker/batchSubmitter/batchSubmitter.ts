@@ -19,17 +19,26 @@ import { config } from '../../config'
 import MonitorHelper from '../../lib/monitor/helper'
 import { createBlob, getCelestiaFeeGasLimit } from '../../celestia/utils'
 import { bech32 } from 'bech32'
-import { TxWalletL2 } from '../../lib/walletL2'
+import { TxWalletL1 } from '../../lib/walletL1'
 
 const base = 200000
 const perByte = 10
 const maxBytes = 500000 // 500kb
 
+// errors
+const ERRORS = {
+  EBLOCK_BULK: 'Error getting block bulk from L2',
+  ERAW_COMMIT: 'Error getting commit from L2',
+  EUNKNOWN_TARGET: `unknown batch target ${config.PUBLISH_BATCH_TARGET}`,
+  EPUBLIC_KEY_NOT_SET: 'batch submitter public key not set',
+  EGAS_PRICES_NOT_SET: 'gasPrices must be set'
+}
+
 export class BatchSubmitter {
   private submitterAddress: string
   private batchIndex = 0
   private db: DataSource
-  private submitter: TxWalletL2
+  private submitter: TxWalletL1
   private bridgeId: number
   private isRunning = false
   private rpcClient: RPCClient
@@ -38,7 +47,7 @@ export class BatchSubmitter {
   async init() {
     [this.db] = getDB()
     this.rpcClient = new RPCClient(config.L2_RPC_URI, batchLogger)
-    this.submitter = new TxWalletL2(
+    this.submitter = new TxWalletL1(
       config.batchlcd,
       new MnemonicKey({ mnemonic: config.BATCH_SUBMITTER_MNEMONIC })
     )
@@ -76,7 +85,6 @@ export class BatchSubmitter {
           output.startBlockNumber,
           output.endBlockNumber
         )
-
         const batchInfo: string[] = await this.publishBatch(batch)
         await this.saveBatchToDB(
           manager,
@@ -89,6 +97,8 @@ export class BatchSubmitter {
           `${this.batchIndex}th batch (${output.startBlockNumber}, ${output.endBlockNumber}) is successfully saved`
         )
       })
+    } catch (err) {
+      this.handleError(err)
     } finally {
       await delay(INTERVAL_BATCH)
     }
@@ -101,14 +111,14 @@ export class BatchSubmitter {
       end.toString()
     )
     if (!bulk) {
-      throw new Error(`Error getting block bulk from L2`)
+      throw new Error(ERRORS.EBLOCK_BULK)
     }
 
     const commit: RawCommit | null = await this.rpcClient.getRawCommit(
       end.toString()
     )
     if (!commit) {
-      throw new Error(`Error getting commit from L2`)
+      throw new Error(ERRORS.ERAW_COMMIT)
     }
 
     const reqStrings = bulk.blocks.concat(commit.commit)
@@ -128,44 +138,37 @@ export class BatchSubmitter {
 
   // Publish a batch to L1
   async publishBatch(batch: Buffer): Promise<string[]> {
-    try {
-      const batchInfos: string[] = []
+    const batchInfos: string[] = []
 
-      while (batch.length !== 0) {
-        let subData: Buffer
-        if (batch.length > maxBytes) {
-          subData = batch.slice(0, maxBytes)
-          batch = batch.slice(maxBytes)
-        } else {
-          subData = batch
-          batch = Buffer.from([])
-        }
-
-        let txBytes: string
-        switch (config.PUBLISH_BATCH_TARGET) {
-          case 'l1':
-            txBytes = await this.createL1BatchMessage(subData)
-            break
-          case 'celestia':
-            txBytes = await this.createCelestiaBatchMessage(subData)
-            break
-          default:
-            throw new Error(
-              `unknown batch target ${config.PUBLISH_BATCH_TARGET}`
-            )
-        }
-
-        const batchInfo = await this.submitter.sendRawTx(txBytes)
-        batchInfos.push(batchInfo.txhash)
-
-        await delay(1000) // break for each tx ended
+    while (batch.length !== 0) {
+      let subData: Buffer
+      if (batch.length > maxBytes) {
+        subData = batch.slice(0, maxBytes)
+        batch = batch.slice(maxBytes)
+      } else {
+        subData = batch
+        batch = Buffer.from([])
       }
 
-      return batchInfos
-    } catch (err) {
-      logger.error(`Error publishing batch to ${config.PUBLISH_BATCH_TARGET}`)
-      throw err
+      let txBytes: string
+      switch (config.PUBLISH_BATCH_TARGET) {
+        case 'l1':
+          txBytes = await this.createL1BatchMessage(subData)
+          break
+        case 'celestia':
+          txBytes = await this.createCelestiaBatchMessage(subData)
+          break
+        default:
+          throw new Error(ERRORS.EUNKNOWN_TARGET)
+      }
+
+      const batchInfo = await this.submitter.sendRawTx(txBytes)
+      batchInfos.push(batchInfo.txhash)
+
+      await delay(1000) // break for each tx ended
     }
+
+    return batchInfos
   }
 
   async createL1BatchMessage(data: Buffer): Promise<string> {
@@ -193,7 +196,7 @@ export class BatchSubmitter {
 
     const rawAddress = this.submitter.key.publicKey?.rawAddress()
     if (!rawAddress) {
-      throw new Error('batch submitter public key not set')
+      throw new Error(ERRORS.EPUBLIC_KEY_NOT_SET)
     }
 
     if (!this.submitterAddress) {
@@ -232,24 +235,31 @@ export class BatchSubmitter {
     record.startBlockNumber = startBlockNumber
     record.endBlockNumber = endBlockNumber
 
-    await manager
-      .getRepository(RecordEntity)
-      .save(record)
-      .catch((err) => {
-        logger.error(
-          `Error saving record ${record.bridgeId} batch ${batchIndex} to database`
-        )
-        throw err
-      })
+    await manager.getRepository(RecordEntity).save(record)
 
     return record
   }
+
+  handleError(err: Error) {
+    logger.error(err)
+    if (
+      err.message.includes(ERRORS.EBLOCK_BULK) ||
+      err.message.includes(ERRORS.ERAW_COMMIT) ||
+      err.message.includes(ERRORS.EUNKNOWN_TARGET) ||
+      err.message.includes(ERRORS.EPUBLIC_KEY_NOT_SET) ||
+      err.message.includes(ERRORS.EGAS_PRICES_NOT_SET)
+    ) {
+      return
+    } else {
+      throw err
+    }
+  }
 }
 
-function getFee(wallet: TxWalletL2, gasLimit: number): Fee {
+function getFee(wallet: TxWalletL1, gasLimit: number): Fee {
   const gasPrices = new Coins(wallet.lcd.config.gasPrices).toArray()
   if (gasPrices.length === 0) {
-    throw Error('gasPrices must be set')
+    throw new Error(ERRORS.EGAS_PRICES_NOT_SET)
   }
   const gasPrice = gasPrices[0]
   const gasAmount = gasPrice.mul(gasLimit).toIntCeilCoin()

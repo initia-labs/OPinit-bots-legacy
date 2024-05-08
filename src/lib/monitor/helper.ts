@@ -8,8 +8,9 @@ import { EntityManager, EntityTarget, ObjectLiteral } from 'typeorm'
 
 class MonitorHelper {
   ///
-  /// GET
+  /// DB
   ///
+
   public async getSyncedState<T extends ObjectLiteral>(
     manager: EntityManager,
     entityClass: EntityTarget<T>,
@@ -81,9 +82,6 @@ class MonitorHelper {
     })
   }
 
-  ///
-  /// SAVE
-  ///
   public async saveEntity<T extends ObjectLiteral>(
     manager: EntityManager,
     entityClass: EntityTarget<T>,

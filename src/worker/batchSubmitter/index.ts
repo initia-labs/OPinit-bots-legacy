@@ -18,7 +18,6 @@ async function runBot(): Promise<void> {
       })
     )
   } catch (err) {
-    logger.error(`failed running bot`, err)
     stopBatch()
   }
 }
