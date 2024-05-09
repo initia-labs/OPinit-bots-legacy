@@ -132,7 +132,7 @@ export const config = {
   l2lcd: new LCDClientL2(
     L2_LCD_URI ? L2_LCD_URI.split(',')[0] : 'http://127.0.0.1:1317',
     {
-      gasPrices: L2_GAS_PRICES || '0.15umin',
+      gasPrices: L2_GAS_PRICES || '0umin',
       gasAdjustment: '2',
       chainId: L2_CHAIN_ID
     }
