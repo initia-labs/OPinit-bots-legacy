@@ -21,6 +21,7 @@ import { TxWalletL2, WalletType, getWallet, initWallet } from '../walletL2'
 
 export class L1Monitor extends Monitor {
   executorL2: TxWalletL2
+  lastSentHeight: number
 
   constructor(
     public socket: RPCSocket,
@@ -31,6 +32,8 @@ export class L1Monitor extends Monitor {
     [this.db] = getDB()
     initWallet(WalletType.Executor, config.l2lcd)
     this.executorL2 = getWallet(WalletType.Executor)
+
+    this.lastSentHeight = 0
   }
 
   public name(): string {
@@ -84,7 +87,7 @@ export class L1Monitor extends Monitor {
     const latestHeight = this.socket.latestHeight
     const latestTx0 = this.socket.latestTx0
 
-    if (!latestHeight || !latestTx0) return
+    if (!latestHeight || !latestTx0 || this.lastSentHeight == latestHeight) return
 
     const msgs = [
       new MsgUpdateOracle(
@@ -101,6 +104,8 @@ export class L1Monitor extends Monitor {
           Succeeded to update oracle tx in height: ${this.currentHeight} ${latestHeight} ${latestTx0}
         `
       )
+
+      this.lastSentHeight = latestHeight
     } catch (err) {
       const errMsg = this.helper.extractErrorMessage(err)
       this.logger.error(
