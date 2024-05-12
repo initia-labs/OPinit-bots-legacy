@@ -2,6 +2,8 @@ import * as winston from 'winston'
 import axios, { AxiosRequestConfig } from 'axios'
 import Websocket from 'ws'
 
+const MAX_RETRY = 10
+
 export class RPCSocket {
   public ws: Websocket
   public wsUrl: string
@@ -14,6 +16,7 @@ export class RPCSocket {
   logger: winston.Logger
   rpcUrl: string
   curRPCUrlIndex: number
+  retry = 0
 
   constructor(
     public rpcUrls: string[],
@@ -72,6 +75,7 @@ export class RPCSocket {
       const msg = `${this.constructor.name} is now alive. (downtime ${downtime} minutes)`
       this.logger.info(msg)
       this.isAlive = true
+      this.retry = 0
     }
     this.alivedAt = Date.now()
   }
@@ -121,9 +125,13 @@ export class RPCSocket {
 
   protected onDisconnect(code: number, reason: string): void {
     this.rotateRPC()
+    this.retry++
     this.logger.info(
       `${this.constructor.name}: websocket disconnected (${code}: ${reason})`
     )
+    if (this.retry > MAX_RETRY) {
+      throw new Error(`RPCSocket max retry reached ${this.rpcUrl}`)
+    }
     // if disconnected, try connect again
     setTimeout(() => this.connect(), 1000)
   }

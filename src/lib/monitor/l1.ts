@@ -10,7 +10,8 @@ import {
 import {
   ExecutorDepositTxEntity,
   ExecutorUnconfirmedTxEntity,
-  ExecutorOutputEntity
+  ExecutorOutputEntity,
+  StateEntity
 } from '../../orm'
 import { EntityManager } from 'typeorm'
 import { RPCClient, RPCSocket } from '../rpc'
@@ -21,6 +22,7 @@ import { TxWalletL2, WalletType, getWallet, initWallet } from '../walletL2'
 
 export class L1Monitor extends Monitor {
   executorL2: TxWalletL2
+  oracleHeight: number
 
   constructor(
     public socket: RPCSocket,
@@ -31,6 +33,8 @@ export class L1Monitor extends Monitor {
     [this.db] = getDB()
     initWallet(WalletType.Executor, config.l2lcd)
     this.executorL2 = getWallet(WalletType.Executor)
+
+    this.oracleHeight = 0
   }
 
   public name(): string {
@@ -58,6 +62,13 @@ export class L1Monitor extends Monitor {
   }
 
   public async prepareMonitor(): Promise<void> {
+    const state = await this.db.getRepository(StateEntity).findOne({
+      where: {
+        name: 'oracle_height'
+      }
+    })
+    this.oracleHeight = state?.height || 0
+
     const bridgeInfoL1 = await config.l1lcd.ophost.bridgeInfo(config.BRIDGE_ID)
 
     try {
@@ -73,8 +84,9 @@ export class L1Monitor extends Monitor {
       const errMsg = this.helper.extractErrorMessage(err)
       if (errMsg.includes('bridge info not found')) {
         // not found bridge info in l2, set bridge info
-        await this.setBridgeInfo(bridgeInfoL1, '')
+        return await this.setBridgeInfo(bridgeInfoL1, '')
       }
+      throw err
     }
   }
 
@@ -84,7 +96,8 @@ export class L1Monitor extends Monitor {
     const latestHeight = this.socket.latestHeight
     const latestTx0 = this.socket.latestTx0
 
-    if (!latestHeight || !latestTx0) return
+    if (!latestHeight || !latestTx0 || this.oracleHeight == latestHeight)
+      return
 
     const msgs = [
       new MsgUpdateOracle(
@@ -101,6 +114,11 @@ export class L1Monitor extends Monitor {
           Succeeded to update oracle tx in height: ${this.currentHeight} ${latestHeight} ${latestTx0}
         `
       )
+
+      this.oracleHeight = latestHeight
+      await this.db
+        .getRepository(StateEntity)
+        .save({ name: 'oracle_height', height: this.oracleHeight })
     } catch (err) {
       const errMsg = this.helper.extractErrorMessage(err)
       this.logger.error(

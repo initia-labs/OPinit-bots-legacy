@@ -115,9 +115,6 @@ export abstract class Monitor {
             await this.handleBlockWithStateUpdate(manager)
           }
         })
-      } catch (err) {
-        this.logger.error(err)
-        this.stop()
       } finally {
         await Bluebird.delay(INTERVAL_MONITOR)
       }
