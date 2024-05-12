@@ -71,10 +71,10 @@ export abstract class Monitor {
   public async monitor(): Promise<void> {
     await this.prepareMonitor()
     while (this.isRunning) {
-      try{
+      try {
         const latestHeight = this.socket.latestHeight
         if (!latestHeight || !(latestHeight > this.syncedHeight)) continue
-        
+
         await this.handleNewBlock()
 
         const blockchainData = await this.rpcClient.getBlockchain(

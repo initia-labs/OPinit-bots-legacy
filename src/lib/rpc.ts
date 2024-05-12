@@ -18,7 +18,6 @@ export class RPCSocket {
   curRPCUrlIndex: number
   retry = 0
 
-
   constructor(
     public rpcUrls: string[],
     public interval: number,
@@ -76,7 +75,7 @@ export class RPCSocket {
       const msg = `${this.constructor.name} is now alive. (downtime ${downtime} minutes)`
       this.logger.info(msg)
       this.isAlive = true
-      this.retry = 0 
+      this.retry = 0
     }
     this.alivedAt = Date.now()
   }

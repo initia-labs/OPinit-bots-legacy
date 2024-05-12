@@ -11,7 +11,7 @@ import {
   ExecutorDepositTxEntity,
   ExecutorUnconfirmedTxEntity,
   ExecutorOutputEntity,
-  StateEntity,
+  StateEntity
 } from '../../orm'
 import { EntityManager } from 'typeorm'
 import { RPCClient, RPCSocket } from '../rpc'
@@ -64,7 +64,7 @@ export class L1Monitor extends Monitor {
   public async prepareMonitor(): Promise<void> {
     const state = await this.db.getRepository(StateEntity).findOne({
       where: {
-        name: "oracle_height"
+        name: 'oracle_height'
       }
     })
     this.oracleHeight = state?.height || 0
@@ -96,7 +96,8 @@ export class L1Monitor extends Monitor {
     const latestHeight = this.socket.latestHeight
     const latestTx0 = this.socket.latestTx0
 
-    if (!latestHeight || !latestTx0 || this.oracleHeight == latestHeight) return
+    if (!latestHeight || !latestTx0 || this.oracleHeight == latestHeight)
+      return
 
     const msgs = [
       new MsgUpdateOracle(
@@ -117,7 +118,7 @@ export class L1Monitor extends Monitor {
       this.oracleHeight = latestHeight
       await this.db
         .getRepository(StateEntity)
-        .save({ name: "oracle_height", height: this.oracleHeight })
+        .save({ name: 'oracle_height', height: this.oracleHeight })
     } catch (err) {
       const errMsg = this.helper.extractErrorMessage(err)
       this.logger.error(
