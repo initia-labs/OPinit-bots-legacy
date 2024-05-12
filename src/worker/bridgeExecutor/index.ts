@@ -38,12 +38,16 @@ async function runBot(): Promise<void> {
   }
 }
 
-function stopBot(): void {
-  monitors.forEach((monitor) => monitor.stop())
+async function stopBot(): Promise<void> {
+  await Promise.all(
+    monitors.map((monitor) => {
+      monitor.stop()
+    })
+  )
 }
 
 export async function stopExecutor(): Promise<void> {
-  stopBot()
+  await stopBot()
 
   logger.info('Closing listening port')
   finalizeServer()

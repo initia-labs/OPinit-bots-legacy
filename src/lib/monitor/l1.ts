@@ -84,8 +84,9 @@ export class L1Monitor extends Monitor {
       const errMsg = this.helper.extractErrorMessage(err)
       if (errMsg.includes('bridge info not found')) {
         // not found bridge info in l2, set bridge info
-        await this.setBridgeInfo(bridgeInfoL1, '')
+        return await this.setBridgeInfo(bridgeInfoL1, '')
       }
+      throw err
     }
   }
 
