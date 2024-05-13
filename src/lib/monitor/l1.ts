@@ -173,7 +173,6 @@ export class L1Monitor extends Monitor {
       config.l1lcd,
       this.currentHeight
     )
-
     if (isEmpty) return false
 
     const l2Msgs: Msg[] = []

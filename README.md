@@ -78,6 +78,7 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | EXECUTOR_PORT              | Executor port                              | 5000                     |
 | EXECUTOR_MNEMONIC          | Mnemonic seed for executor                 | ''                       |
 | BATCH_SUBMITTER_ADDR       | Batch submitter address                    | ''                       |
+| SUBMISSION_THRESHOLD       | Submission interval threshold ratio        | 2/3                      |
 | ENABLE_ORACLE              | Enable Oracle                              | false                    |
 | L1_CLIENT_ID               | L1 client id for Oracle                    | ''                       |
 | L1_CHAIN_ID                | L1 chain id for Bridge Info                | ''                       |

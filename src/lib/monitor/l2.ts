@@ -6,11 +6,13 @@ import { getDB } from '../../worker/bridgeExecutor/db'
 import { RPCClient, RPCSocket } from '../rpc'
 import winston from 'winston'
 import { config } from '../../config'
-import { getBridgeInfo } from '../query'
+import { getBridgeInfo, getLastOutputInfo } from '../query'
+import { TxWalletL2, WalletType, getWallet, initWallet } from '../walletL2'
 
 export class L2Monitor extends Monitor {
   submissionInterval: number
   nextSubmissionTimeSec: number
+  executorL2: TxWalletL2
 
   constructor(
     public socket: RPCSocket,
@@ -19,7 +21,12 @@ export class L2Monitor extends Monitor {
   ) {
     super(socket, rpcClient, logger);
     [this.db] = getDB()
-    this.nextSubmissionTimeSec = this.getCurTimeSec()
+    initWallet(WalletType.Executor, config.l2lcd)
+    this.executorL2 = getWallet(WalletType.Executor)
+  }
+
+  async getLatestBlock(): Promise<BlockInfo> {
+    return await this.executorL2.lcd.tendermint.blockInfo()
   }
 
   public name(): string {
@@ -28,13 +35,6 @@ export class L2Monitor extends Monitor {
 
   dateToSeconds(date: Date): number {
     return Math.floor(date.getTime() / 1000)
-  }
-
-  private async setNextSubmissionTimeSec(): Promise<void> {
-    const bridgeInfo = await getBridgeInfo(this.bridgeId)
-    this.submissionInterval =
-      bridgeInfo.bridge_config.submission_interval.seconds.toNumber()
-    this.nextSubmissionTimeSec += this.submissionInterval
   }
 
   private getCurTimeSec(): number {
@@ -49,6 +49,7 @@ export class L2Monitor extends Monitor {
       manager,
       ExecutorOutputEntity
     )
+
     if (!outputInfo) return
     const pair = await config.l1lcd.ophost.tokenPairByL2Denom(
       this.bridgeId,
@@ -89,8 +90,27 @@ export class L2Monitor extends Monitor {
     return true
   }
 
+  async checkSubmissionInterval(): Promise<boolean> {
+    const lastOutputSubmitted = await getLastOutputInfo(this.bridgeId)
+    if (lastOutputSubmitted) {
+      const lastOutputSubmittedTime =
+        lastOutputSubmitted.output_proposal.l1_block_time
+      const bridgeInfo = await getBridgeInfo(this.bridgeId)
+      this.submissionInterval =
+        bridgeInfo.bridge_config.submission_interval.seconds.toNumber()
+      if (
+        this.getCurTimeSec() <
+        this.dateToSeconds(lastOutputSubmittedTime) +
+          Math.floor(this.submissionInterval * config.SUBMISSION_THRESHOLD)
+      )
+        return false
+    }
+    return true
+  }
+
   public async handleBlock(manager: EntityManager): Promise<void> {
-    if (this.getCurTimeSec() < this.nextSubmissionTimeSec) return
+    if (!await this.checkSubmissionInterval()) return
+
     const lastOutput = await this.helper.getLastOutputFromDB(
       manager,
       ExecutorOutputEntity
@@ -131,7 +151,5 @@ export class L2Monitor extends Monitor {
     )
 
     await this.helper.saveEntity(manager, ExecutorOutputEntity, outputEntity)
-
-    await this.setNextSubmissionTimeSec()
   }
 }

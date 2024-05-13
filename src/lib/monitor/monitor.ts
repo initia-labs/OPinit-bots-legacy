@@ -83,6 +83,7 @@ export abstract class Monitor {
           // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
           Math.min(latestHeight, this.syncedHeight + MAX_BLOCKS)
         )
+        
         if (blockchainData === null) continue
 
         await this.db.transaction(async (manager: EntityManager) => {
@@ -94,7 +95,6 @@ export abstract class Monitor {
                 `expected block meta is the height ${this.currentHeight}, but got ${metadata.header.height}`
               )
             }
-
             if (parseInt(metadata.num_txs) === 0) {
               await this.handleBlockWithStateUpdate(manager)
               continue
