@@ -19,6 +19,7 @@ import { getDB } from '../../worker/bridgeExecutor/db'
 import winston from 'winston'
 import { config } from '../../config'
 import { TxWalletL2, WalletType, getWallet, initWallet } from '../walletL2'
+import { MetricName, Prometheus } from '../../lib/metrics'
 
 export class L1Monitor extends Monitor {
   executorL2: TxWalletL2
@@ -45,6 +46,10 @@ export class L1Monitor extends Monitor {
     bridgeInfoL1: BridgeInfo,
     l1ClientId: string
   ): Promise<void> {
+    this.logger.info(
+      `[setBridgeInfo - ${this.name()}] bridge_id: ${bridgeInfoL1.bridge_id} l1_client_id: ${l1ClientId}`
+    )
+
     if (config.L1_CHAIN_ID == '') throw new Error('L1_CHAIN_ID is not set')
     const l2Msgs = [
       new MsgSetBridgeInfo(
@@ -58,7 +63,10 @@ export class L1Monitor extends Monitor {
         )
       )
     ]
-    await this.executorL2.transaction(l2Msgs)
+    const res = await this.executorL2.transaction(l2Msgs)
+    this.logger.info(
+      `[setBridgeInfo - ${this.name()}] Successfully submitted setBridgeInfo : ${res.txhash}`
+    )
   }
 
   public async prepareMonitor(): Promise<void> {
@@ -68,7 +76,6 @@ export class L1Monitor extends Monitor {
       }
     })
     this.oracleHeight = state?.height || 0
-
     const bridgeInfoL1 = await config.l1lcd.ophost.bridgeInfo(config.BRIDGE_ID)
 
     try {
@@ -82,12 +89,23 @@ export class L1Monitor extends Monitor {
       }
     } catch (err) {
       const errMsg = this.helper.extractErrorMessage(err)
+      this.logger.error(`[prepareMonitor - ${this.name()}] Error: ${errMsg}`)
       if (errMsg.includes('bridge info not found')) {
         // not found bridge info in l2, set bridge info
+        this.logger.info(
+          `[prepareMonitor - ${this.name()}] setBridgeInfo with empty l1ClientId`
+        )
         return await this.setBridgeInfo(bridgeInfoL1, '')
       }
       throw err
     }
+  }
+
+  public async endBlock(): Promise<void> {
+    Prometheus.add({
+      name: MetricName.L1MonitorHeight,
+      data: this.currentHeight
+    })
   }
 
   public async handleNewBlock(): Promise<void> {
@@ -96,8 +114,12 @@ export class L1Monitor extends Monitor {
     const latestHeight = this.socket.latestHeight
     const latestTx0 = this.socket.latestTx0
 
-    if (!latestHeight || !latestTx0 || this.oracleHeight == latestHeight)
+    if (!latestHeight || !latestTx0 || this.oracleHeight == latestHeight) {
+      this.logger.info(
+        `[handleNewBlock - ${this.name()}] No new block to update oracle tx`
+      )
       return
+    }
 
     const msgs = [
       new MsgUpdateOracle(
@@ -108,10 +130,14 @@ export class L1Monitor extends Monitor {
     ]
 
     try {
-      await this.executorL2.transaction(msgs)
+      const res = await this.executorL2.transaction(msgs)
       this.logger.info(
         `
-          Succeeded to update oracle tx in height: ${this.currentHeight} ${latestHeight} ${latestTx0}
+          [handleNewBlock - ${this.name()}] Succeeded to update oracle tx in height
+          currentHeight: ${this.currentHeight} 
+          latestHeight: ${latestHeight}
+          txhash: ${res.txhash}
+          latestTx0: ${latestTx0}
         `
       )
 
@@ -123,7 +149,8 @@ export class L1Monitor extends Monitor {
       const errMsg = this.helper.extractErrorMessage(err)
       this.logger.error(
         `
-          Failed to submit tx in height: ${this.currentHeight}
+          [handleNewBlock - ${this.name()}] Failed to submit tx
+          currentHeight: ${this.currentHeight}
           Msg: ${latestHeight} ${latestTx0}
           Error: ${errMsg}
         `
@@ -173,7 +200,12 @@ export class L1Monitor extends Monitor {
       config.l1lcd,
       this.currentHeight
     )
-    if (isEmpty) return false
+    if (isEmpty) {
+      this.logger.info(
+        `[handleEvents - ${this.name()}] No events in height: ${this.currentHeight}`
+      )
+      return false
+    }
 
     const l2Msgs: Msg[] = []
     const depositEntities: ExecutorDepositTxEntity[] = []
@@ -211,16 +243,13 @@ export class L1Monitor extends Monitor {
 
       await this.executorL2.transaction(msgs)
       this.logger.info(
-        `
-          Succeeded to submit tx in height: ${this.currentHeight} 
-          ${stringfyMsgs}
-        `
+        `[proccessMsgs - ${this.name()}] Succeeded to submit tx in height: ${this.currentHeight}`
       )
     } catch (err) {
       const errMsg = this.helper.extractErrorMessage(err)
       this.logger.error(
         `
-          Failed to submit tx in height: ${this.currentHeight}
+          [processMsgs - ${this.name()}] Failed to submit tx in height: ${this.currentHeight}
           Msg: ${stringfyMsgs}
           Error: ${errMsg}
         `

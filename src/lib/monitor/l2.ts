@@ -8,10 +8,9 @@ import winston from 'winston'
 import { config } from '../../config'
 import { getBridgeInfo, getLastOutputInfo } from '../query'
 import { TxWalletL2, WalletType, getWallet, initWallet } from '../walletL2'
+import { MetricName, Prometheus } from '../../lib/metrics'
 
 export class L2Monitor extends Monitor {
-  submissionInterval: number
-  nextSubmissionTimeSec: number
   executorL2: TxWalletL2
 
   constructor(
@@ -41,6 +40,13 @@ export class L2Monitor extends Monitor {
     return this.dateToSeconds(new Date())
   }
 
+  public async endBlock(): Promise<void> {
+    Prometheus.add({
+      name: MetricName.L2MonitorHeight,
+      data: this.currentHeight
+    })
+  }
+
   private async handleInitiateTokenWithdrawalEvent(
     manager: EntityManager,
     data: { [key: string]: string }
@@ -50,7 +56,12 @@ export class L2Monitor extends Monitor {
       ExecutorOutputEntity
     )
 
-    if (!outputInfo) return
+    if (!outputInfo) {
+      this.logger.info(
+        `[handleInitiateTokenWithdrawalEvent - ${this.name()}] No output info`
+      )
+      return
+    }
     const pair = await config.l1lcd.ophost.tokenPairByL2Denom(
       this.bridgeId,
       data['denom']
@@ -70,6 +81,9 @@ export class L2Monitor extends Monitor {
     }
 
     await this.helper.saveEntity(manager, ExecutorWithdrawalTxEntity, tx)
+    this.logger.info(
+      `[handleInitiateTokenWithdrawalEvent - ${this.name()}] Succeeded to save withdrawal tx`
+    )
   }
 
   public async handleEvents(manager: EntityManager): Promise<boolean> {
@@ -77,7 +91,12 @@ export class L2Monitor extends Monitor {
       config.l2lcd,
       this.currentHeight
     )
-    if (isEmpty) return false
+    if (isEmpty) {
+      this.logger.info(
+        `[handleEvents - ${this.name()}] No events in height: ${this.currentHeight}`
+      )
+      return false
+    }
 
     const withdrawalEvents = events.filter(
       (evt) => evt.type === 'initiate_token_withdrawal'
@@ -96,20 +115,25 @@ export class L2Monitor extends Monitor {
       const lastOutputSubmittedTime =
         lastOutputSubmitted.output_proposal.l1_block_time
       const bridgeInfo = await getBridgeInfo(this.bridgeId)
-      this.submissionInterval =
+      const submissionInterval =
         bridgeInfo.bridge_config.submission_interval.seconds.toNumber()
       if (
         this.getCurTimeSec() <
         this.dateToSeconds(lastOutputSubmittedTime) +
-          Math.floor(this.submissionInterval * config.SUBMISSION_THRESHOLD)
+          Math.floor(submissionInterval * config.SUBMISSION_THRESHOLD)
       )
         return false
     }
     return true
   }
 
-  public async handleBlock(manager: EntityManager): Promise<void> {
-    if (!await this.checkSubmissionInterval()) return
+  async handleOutput(manager: EntityManager): Promise<void> {
+    if (!(await this.checkSubmissionInterval())) {
+      this.logger.info(
+        `[handleOutput - ${this.name()}] Submission interval not reached`
+      )
+      return
+    }
 
     const lastOutput = await this.helper.getLastOutputFromDB(
       manager,
@@ -123,7 +147,12 @@ export class L2Monitor extends Monitor {
     const endBlockNumber = this.currentHeight
     const outputIndex = lastOutputIndex + 1
 
-    if (startBlockNumber > endBlockNumber) return
+    if (startBlockNumber > endBlockNumber) {
+      this.logger.info(
+        `[handleOutput - ${this.name()}] No new block to process`
+      )
+      return
+    }
 
     const blockInfo: BlockInfo = await config.l2lcd.tendermint.blockInfo(
       this.currentHeight
@@ -151,5 +180,9 @@ export class L2Monitor extends Monitor {
     )
 
     await this.helper.saveEntity(manager, ExecutorOutputEntity, outputEntity)
+  }
+
+  public async handleBlock(manager: EntityManager): Promise<void> {
+    await this.handleOutput(manager)
   }
 }
