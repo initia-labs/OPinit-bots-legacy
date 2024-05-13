@@ -54,7 +54,12 @@ export class OutputSubmitter {
           ExecutorOutputEntity,
           this.syncedOutputIndex
         )
-        if (!output) return
+        if (!output) {
+          logger.info(
+            `waiting for output index from DB: ${this.syncedOutputIndex}, processed block number: ${this.processedBlockNumber}`
+          )
+          return
+        }
 
         await this.proposeOutput(output)
         logger.info(
@@ -64,7 +69,7 @@ export class OutputSubmitter {
     } catch (err) {
       if (err.response?.data.type === ErrorTypes.NOT_FOUND_ERROR) {
         logger.warn(
-          `waiting for output index: ${this.syncedOutputIndex}, processed block number: ${this.processedBlockNumber}`
+          `waiting for output index from L1: ${this.syncedOutputIndex}, processed block number: ${this.processedBlockNumber}`
         )
         await delay(INTERVAL_OUTPUT)
       } else {

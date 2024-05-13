@@ -137,7 +137,6 @@ export class L1Monitor extends Monitor {
           currentHeight: ${this.currentHeight} 
           latestHeight: ${latestHeight}
           txhash: ${res.txhash}
-          latestTx0: ${latestTx0}
         `
       )
 
@@ -151,7 +150,7 @@ export class L1Monitor extends Monitor {
         `
           [handleNewBlock - ${this.name()}] Failed to submit tx
           currentHeight: ${this.currentHeight}
-          Msg: ${latestHeight} ${latestTx0}
+          latestHeight: ${latestHeight}
           Error: ${errMsg}
         `
       )

@@ -79,7 +79,10 @@ export class BatchSubmitter {
         this.batchIndex
       )
 
-      if (!output) return
+      if (!output) {
+        logger.info(`waiting for output index from DB: ${this.batchIndex}`)
+        return
+      }
 
       const batch = await this.getBatch(
         output.startBlockNumber,
@@ -172,6 +175,7 @@ export class BatchSubmitter {
 
     if (!this.submitterAddress) {
       this.submitterAddress = this.submitter.key.accAddress
+      logger.info(`submitter address: ${this.submitterAddress}`)
     }
 
     const msg = new MsgRecordBatch(
