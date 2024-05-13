@@ -19,7 +19,7 @@ To run OPinit bots, you should check the following version. This is needed to en
 
 | L1 Node | MiniMove | MiniWasm | MiniEVM | OPinit-bots |
 | ------- | -------- | -------- | ------- | ----------- |
-| v0.2.9  |  v0.2.11 |  v0.2.14 |  -      |    v0.1.6   |
+| v0.2.10 |  v0.2.12 |  v0.2.15 |  -      |    v0.1.6   |
 
 ### Step1. Create Bridge
 
