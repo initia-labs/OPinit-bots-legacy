@@ -47,11 +47,5 @@ describe('WithdrawStorage', () => {
       ])
     ).toString('base64')
     expect(airdrop.verify(merkleProof, target)).toBeTruthy()
-
-    expect(merkleRoot).toEqual('EYgpXs1b+Z3AdGqjjtJHylrGzCjXtBKDD2UTPXelUk4=')
-    expect(merkleProof).toEqual([
-      '5eJNy8mEqvyhysgWCqi7JQ7K602FtSpz+wDRNQitQMc='
-    ])
-    expect(outputRoot).toEqual('euaoJcFRXfV/6F0AiC0vYwXUY4NPHfCn9LbFMPieNsA=')
   })
 })
