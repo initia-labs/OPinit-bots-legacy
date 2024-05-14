@@ -104,4 +104,17 @@ Prometheus.create({
   help: 'Current height of the L2 monitor.'
 })
 
+Prometheus.create({
+  type: 'gauge',
+  name: 'l1_monitor_time',
+  help: 'Time taken to process L1 monitor.'
+})
+
+Prometheus.create({
+  type: 'gauge',
+  name: 'l2_monitor_time',
+  help: 'Time taken to process L2 monitor.'
+})
+
+
 export { Prometheus }
