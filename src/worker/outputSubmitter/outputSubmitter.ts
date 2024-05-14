@@ -38,6 +38,7 @@ export class OutputSubmitter {
 
     while (this.isRunning) {
       await this.processOutput()
+      await delay(INTERVAL_OUTPUT)
     }
   }
 

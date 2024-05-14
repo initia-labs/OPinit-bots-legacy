@@ -132,6 +132,7 @@ export class TxWalletL1 extends Wallet {
 
   async sendRawTx(txBytes: string, timeout = 10_000): Promise<any> {
     const broadcastResult = await this.lcd.tx.broadcast(txBytes, timeout)
+    
     if (broadcastResult['code']) throw new Error(broadcastResult.raw_log)
     return broadcastResult
   }
