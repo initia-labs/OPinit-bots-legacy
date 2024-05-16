@@ -21,6 +21,7 @@ import { createBlob, getCelestiaFeeGasLimit } from '../../celestia/utils'
 import { bech32 } from 'bech32'
 import { TxWalletL1 } from '../../lib/walletL1'
 import { BatchError, BatchErrorTypes } from './error'
+import { log } from 'console'
 
 const base = 200000
 const perByte = 10
@@ -184,22 +185,11 @@ export class BatchSubmitter {
   }
 
   async submitTransaction(batchTxEntites: BatchTxEntity[]): Promise<void> {
-    const POLLING_INTERVAL = 10_000
-    const MAX_RETRIES = 60
     for (const batchTx of batchTxEntites) {
       const txInfo = await this.getTransaction(batchTx.hash)
       if (txInfo) continue
-      await this.submitter.sendRawTx(batchTx.txBytes)
-      let i = 0
-      do {
-        const txInfo = await this.getTransaction(batchTx.hash)
-        if (txInfo) break
-        logger.info(`waiting for tx ${batchTx.hash} to be included in a block`)
-        await delay(POLLING_INTERVAL)
-        if (i === MAX_RETRIES) {
-          throw new BatchError(BatchErrorTypes.EMAX_RETRIES)
-        }
-      } while (i++)
+      logger.info(`submitting tx: ${batchTx.hash}`)
+      await this.submitter.sendRawTx(batchTx.txBytes, 60 * 10 * 1000)
     }
   }
 
