@@ -187,11 +187,13 @@ export class BatchSubmitter {
     const POLLING_INTERVAL = 10_000
     const MAX_RETRIES = 60
     for (const batchTx of batchTxEntites) {
+      const txInfo = await this.getTransaction(batchTx.hash)
+      if (txInfo) continue
+      await this.submitter.sendRawTx(batchTx.txBytes)
       let i = 0
       do {
         const txInfo = await this.getTransaction(batchTx.hash)
         if (txInfo) break
-        await this.submitter.sendRawTx(batchTx.txBytes)
         logger.info(`waiting for tx ${batchTx.hash} to be included in a block`)
         await delay(POLLING_INTERVAL)
         if (i === MAX_RETRIES) {
@@ -273,7 +275,9 @@ export class BatchSubmitter {
     record.endBlockNumber = endBlockNumber
 
     await manager.getRepository(RecordEntity).save(record)
-
+    await manager.getRepository(BatchTxEntity).delete({
+      batchIndex: batchIndex
+    })
     return record
   }
 }
