@@ -191,7 +191,7 @@ export class BatchSubmitter {
       do {
         const txInfo = await this.getTransaction(batchTx.hash)
         if (txInfo) break
-        this.submitter.sendRawTx(batchTx.txBytes)
+        await this.submitter.sendRawTx(batchTx.txBytes)
         logger.info(`waiting for tx ${batchTx.hash} to be included in a block`)
         await delay(POLLING_INTERVAL)
         if (i === MAX_RETRIES) {
