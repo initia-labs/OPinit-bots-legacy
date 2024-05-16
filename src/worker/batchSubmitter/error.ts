@@ -3,7 +3,8 @@ export enum BatchErrorTypes {
   ERAW_COMMIT = 'Error getting commit from L2',
   EUNKNOWN_TARGET = `unknown batch target`,
   EPUBLIC_KEY_NOT_SET = 'batch submitter public key not set',
-  EGAS_PRICES_NOT_SET = 'gasPrices must be set'
+  EGAS_PRICES_NOT_SET = 'gasPrices must be set',
+  EMAX_RETRIES = 'max retries exceeded',
 }
 
 export class BatchError extends Error {

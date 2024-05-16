@@ -185,7 +185,7 @@ export class BatchSubmitter {
 
   async submitTransaction(batchTxEntites: BatchTxEntity[]): Promise<void> {
     const POLLING_INTERVAL = 10_000
-    const MAX_POLLING_COUNT = 60
+    const MAX_RETRIES = 60
     for (const batchTx of batchTxEntites) {
       let i = 0
       do {
@@ -194,7 +194,10 @@ export class BatchSubmitter {
         this.submitter.sendRawTx(batchTx.txBytes)
         logger.info(`waiting for tx ${batchTx.hash} to be included in a block`)
         await delay(POLLING_INTERVAL)
-      } while (i++ < MAX_POLLING_COUNT)
+        if (i === MAX_RETRIES) {
+          throw new BatchError(BatchErrorTypes.EMAX_RETRIES)
+        }
+      } while (i++)
     }
   }
 
