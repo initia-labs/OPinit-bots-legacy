@@ -3,7 +3,7 @@ import { DataSource, EntityManager } from 'typeorm'
 import { batchLogger, batchLogger as logger } from '../../lib/logger'
 import { BlockBulk, RawCommit, RPCClient } from '../../lib/rpc'
 import { compress } from '../../lib/compressor'
-import { BatchTxEntity, ExecutorOutputEntity, RecordEntity } from '../../orm'
+import { ExecutorOutputEntity, RecordEntity } from '../../orm'
 import {
   MnemonicKey,
   MsgRecordBatch,
@@ -225,9 +225,6 @@ export class BatchSubmitter {
     record.endBlockNumber = endBlockNumber
 
     await manager.getRepository(RecordEntity).save(record)
-    await manager.getRepository(BatchTxEntity).delete({
-      batchIndex: batchIndex
-    })
     return record
   }
 }
