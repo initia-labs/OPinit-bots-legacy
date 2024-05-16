@@ -152,7 +152,7 @@ export class BatchSubmitter {
           throw new BatchError(BatchErrorTypes.EUNKNOWN_TARGET)
       }
 
-      const batchInfo = await this.submitter.sendRawTx(txBytes)
+      const batchInfo = await this.submitter.sendRawTx(txBytes, 60 * 10 * 1000)
       batchInfos.push(batchInfo.txhash)
 
       await delay(1000) // break for each tx ended
