@@ -11,7 +11,9 @@ type MetricType = 'counter' | 'gauge' | 'histogram' | 'summary'
 
 export enum MetricName {
   L1MonitorHeight = 'l1_monitor_height',
-  L2MonitorHeight = 'l2_monitor_height'
+  L2MonitorHeight = 'l2_monitor_height',
+  L1MonitorTime = 'l1_monitor_time',
+  L2MonitorTime = 'l2_monitor_time'
 }
 
 interface CreateMetricOptions {
@@ -92,29 +94,30 @@ const prometheus = () => {
 
 const Prometheus = prometheus()
 
+// Create metrics
+
 Prometheus.create({
   type: 'gauge',
   name: MetricName.L1MonitorHeight,
-  help: 'Current height of the L1 monitor.'
+  help: '[Executor] Current height of the L1 monitor.'
 })
 
 Prometheus.create({
   type: 'gauge',
   name: MetricName.L2MonitorHeight,
-  help: 'Current height of the L2 monitor.'
+  help: '[Executor] Current height of the L2 monitor.'
 })
 
 Prometheus.create({
   type: 'gauge',
-  name: 'l1_monitor_time',
-  help: 'Time taken to process L1 monitor.'
+  name: MetricName.L1MonitorTime,
+  help: '[Executor] Time taken to process L1 monitor.'
 })
 
 Prometheus.create({
   type: 'gauge',
-  name: 'l2_monitor_time',
-  help: 'Time taken to process L2 monitor.'
+  name: MetricName.L2MonitorTime,
+  help: '[Executor] Time taken to process L2 monitor.'
 })
-
 
 export { Prometheus }

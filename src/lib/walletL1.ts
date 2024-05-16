@@ -116,7 +116,7 @@ export class TxWalletL1 extends Wallet {
     fee?: Fee,
     accountNumber?: number,
     sequence?: number,
-    timeout = 10_000
+    timeout = 30_000
   ): Promise<WaitTxBroadcastResult> {
     const signedTx = await this.createAndSignTx({
       msgs,
@@ -130,7 +130,7 @@ export class TxWalletL1 extends Wallet {
     return broadcastResult
   }
 
-  async sendRawTx(txBytes: string, timeout = 10_000): Promise<any> {
+  async sendRawTx(txBytes: string, timeout = 30_000): Promise<any> {
     const broadcastResult = await this.lcd.tx.broadcast(txBytes, timeout)
     
     if (broadcastResult['code']) throw new Error(broadcastResult.raw_log)
