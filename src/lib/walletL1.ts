@@ -116,7 +116,7 @@ export class TxWalletL1 extends Wallet {
     fee?: Fee,
     accountNumber?: number,
     sequence?: number,
-    timeout = 10_000
+    timeout = 30_000
   ): Promise<WaitTxBroadcastResult> {
     const signedTx = await this.createAndSignTx({
       msgs,
@@ -130,13 +130,34 @@ export class TxWalletL1 extends Wallet {
     return broadcastResult
   }
 
-  async sendRawTx(txBytes: string, timeout = 10_000): Promise<any> {
+  async sendRawTx(txBytes: string, timeout?: number): Promise<any> {
     const broadcastResult = await this.lcd.tx.broadcast(txBytes, timeout)
+
     if (broadcastResult['code']) throw new Error(broadcastResult.raw_log)
     return broadcastResult
   }
 
-  async transaction(msgs: Msg[]): Promise<WaitTxBroadcastResult> {
+  async getManagedAccountNumberAndSequence(): Promise<{
+    accountNumber: number;
+    sequence: number;
+  }> {
+    if (!this.managedAccountNumber || !this.managedSequence) {
+      const { account_number: accountNumber, sequence } =
+        await this.accountNumberAndSequence()
+      this.managedAccountNumber = accountNumber
+      this.managedSequence = sequence
+    }
+    return {
+      accountNumber: this.managedAccountNumber,
+      sequence: this.managedSequence
+    }
+  }
+
+  async transaction(
+    msgs: Msg[],
+    fee?: Fee,
+    timeout?: number
+  ): Promise<WaitTxBroadcastResult> {
     if (!this.managedAccountNumber && !this.managedSequence) {
       const { account_number: accountNumber, sequence } =
         await this.accountNumberAndSequence()
@@ -148,9 +169,10 @@ export class TxWalletL1 extends Wallet {
       await this.checkEnoughBalance()
       const txInfo = await this.sendTx(
         msgs,
-        undefined,
+        fee,
         this.managedAccountNumber,
-        this.managedSequence
+        this.managedSequence,
+        timeout
       )
       this.managedSequence += 1
       return txInfo
@@ -159,5 +181,17 @@ export class TxWalletL1 extends Wallet {
       delete this.managedSequence
       throw err
     }
+  }
+
+  getFee(gasLimit: number): Fee {
+    const gasPrices = new Coins(this.lcd.config.gasPrices).toArray()
+    if (gasPrices.length === 0) {
+      throw new Error('gasPrices must be set')
+    }
+    const gasPrice = gasPrices[0]
+    const gasAmount = gasPrice.mul(gasLimit).toIntCeilCoin()
+
+    const fee = new Fee(gasLimit, [gasAmount])
+    return fee
   }
 }

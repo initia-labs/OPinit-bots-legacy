@@ -8,10 +8,8 @@ import {
   MnemonicKey,
   MsgRecordBatch,
   MsgPayForBlobs,
-  Fee,
-  Coins,
   BlobTx,
-  TxAPI
+  TxAPI,
 } from 'initia-l2'
 import { delay } from 'bluebird'
 import { INTERVAL_BATCH } from '../../config'
@@ -20,19 +18,11 @@ import MonitorHelper from '../../lib/monitor/helper'
 import { createBlob, getCelestiaFeeGasLimit } from '../../celestia/utils'
 import { bech32 } from 'bech32'
 import { TxWalletL1 } from '../../lib/walletL1'
+import { BatchError, BatchErrorTypes } from './error'
 
 const base = 200000
 const perByte = 10
 const maxBytes = 500000 // 500kb
-
-// errors
-const ERRORS = {
-  EBLOCK_BULK: 'Error getting block bulk from L2',
-  ERAW_COMMIT: 'Error getting commit from L2',
-  EUNKNOWN_TARGET: `unknown batch target ${config.PUBLISH_BATCH_TARGET}`,
-  EPUBLIC_KEY_NOT_SET: 'batch submitter public key not set',
-  EGAS_PRICES_NOT_SET: 'gasPrices must be set'
-}
 
 export class BatchSubmitter {
   private submitterAddress: string
@@ -79,7 +69,10 @@ export class BatchSubmitter {
         this.batchIndex
       )
 
-      if (!output) return
+      if (!output) {
+        logger.info(`waiting for output index from DB: ${this.batchIndex}`)
+        return
+      }
 
       const batch = await this.getBatch(
         output.startBlockNumber,
@@ -106,14 +99,14 @@ export class BatchSubmitter {
       end.toString()
     )
     if (!bulk) {
-      throw new Error(ERRORS.EBLOCK_BULK)
+      throw new BatchError(BatchErrorTypes.EBLOCK_BULK)
     }
 
     const commit: RawCommit | null = await this.rpcClient.getRawCommit(
       end.toString()
     )
     if (!commit) {
-      throw new Error(ERRORS.ERAW_COMMIT)
+      throw new BatchError(BatchErrorTypes.ERAW_COMMIT)
     }
 
     const reqStrings = bulk.blocks.concat(commit.commit)
@@ -154,10 +147,10 @@ export class BatchSubmitter {
           txBytes = await this.createCelestiaBatchMessage(subData)
           break
         default:
-          throw new Error(ERRORS.EUNKNOWN_TARGET)
+          throw new BatchError(BatchErrorTypes.EUNKNOWN_TARGET)
       }
 
-      const batchInfo = await this.submitter.sendRawTx(txBytes)
+      const batchInfo = await this.submitter.sendRawTx(txBytes, 60 * 10 * 1000)
       batchInfos.push(batchInfo.txhash)
 
       await delay(1000) // break for each tx ended
@@ -168,7 +161,7 @@ export class BatchSubmitter {
 
   async createL1BatchMessage(data: Buffer): Promise<string> {
     const gasLimit = Math.floor((base + perByte * data.length) * 1.2)
-    const fee = getFee(this.submitter, gasLimit)
+    const fee = this.submitter.getFee(gasLimit)
 
     if (!this.submitterAddress) {
       this.submitterAddress = this.submitter.key.accAddress
@@ -187,11 +180,11 @@ export class BatchSubmitter {
   async createCelestiaBatchMessage(data: Buffer): Promise<string> {
     const blob = createBlob(data)
     const gasLimit = getCelestiaFeeGasLimit(data.length)
-    const fee = getFee(this.submitter, gasLimit)
+    const fee = this.submitter.getFee(gasLimit)
 
     const rawAddress = this.submitter.key.publicKey?.rawAddress()
     if (!rawAddress) {
-      throw new Error(ERRORS.EPUBLIC_KEY_NOT_SET)
+      throw new BatchError(BatchErrorTypes.EPUBLIC_KEY_NOT_SET)
     }
 
     if (!this.submitterAddress) {
@@ -213,7 +206,6 @@ export class BatchSubmitter {
     const blobTx = new BlobTx(signedTx, [blob.blob], 'BLOB')
     return Buffer.from(blobTx.toBytes()).toString('base64')
   }
-
   // Save batch record to database
   async saveBatchToDB(
     manager: EntityManager,
@@ -231,19 +223,6 @@ export class BatchSubmitter {
     record.endBlockNumber = endBlockNumber
 
     await manager.getRepository(RecordEntity).save(record)
-
     return record
   }
-}
-
-function getFee(wallet: TxWalletL1, gasLimit: number): Fee {
-  const gasPrices = new Coins(wallet.lcd.config.gasPrices).toArray()
-  if (gasPrices.length === 0) {
-    throw new Error(ERRORS.EGAS_PRICES_NOT_SET)
-  }
-  const gasPrice = gasPrices[0]
-  const gasAmount = gasPrice.mul(gasLimit).toIntCeilCoin()
-
-  const fee = new Fee(gasLimit, [gasAmount])
-  return fee
 }

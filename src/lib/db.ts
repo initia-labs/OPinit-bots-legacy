@@ -10,12 +10,12 @@ import CamelToSnakeNamingStrategy from '../orm/CamelToSnakeNamingStrategy'
 
 const debug = require('debug')('orm')
 
-import { RecordEntity, ExecutorOutputEntity } from '../orm'
+import { RecordEntity, ExecutorOutputEntity, BatchTxEntity } from '../orm'
 
 const staticOptions = {
   supportBigNumbers: true,
   bigNumberStrings: true,
-  entities: [RecordEntity, ExecutorOutputEntity]
+  entities: [RecordEntity, ExecutorOutputEntity, BatchTxEntity]
 }
 
 let DB: DataSource[] = []

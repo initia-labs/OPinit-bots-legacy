@@ -66,6 +66,7 @@ export abstract class Monitor {
     await manager
       .getRepository(StateEntity)
       .update({ name: this.name() }, { height: this.syncedHeight })
+    await this.endBlock()
   }
 
   public async monitor(): Promise<void> {
@@ -83,6 +84,7 @@ export abstract class Monitor {
           // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
           Math.min(latestHeight, this.syncedHeight + MAX_BLOCKS)
         )
+
         if (blockchainData === null) continue
 
         await this.db.transaction(async (manager: EntityManager) => {
@@ -94,7 +96,6 @@ export abstract class Monitor {
                 `expected block meta is the height ${this.currentHeight}, but got ${metadata.header.height}`
               )
             }
-
             if (parseInt(metadata.num_txs) === 0) {
               await this.handleBlockWithStateUpdate(manager)
               continue
@@ -129,6 +130,9 @@ export abstract class Monitor {
 
   // eslint-disable-next-line
   public async handleNewBlock(): Promise<void> {}
+
+  // eslint-disable-next-line
+  public async endBlock(): Promise<void> {}
 
   // eslint-disable-next-line
   public async prepareMonitor(): Promise<void> {}

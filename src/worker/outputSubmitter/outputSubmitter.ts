@@ -38,40 +38,55 @@ export class OutputSubmitter {
 
     while (this.isRunning) {
       await this.processOutput()
+      await delay(INTERVAL_OUTPUT)
+    }
+  }
+
+  async getOutput(
+    manager: EntityManager
+  ): Promise<ExecutorOutputEntity | null> {
+    try {
+      const lastOutputInfo = await getLastOutputInfo(this.bridgeId)
+      if (lastOutputInfo) {
+        this.syncedOutputIndex = lastOutputInfo.output_index + 1
+      }
+
+      const output = await this.helper.getOutputByIndex(
+        manager,
+        ExecutorOutputEntity,
+        this.syncedOutputIndex
+      )
+
+      if (!output) return null
+
+      return output
+    } catch (err) {
+      if (err.response?.data.type === ErrorTypes.NOT_FOUND_ERROR) {
+        logger.warn(
+          `waiting for output index from L1: ${this.syncedOutputIndex}, processed block number: ${this.processedBlockNumber}`
+        )
+        await delay(INTERVAL_OUTPUT)
+        return null
+      }
+      throw err
     }
   }
 
   async processOutput() {
-    try {
-      await this.db.transaction(async (manager: EntityManager) => {
-        const lastOutputInfo = await getLastOutputInfo(this.bridgeId)
-        if (lastOutputInfo) {
-          this.syncedOutputIndex = lastOutputInfo.output_index + 1
-        }
-
-        const output = await this.helper.getOutputByIndex(
-          manager,
-          ExecutorOutputEntity,
-          this.syncedOutputIndex
-        )
-        if (!output) return
-
-        await this.proposeOutput(output)
+    await this.db.transaction(async (manager: EntityManager) => {
+      const output = await this.getOutput(manager)
+      if (!output) {
         logger.info(
-          `successfully submitted! output index: ${this.syncedOutputIndex}, output root: ${output.outputRoot} (${output.startBlockNumber}, ${output.endBlockNumber})`
+          `waiting for output index from DB: ${this.syncedOutputIndex}, processed block number: ${this.processedBlockNumber}`
         )
-      })
-    } catch (err) {
-      if (err.response?.data.type === ErrorTypes.NOT_FOUND_ERROR) {
-        logger.warn(
-          `waiting for output index: ${this.syncedOutputIndex}, processed block number: ${this.processedBlockNumber}`
-        )
-        await delay(INTERVAL_OUTPUT)
-      } else {
-        logger.error(`Output Submitter halted!`, err)
-        this.stop()
+        return
       }
-    }
+
+      await this.proposeOutput(output)
+      logger.info(
+        `successfully submitted! output index: ${this.syncedOutputIndex}, output root: ${output.outputRoot} (${output.startBlockNumber}, ${output.endBlockNumber})`
+      )
+    })
   }
 
   public async stop() {
@@ -86,7 +101,7 @@ export class OutputSubmitter {
       outputEntity.outputRoot
     )
 
-    await this.submitter.transaction([msg])
+    await this.submitter.transaction([msg], undefined, 1000 * 60 * 10) // 10 minutes
 
     this.processedBlockNumber = outputEntity.endBlockNumber
   }

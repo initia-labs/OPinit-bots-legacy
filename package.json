@@ -1,6 +1,6 @@
 {
   "name": "@initia/rollup",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Optimistic rollup for initia",
   "main": "index.js",
   "engines": {
@@ -120,6 +120,7 @@
     "merkletreejs": "^0.3.11",
     "pako": "^2.1.0",
     "pg": "^8.11.5",
+    "prom-client": "^15.1.2",
     "reflect-metadata": "^0.2.2",
     "sha3": "^2.1.4",
     "ts-node": "^10.9.2",

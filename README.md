@@ -15,13 +15,11 @@ Initia Optimistic Rollup Bots.
 - Node.js 16+
 - Node LCD/RPC (L1 and L2)
 
-TO run OPinit bots, you should check the following version. This is needed to ensure that the bots are compatible with the node version.
+To run OPinit bots, you should check the following version. This is needed to ensure that the bots are compatible with the node version.
 
-| L1 Node | L2 Node | OPinit-bots |
-| ------- | ------- | ----------- |
-| v0.2.3  | v0.2.6  | v0.1.0      |
-| v0.2.7  | v0.2.9  | v0.1.2      |
-
+| L1 Node | MiniMove | MiniWasm | MiniEVM | OPinit-bots |
+| ------- | -------- | -------- | ------- | ----------- |
+| v0.2.10 |  v0.2.12 |  v0.2.15 |  -      |    v0.1.6   |
 
 ### Step1. Create Bridge
 
@@ -78,6 +76,7 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | EXECUTOR_PORT              | Executor port                              | 5000                     |
 | EXECUTOR_MNEMONIC          | Mnemonic seed for executor                 | ''                       |
 | BATCH_SUBMITTER_ADDR       | Batch submitter address                    | ''                       |
+| SUBMISSION_THRESHOLD       | Submission interval threshold ratio        | 0.66                     |
 | ENABLE_ORACLE              | Enable Oracle                              | false                    |
 | L1_CLIENT_ID               | L1 client id for Oracle                    | ''                       |
 | L1_CHAIN_ID                | L1 chain id for Bridge Info                | ''                       |

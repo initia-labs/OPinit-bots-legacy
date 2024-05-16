@@ -1,6 +1,8 @@
 import * as winston from 'winston'
 import axios, { AxiosRequestConfig } from 'axios'
 import Websocket from 'ws'
+import * as http from 'http'
+import * as https from 'https'
 
 const MAX_RETRY = 10
 
@@ -198,7 +200,9 @@ export class RPCClient {
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': 'initia-rollup'
-      }
+      },
+      httpsAgent: new https.Agent({ keepAlive: true }),
+      httpAgent: new http.Agent({ keepAlive: true })
     }
 
     let url = `${this.rpcUrl}${path}`
