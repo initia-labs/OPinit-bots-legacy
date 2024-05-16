@@ -21,7 +21,6 @@ import { createBlob, getCelestiaFeeGasLimit } from '../../celestia/utils'
 import { bech32 } from 'bech32'
 import { TxWalletL1 } from '../../lib/walletL1'
 import { BatchError, BatchErrorTypes } from './error'
-import { log } from 'console'
 
 const base = 200000
 const perByte = 10
@@ -81,7 +80,7 @@ export class BatchSubmitter {
         output.startBlockNumber,
         output.endBlockNumber
       )
-      const batchInfo: string[] = await this.publishBatch(manager, batch)
+      const batchInfo: string[] = await this.publishBatch(batch)
       await this.saveBatchToDB(
         manager,
         batchInfo,
@@ -127,11 +126,10 @@ export class BatchSubmitter {
     return storedRecord[0] ?? null
   }
 
-  async createBatch(manager: EntityManager, batch: Buffer): Promise<void> {
-    let batchSubIndex = 0
-    const batchTxEntites: BatchTxEntity[] = []
+   // Publish a batch to L1
+   async publishBatch(batch: Buffer): Promise<string[]> {
+    const batchInfos: string[] = []
 
-    let {accountNumber, sequence} = await this.submitter.getManagedAccountNumberAndSequence()
     while (batch.length !== 0) {
       let subData: Buffer
       if (batch.length > maxBytes) {
@@ -143,71 +141,32 @@ export class BatchSubmitter {
       }
 
       let txBytes: string
-      let signedTx: Tx
       switch (config.PUBLISH_BATCH_TARGET) {
         case 'l1':
-          [txBytes, signedTx] = await this.createL1BatchMessage(subData, accountNumber, sequence)
+          txBytes = await this.createL1BatchMessage(subData)
           break
         case 'celestia':
-          [txBytes, signedTx] = await this.createCelestiaBatchMessage(subData, accountNumber, sequence)
+          txBytes = await this.createCelestiaBatchMessage(subData)
           break
         default:
           throw new BatchError(BatchErrorTypes.EUNKNOWN_TARGET)
       }
 
-      // check txBytes not in batchTxEntity
-      const txhash = TxAPI.hash(signedTx)
-      const batchTxEntity: BatchTxEntity = {
-        hash: txhash,
-        batchIndex: this.batchIndex,
-        subIndex: batchSubIndex,
-        txBytes: txBytes
-      }
-      batchTxEntites.push(batchTxEntity)
-      batchSubIndex++
-      accountNumber += 1
-      sequence += 1
+      const batchInfo = await this.submitter.sendRawTx(txBytes)
+      batchInfos.push(batchInfo.txhash)
+
+      await delay(1000) // break for each tx ended
     }
-    await manager.getRepository(BatchTxEntity).save(batchTxEntites)
+
+    return batchInfos
   }
 
-  // Publish a batch to L1
-  async publishBatch(manager: EntityManager, batch: Buffer): Promise<string[]> {
-    await this.createBatch(manager, batch)
-    logger.info(`batch ${this.batchIndex} is created`)
-    const batchTxEntites = await manager.getRepository(BatchTxEntity).find({
-      where: {
-        batchIndex: this.batchIndex
-      },
-      order: {
-        subIndex: 'ASC'
-      }
-    })
-
-    await this.submitTransaction(batchTxEntites)
-    return batchTxEntites.map((batchTx) => batchTx.hash)
-  }
-
-  async submitTransaction(batchTxEntites: BatchTxEntity[]): Promise<void> {
-    for (const batchTx of batchTxEntites) {
-      const txInfo = await this.getTransaction(batchTx.hash)
-      if (txInfo) continue
-      logger.info(`submitting tx: ${batchTx.hash}`)
-      await this.submitter.sendRawTx(batchTx.txBytes, 60 * 10 * 1000)
-    }
-  }
-
-  async getTransaction(hash: string): Promise<TxInfo | null> {
-    return await this.submitter.lcd.tx.txInfo(hash).catch(() => null)
-  }
-
-  async createL1BatchMessage(data: Buffer, accountNumber: number, sequence: number): Promise<[string, Tx]> {
+  async createL1BatchMessage(data: Buffer): Promise<string> {
     const gasLimit = Math.floor((base + perByte * data.length) * 1.2)
     const fee = this.submitter.getFee(gasLimit)
 
     if (!this.submitterAddress) {
       this.submitterAddress = this.submitter.key.accAddress
-      logger.info(`submitter address: ${this.submitterAddress}`)
     }
 
     const msg = new MsgRecordBatch(
@@ -216,11 +175,11 @@ export class BatchSubmitter {
       data.toString('base64')
     )
 
-    const signedTx = await this.submitter.createAndSignTx({ msgs: [msg], fee, accountNumber, sequence})
-    return [TxAPI.encode(signedTx), signedTx]
+    const signedTx = await this.submitter.createAndSignTx({ msgs: [msg], fee })
+    return TxAPI.encode(signedTx)
   }
 
-  async createCelestiaBatchMessage(data: Buffer, accountNumber: number, sequence: number): Promise<[string, Tx]> {
+  async createCelestiaBatchMessage(data: Buffer): Promise<string> {
     const blob = createBlob(data)
     const gasLimit = getCelestiaFeeGasLimit(data.length)
     const fee = this.submitter.getFee(gasLimit)
@@ -245,11 +204,10 @@ export class BatchSubmitter {
       [blob.commitment],
       [blob.blob.share_version]
     )
-    const signedTx = await this.submitter.createAndSignTx({ msgs: [msg], fee,  accountNumber, sequence })
+    const signedTx = await this.submitter.createAndSignTx({ msgs: [msg], fee })
     const blobTx = new BlobTx(signedTx, [blob.blob], 'BLOB')
-    return [Buffer.from(blobTx.toBytes()).toString('base64'), signedTx]
+    return Buffer.from(blobTx.toBytes()).toString('base64')
   }
-
   // Save batch record to database
   async saveBatchToDB(
     manager: EntityManager,
