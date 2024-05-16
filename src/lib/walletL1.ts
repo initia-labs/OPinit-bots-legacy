@@ -137,14 +137,20 @@ export class TxWalletL1 extends Wallet {
     return broadcastResult
   }
 
-  async getManagedAccountNumberAndSequence(): Promise<{ accountNumber: number; sequence: number }> {
+  async getManagedAccountNumberAndSequence(): Promise<{
+    accountNumber: number;
+    sequence: number;
+  }> {
     if (!this.managedAccountNumber || !this.managedSequence) {
       const { account_number: accountNumber, sequence } =
         await this.accountNumberAndSequence()
       this.managedAccountNumber = accountNumber
       this.managedSequence = sequence
     }
-    return { accountNumber: this.managedAccountNumber, sequence: this.managedSequence }
+    return {
+      accountNumber: this.managedAccountNumber,
+      sequence: this.managedSequence
+    }
   }
 
   async transaction(

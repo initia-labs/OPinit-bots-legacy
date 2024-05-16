@@ -10,8 +10,6 @@ import {
   MsgPayForBlobs,
   BlobTx,
   TxAPI,
-  Tx,
-  TxInfo
 } from 'initia-l2'
 import { delay } from 'bluebird'
 import { INTERVAL_BATCH } from '../../config'
@@ -126,8 +124,8 @@ export class BatchSubmitter {
     return storedRecord[0] ?? null
   }
 
-   // Publish a batch to L1
-   async publishBatch(batch: Buffer): Promise<string[]> {
+  // Publish a batch to L1
+  async publishBatch(batch: Buffer): Promise<string[]> {
     const batchInfos: string[] = []
 
     while (batch.length !== 0) {
