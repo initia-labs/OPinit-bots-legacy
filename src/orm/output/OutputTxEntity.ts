@@ -3,12 +3,12 @@ import { Column, Entity, Index, PrimaryColumn } from 'typeorm'
 @Entity('output_tx')
 export default class OutputTxEntity {
   @PrimaryColumn('text')
-  txHash: string
+  txHash!: string
 
-  @Column()
+  @Column({ type: 'int' })
   @Index('output_tx_output_index_index')
-  outputIndex: number
+  outputIndex!: number
 
-  @Column()
-  processed: boolean
+  @Column({ type: 'boolean', default: false })
+  processed!: boolean
 }
