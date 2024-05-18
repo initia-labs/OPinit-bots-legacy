@@ -79,7 +79,7 @@ export class L2Monitor extends Monitor {
 
   public async handleEvents(manager: EntityManager): Promise<boolean> {
     const [isEmpty, events] = await this.helper.fetchAllEvents(
-      config.l2lcd,
+      this.rpcClient,
       this.currentHeight
     )
 

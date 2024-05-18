@@ -196,7 +196,7 @@ export class L1Monitor extends Monitor {
 
   public async handleEvents(manager: EntityManager): Promise<any> {
     const [isEmpty, events] = await this.helper.fetchAllEvents(
-      config.l1lcd,
+      this.rpcClient,
       this.currentHeight
     )
     if (isEmpty) {

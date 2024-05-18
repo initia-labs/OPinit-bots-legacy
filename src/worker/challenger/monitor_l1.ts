@@ -7,7 +7,6 @@ import { EntityManager } from 'typeorm'
 import { RPCClient, RPCSocket } from '../../lib/rpc'
 import { getDB } from './db'
 import winston from 'winston'
-import { config } from '../../config'
 
 export class L1Monitor extends Monitor {
   constructor(
@@ -61,7 +60,7 @@ export class L1Monitor extends Monitor {
 
   public async handleEvents(manager: EntityManager): Promise<boolean> {
     const [isEmpty, events] = await this.helper.fetchAllEvents(
-      config.l1lcd,
+      this.rpcClient,
       this.currentHeight
     )
 
