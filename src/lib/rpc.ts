@@ -249,6 +249,21 @@ export class RPCClient {
     return blockchainResult
   }
 
+  async getBlockResults(
+    height: number,
+  ): Promise<BlockResults | null> {
+    const blockResults: BlockResults = await this.getRequest(`/block_results`, {
+      height: height.toString(),
+    })
+
+    if (!blockResults) {
+      this.logger.info('failed get block results from rpc')
+      return null
+    }
+
+    return blockResults
+  }
+
   async getBlockBulk(start: string, end: string): Promise<BlockBulk | null> {
     const blockBulksResult: BlockBulk = await this.getRequest(`/block_bulk`, {
       start,
@@ -295,6 +310,27 @@ export class RPCClient {
     }
 
     throw new Error(`failed to get latest block height`)
+  }
+}
+
+export interface BlockResults {
+  result: {
+    height: string;
+    txs_results: {
+      code: number;
+      data: string;
+      log: string;
+      info: string;
+      gas_wanted: string;
+      gas_used: string;
+      events: {
+        type: string;
+        attributes: {
+          key: string;
+          value: string;
+        }[];
+      }[];
+    }[];
   }
 }
 
