@@ -314,24 +314,22 @@ export class RPCClient {
 }
 
 export interface BlockResults {
-  result: {
-    height: string;
-    txs_results: {
-      code: number;
-      data: string;
-      log: string;
-      info: string;
-      gas_wanted: string;
-      gas_used: string;
-      events: {
-        type: string;
-        attributes: {
-          key: string;
-          value: string;
-        }[];
+  height: string;
+  txs_results: {
+    code: number;
+    data: string;
+    log: string;
+    info: string;
+    gas_wanted: string;
+    gas_used: string;
+    events: {
+      type: string;
+      attributes: {
+        key: string;
+        value: string;
       }[];
     }[];
-  }
+  }[];
 }
 
 export interface Blockchain {

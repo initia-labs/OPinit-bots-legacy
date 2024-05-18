@@ -110,7 +110,7 @@ class MonitorHelper {
       return [true, []]
     }
 
-    const txResults = blockResults.result.txs_results
+    const txResults = blockResults.txs_results
     const extractAllEvents = (txs: any[]) =>
       txs
         .filter((tx) => tx.events && tx.events.length > 0)
