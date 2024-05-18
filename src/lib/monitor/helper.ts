@@ -1,4 +1,4 @@
-import { BlockInfo } from 'initia-l2'
+import { BlockInfo, LCDClient, TxSearchOptions, TxSearchResult } from 'initia-l2'
 import { getLatestOutputFromExecutor, getOutputFromExecutor } from '../query'
 import { WithdrawStorage } from '../storage'
 import { WithdrawalTx } from '../types'
@@ -104,7 +104,7 @@ class MonitorHelper {
     lcd: any,
     height: number
   ): Promise<[boolean, any[]]> {
-    const searchRes = await lcd.tx.search({
+    const searchRes = await this.search(lcd, {
       query: [{ key: 'tx.height', value: height.toString() }]
     })
 
@@ -129,6 +129,30 @@ class MonitorHelper {
     [key: string]: string;
   } {
     return JSON.parse(attrMap['data'])
+  }
+
+  // search tx without from data
+  public async search(
+    lcd: LCDClient,
+    options: Partial<TxSearchOptions>
+  ): Promise<TxSearchResult.Data> {
+    const params = new URLSearchParams()
+
+    // build search params
+    options.query?.forEach(v =>
+      params.append(
+        'query',
+        v.key === 'tx.height' ? `${v.key}=${v.value}` : `${v.key}='${v.value}'`
+      )
+    )
+
+    delete options['query']
+
+    Object.entries(options).forEach(v => {
+      params.append(v[0], v[1] as string)
+    })
+
+    return lcd.apiRequester.getRaw<TxSearchResult.Data>(`/cosmos/tx/v1beta1/txs`, params)
   }
 
   ///
