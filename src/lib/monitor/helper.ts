@@ -5,7 +5,7 @@ import { WithdrawalTx } from '../types'
 import { sha3_256 } from '../util'
 import OutputEntity from '../../orm/executor/OutputEntity'
 import { EntityManager, EntityTarget, ObjectLiteral } from 'typeorm'
-import { RPCClient } from 'lib/rpc'
+import { RPCClient } from '../../lib/rpc'
 
 class MonitorHelper {
   ///
