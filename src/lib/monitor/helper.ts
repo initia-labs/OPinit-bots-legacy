@@ -113,7 +113,7 @@ class MonitorHelper {
         .filter((tx) => tx.events && tx.events.length > 0)
         .flatMap((tx) => tx.events ?? [])
     const isEmpty = searchRes.txs.length === 0
-    const events = extractAllEvents(searchRes.txs)
+    const events = extractAllEvents(searchRes.tx_responses)
 
     return [isEmpty, events]
   }
