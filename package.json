@@ -1,6 +1,6 @@
 {
   "name": "@initia/rollup",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Optimistic rollup for initia",
   "main": "index.js",
   "engines": {
