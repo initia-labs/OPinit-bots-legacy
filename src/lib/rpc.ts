@@ -252,16 +252,16 @@ export class RPCClient {
   async getBlockResults(
     height: number,
   ): Promise<BlockResults | null> {
-    const blockchainResults: BlockResults = await this.getRequest(`/block_results`, {
+    const blockResults: BlockResults = await this.getRequest(`/block_results`, {
       height: height.toString(),
     })
 
-    if (!blockchainResults) {
+    if (!blockResults) {
       this.logger.info('failed get block results from rpc')
       return null
     }
 
-    return blockchainResults
+    return blockResults
   }
 
   async getBlockBulk(start: string, end: string): Promise<BlockBulk | null> {
