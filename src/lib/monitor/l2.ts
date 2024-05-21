@@ -62,10 +62,20 @@ export class L2Monitor extends Monitor {
       )
       return
     }
+
     const pair = await config.l1lcd.ophost.tokenPairByL2Denom(
       this.bridgeId,
       data['denom']
-    )
+    ).catch((e) => {
+      return null
+    })
+
+    if (!pair) {
+      this.logger.info(
+        `[handleInitiateTokenWithdrawalEvent - ${this.name()}] No token pair`
+      )
+      return
+    }
 
     const tx: ExecutorWithdrawalTxEntity = {
       l1Denom: pair.l1_denom,
