@@ -40,13 +40,6 @@ export class L2Monitor extends Monitor {
     return this.dateToSeconds(new Date())
   }
 
-  public async endBlock(): Promise<void> {
-    Prometheus.add({
-      name: MetricName.L2MonitorHeight,
-      data: this.currentHeight
-    })
-  }
-
   private async handleInitiateTokenWithdrawalEvent(
     manager: EntityManager,
     data: { [key: string]: string }
@@ -63,16 +56,15 @@ export class L2Monitor extends Monitor {
       return
     }
 
-    const pair = await config.l1lcd.ophost.tokenPairByL2Denom(
-      this.bridgeId,
-      data['denom']
-    ).catch((e) => {
-      return null
-    })
+    const pair = await config.l1lcd.ophost
+      .tokenPairByL2Denom(this.bridgeId, data['denom'])
+      .catch((e) => {
+        return null
+      })
 
     if (!pair) {
       this.logger.info(
-        `[handleInitiateTokenWithdrawalEvent - ${this.name()}] No token pair`
+        `[handleInitiateTokenWithdrawalEvent - ${this.name()}] No token pair for ${data['denom']}... skipping`
       )
       return
     }

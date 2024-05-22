@@ -19,7 +19,6 @@ import { getDB } from '../../worker/bridgeExecutor/db'
 import winston from 'winston'
 import { config } from '../../config'
 import { TxWalletL2, WalletType, getWallet, initWallet } from '../walletL2'
-import { MetricName, Prometheus } from '../../lib/metrics'
 
 export class L1Monitor extends Monitor {
   executorL2: TxWalletL2
@@ -99,13 +98,6 @@ export class L1Monitor extends Monitor {
       }
       throw err
     }
-  }
-
-  public async endBlock(): Promise<void> {
-    Prometheus.add({
-      name: MetricName.L1MonitorHeight,
-      data: this.currentHeight
-    })
   }
 
   public async handleNewBlock(): Promise<void> {

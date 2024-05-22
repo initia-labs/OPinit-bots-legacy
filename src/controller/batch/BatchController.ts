@@ -9,6 +9,7 @@ import { responses, routeConfig, z } from 'koa-swagger-decorator'
 import { success } from '../../lib/response'
 import { GetBatchResponse } from '../../swagger/batch_model'
 import { getBatch } from '../../service/batch/BatchService'
+import { wrapControllerFunction } from '../../lib/metricsMiddleware'
 
 const Joi = Validator.Joi
 
@@ -35,6 +36,8 @@ export class BatchController extends KoaController {
     }
   })
   async getBatch(ctx): Promise<void> {
-    success(ctx, await getBatch(ctx.params.batch_index))
+    await wrapControllerFunction('getBatch', async (ctx) => {
+      success(ctx, await getBatch(ctx.params.batch_index))
+    })(ctx, async () => {})
   }
 }

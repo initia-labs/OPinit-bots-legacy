@@ -5,6 +5,7 @@ import { error, success } from '../../lib/response'
 import { getWithdrawalTxList } from '../../service'
 import { responses, routeConfig, z } from 'koa-swagger-decorator'
 import { GetWithdrawalResponse } from '../../swagger/executor_model'
+import { wrapControllerFunction } from '../../lib/metricsMiddleware'
 
 @Controller('')
 export class WithdrawalTxController extends KoaController {
@@ -13,7 +14,7 @@ export class WithdrawalTxController extends KoaController {
     path: '/tx/withdrawal',
     summary: 'Get withdrawal tx data',
     description: 'Get withdrawal data',
-    tags: ['Withdrawal'],
+    tags: ['Executor'],
     operationId: 'getWithdrawalTx',
     request: {
       query: z.object({
@@ -34,8 +35,10 @@ export class WithdrawalTxController extends KoaController {
   @responses(GetWithdrawalResponse)
   @Get('/tx/withdrawal')
   async getWithdrawalTxList(ctx: Context): Promise<void> {
-    const withdrawalTxList = await getWithdrawalTxList(ctx.query as any)
-    if (withdrawalTxList) success(ctx, withdrawalTxList)
-    else error(ctx, ErrorTypes.API_ERROR)
+    await wrapControllerFunction('getWithdrawalTxList', async (ctx) => {
+      const withdrawalTxList = await getWithdrawalTxList(ctx.query as any)
+      if (withdrawalTxList) success(ctx, withdrawalTxList)
+      else error(ctx, ErrorTypes.API_ERROR)
+    })(ctx, async () => {})
   }
 }

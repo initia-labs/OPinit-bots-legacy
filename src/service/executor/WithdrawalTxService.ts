@@ -1,5 +1,5 @@
 import { ExecutorWithdrawalTxEntity } from '../../orm'
-import { getDB } from '../../lib/db'
+import { getDB } from '../../worker/bridgeExecutor/db'
 
 export interface GetWithdrawalTxListParam {
   sequence?: number;
@@ -24,6 +24,7 @@ export async function getWithdrawalTxList(
   try {
     const offset = param.offset ?? 0
     const order = param.descending == 'true' ? 'DESC' : 'ASC'
+    const limit = Number(param.limit) ?? 10
 
     const qb = queryRunner.manager.createQueryBuilder(
       ExecutorWithdrawalTxEntity,
@@ -40,8 +41,8 @@ export async function getWithdrawalTxList(
 
     const withdrawalTxList = await qb
       .orderBy('tx.sequence', order)
-      .skip(offset * param.limit)
-      .take(param.limit)
+      .skip(offset * limit)
+      .take(limit)
       .getMany()
 
     const count = await qb.getCount()

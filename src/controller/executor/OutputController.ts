@@ -5,6 +5,7 @@ import { error, success } from '../../lib/response'
 import { responses, routeConfig, z } from 'koa-swagger-decorator'
 import { getOutputList } from '../../service'
 import { GetOutputResponse } from '../../swagger/executor_model'
+import { wrapControllerFunction } from '../../lib/metricsMiddleware'
 
 @Controller('')
 export class OutputController extends KoaController {
@@ -13,7 +14,7 @@ export class OutputController extends KoaController {
     path: '/output',
     summary: 'Get output proposal data',
     description: 'Get output proposal data',
-    tags: ['Output'],
+    tags: ['Executor'],
     operationId: 'getOutput',
     request: {
       query: z.object({
@@ -33,8 +34,10 @@ export class OutputController extends KoaController {
   @responses(GetOutputResponse)
   @Get('/output')
   async getgetOutputList(ctx: Context): Promise<void> {
-    const outputList = await getOutputList(ctx.query as any)
-    if (outputList) success(ctx, outputList)
-    else error(ctx, ErrorTypes.API_ERROR)
+    await wrapControllerFunction('getOutputList', async (ctx) => {
+      const outputList = await getOutputList(ctx.query as any)
+      if (outputList) success(ctx, outputList)
+      else error(ctx, ErrorTypes.API_ERROR)
+    })(ctx, async () => {})
   }
 }

@@ -1,11 +1,11 @@
 import { RPCClient, RPCSocket } from '../../lib/rpc'
 import { L1Monitor } from '../../lib/monitor/l1'
 import { L2Monitor } from '../../lib/monitor/l2'
-import { executorController } from '../../controller'
+import { executorController, metricsController } from '../../controller'
 
 import { executorLogger as logger } from '../../lib/logger'
 import { initORM, finalizeORM } from './db'
-import { initServer, finalizeServer } from '../../loader'
+import { initServer, finalizeServer, initMetricsServer } from '../../loader'
 import { once } from 'lodash'
 import { config } from '../../config'
 import { Resurrector } from './Resurrector'
@@ -64,6 +64,7 @@ export async function startExecutor(): Promise<void> {
     await initORM()
 
     await initServer(executorController, config.EXECUTOR_PORT)
+    await initMetricsServer(metricsController, config.EXECUTOR_METRICS_PORT)
 
     if (!config.ENABLE_API_ONLY) {
       await runBot()

@@ -249,11 +249,9 @@ export class RPCClient {
     return blockchainResult
   }
 
-  async getBlockResults(
-    height: number,
-  ): Promise<BlockResults | null> {
+  async getBlockResults(height: number): Promise<BlockResults | null> {
     const blockResults: BlockResults = await this.getRequest(`/block_results`, {
-      height: height.toString(),
+      height: height.toString()
     })
 
     if (!blockResults) {

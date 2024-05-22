@@ -1,4 +1,4 @@
-import { getDB } from '../../lib/db'
+import { getDB } from '../../worker/batchSubmitter/db'
 import { DataSource, EntityManager } from 'typeorm'
 import { batchLogger, batchLogger as logger } from '../../lib/logger'
 import { BlockBulk, RawCommit, RPCClient } from '../../lib/rpc'
@@ -9,7 +9,7 @@ import {
   MsgRecordBatch,
   MsgPayForBlobs,
   BlobTx,
-  TxAPI,
+  TxAPI
 } from 'initia-l2'
 import { delay } from 'bluebird'
 import { INTERVAL_BATCH } from '../../config'

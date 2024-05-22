@@ -10,21 +10,25 @@ import {
 type MetricType = 'counter' | 'gauge' | 'histogram' | 'summary'
 
 export enum MetricName {
-  L1MonitorHeight = 'l1_monitor_height',
-  L2MonitorHeight = 'l2_monitor_height',
-  L1MonitorTime = 'l1_monitor_time',
-  L2MonitorTime = 'l2_monitor_time'
+  CPU_USAGE_GAUGE = 'cpu_usage_gauge',
+  MEMORY_USAGE_GAUGE = 'memory_usage_gauge',
+  LATENCY_GAUGE = 'latency_gauge',
+  REQUEST_LATENCY_HISTOGRAM = 'request_latency_histogram',
+  REQUEST_COUNT = 'request_count',
+  REQUEST_STATUS_CODE_COUNTER = 'status_code_counter'
 }
 
 interface CreateMetricOptions {
   type: MetricType;
   name: string;
   help: string;
+  buckets?: number[];
 }
 
 interface AddMetricData {
   name: string;
   data: number;
+  labels?: Partial<Record<string, string>>;
 }
 
 const prometheus = () => {
@@ -41,7 +45,7 @@ const prometheus = () => {
     }
   > = {}
 
-  const create = ({ type, name, help }: CreateMetricOptions): void => {
+  const create = ({ type, name, help, buckets }: CreateMetricOptions): void => {
     let instance:
       | Counter<string>
       | Gauge<string>
@@ -50,11 +54,11 @@ const prometheus = () => {
       | undefined
 
     if (type === 'counter') {
-      instance = new Counter({ name, help })
+      instance = new Counter({ name, help, labelNames: ['status_code']  })
     } else if (type === 'gauge') {
       instance = new Gauge({ name, help })
     } else if (type === 'histogram') {
-      instance = new Histogram({ name, help })
+      instance = new Histogram({ name, help, buckets })
     } else if (type === 'summary') {
       instance = new Summary({ name, help })
     }
@@ -65,13 +69,17 @@ const prometheus = () => {
     }
   }
 
-  const add = ({ name, data }: AddMetricData): void => {
+  const add = ({ name, data, labels }: AddMetricData): void => {
     const metric = instances[name]
     if (metric) {
       const { type, instance } = metric
 
       if (type === 'counter') {
-        (instance as Counter<string>).inc(data)
+        if (labels) {
+          (instance as Counter<string>).inc(labels, data)
+        } else {
+          (instance as Counter<string>).inc(data)
+        }
       } else if (type === 'gauge') {
         (instance as Gauge<string>).set(data)
       } else if (type === 'histogram') {
@@ -89,7 +97,33 @@ const prometheus = () => {
     }
   }
 
-  return { create, add, get }
+  const startLatencyTimer = (name: string) => {
+    const metricName = `${name}_latency_histogram`
+    if (!instances[metricName]) {
+      create({
+        type: 'histogram',
+        name: metricName,
+        help: `Latency of the ${name} function in milliseconds.`,
+        buckets: [0.1, 5, 15, 50, 100, 500, 1000]
+      })
+    }
+    return (instances[metricName].instance as Histogram<string>).startTimer()
+  }
+
+  const startStatusCodeCounter = (name: string) => {
+    const metricName = `${name}_${MetricName.REQUEST_STATUS_CODE_COUNTER}`
+    if (!instances[metricName]) {
+      create({
+        type: 'counter',
+        name: metricName,
+        help: `Count of the ${name} function by status code.`
+      })
+    }
+    return instances[metricName].instance as Counter<string>
+  }
+
+
+  return { create, add, get, startLatencyTimer, startStatusCodeCounter }
 }
 
 const Prometheus = prometheus()
@@ -98,26 +132,32 @@ const Prometheus = prometheus()
 
 Prometheus.create({
   type: 'gauge',
-  name: MetricName.L1MonitorHeight,
-  help: '[Executor] Current height of the L1 monitor.'
+  name: MetricName.CPU_USAGE_GAUGE,
+  help: 'CPU usage of the process.'
 })
 
 Prometheus.create({
   type: 'gauge',
-  name: MetricName.L2MonitorHeight,
-  help: '[Executor] Current height of the L2 monitor.'
+  name: MetricName.MEMORY_USAGE_GAUGE,
+  help: 'Memory usage of the process.'
 })
 
-Prometheus.create({
-  type: 'gauge',
-  name: MetricName.L1MonitorTime,
-  help: '[Executor] Time taken to process L1 monitor.'
-})
+export const updateUsageMetrics = () => {
+  const memoryUsage = process.memoryUsage()
+  const cpuUsage = process.cpuUsage()
 
-Prometheus.create({
-  type: 'gauge',
-  name: MetricName.L2MonitorTime,
-  help: '[Executor] Time taken to process L2 monitor.'
-})
+  const memoryUsageInMB = memoryUsage.rss / 1024 / 1024
+  const cpuUsageInSec = (cpuUsage.user + cpuUsage.system) / 1000000
+
+  Prometheus.add({
+    name: MetricName.MEMORY_USAGE_GAUGE,
+    data: memoryUsageInMB
+  })
+
+  Prometheus.add({
+    name: MetricName.CPU_USAGE_GAUGE,
+    data: cpuUsageInSec
+  })
+}
 
 export { Prometheus }
