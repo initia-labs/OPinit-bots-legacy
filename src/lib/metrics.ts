@@ -11,10 +11,14 @@ type MetricType = 'counter' | 'gauge' | 'histogram' | 'summary'
 
 export enum MetricName {
   OPINIT_BOT = 'opinit_bot',
-  CPU_USAGE_GAUGE = 'opinit_bot_cpu_usage_gauge',
-  MEMORY_USAGE_GAUGE = 'opinit_bot_memory_usage_gauge',
   REQUEST_LATENCY_HISTOGRAM = 'request_latency_histogram',
-  REQUEST_STATUS_CODE_COUNTER = 'status_code_counter'
+  REQUEST_STATUS_CODE_COUNTER = 'request_status_code_counter',
+  EXECUTOR_CPU_USAGE_GAUGE = 'opinit_bot_executor_cpu_usage_gauge',
+  EXECUTOR_MEMORY_USAGE_GAUGE = 'opinit_bot_executor_memory_usage_gauge',
+  OUTPUT_CPU_USAGE_GAUGE = 'opinit_bot_output_cpu_usage_gauge',
+  OUTPUT_MEMORY_USAGE_GAUGE = 'opinit_bot_output_memory_usage_gauge',
+  BATCH_CPU_USAGE_GAUGE = 'opinit_bot_batch_cpu_usage_gauge',
+  BATCH_MEMORY_USAGE_GAUGE = 'opinit_bot_batch_memory_usage_gauge'
 }
 
 interface CreateMetricOptions {
@@ -128,19 +132,46 @@ const Prometheus = prometheus()
 
 // Create metrics
 
-Prometheus.create({
-  type: 'gauge',
-  name: MetricName.CPU_USAGE_GAUGE,
-  help: 'CPU usage of the process.'
-})
+const metricsToCreate: CreateMetricOptions[] = [
+  {
+    type: 'gauge',
+    name: MetricName.EXECUTOR_CPU_USAGE_GAUGE,
+    help: 'CPU usage of the process.'
+  },
+  {
+    type: 'gauge',
+    name: MetricName.EXECUTOR_MEMORY_USAGE_GAUGE,
+    help: 'Memory usage of the process.'
+  },
+  {
+    type: 'gauge',
+    name: MetricName.OUTPUT_CPU_USAGE_GAUGE,
+    help: 'CPU usage of the process.'
+  },
+  {
+    type: 'gauge',
+    name: MetricName.OUTPUT_MEMORY_USAGE_GAUGE,
+    help: 'Memory usage of the process.'
+  },
+  {
+    type: 'gauge',
+    name: MetricName.BATCH_CPU_USAGE_GAUGE,
+    help: 'CPU usage of the process.'
+  },
+  {
+    type: 'gauge',
+    name: MetricName.BATCH_MEMORY_USAGE_GAUGE,
+    help: 'Memory usage of the process.'
+  }
+]
 
-Prometheus.create({
-  type: 'gauge',
-  name: MetricName.MEMORY_USAGE_GAUGE,
-  help: 'Memory usage of the process.'
-})
+// Create the metrics
+metricsToCreate.forEach((metric) => Prometheus.create(metric))
 
-export const updateUsageMetrics = () => {
+const updateUsageMetrics = (
+  cpuMetric: MetricName,
+  memoryMetric: MetricName
+) => {
   const memoryUsage = process.memoryUsage()
   const cpuUsage = process.cpuUsage()
 
@@ -148,14 +179,32 @@ export const updateUsageMetrics = () => {
   const cpuUsageInSec = (cpuUsage.user + cpuUsage.system) / 1000000
 
   Prometheus.add({
-    name: MetricName.MEMORY_USAGE_GAUGE,
+    name: memoryMetric,
     data: memoryUsageInMB
   })
 
   Prometheus.add({
-    name: MetricName.CPU_USAGE_GAUGE,
+    name: cpuMetric,
     data: cpuUsageInSec
   })
 }
+
+export const updateExecutorUsageMetrics = () =>
+  updateUsageMetrics(
+    MetricName.EXECUTOR_CPU_USAGE_GAUGE,
+    MetricName.EXECUTOR_MEMORY_USAGE_GAUGE
+  )
+
+export const updateOutputUsageMetrics = () =>
+  updateUsageMetrics(
+    MetricName.OUTPUT_CPU_USAGE_GAUGE,
+    MetricName.OUTPUT_MEMORY_USAGE_GAUGE
+  )
+
+export const updateBatchUsageMetrics = () =>
+  updateUsageMetrics(
+    MetricName.BATCH_CPU_USAGE_GAUGE,
+    MetricName.BATCH_MEMORY_USAGE_GAUGE
+  )
 
 export { Prometheus }

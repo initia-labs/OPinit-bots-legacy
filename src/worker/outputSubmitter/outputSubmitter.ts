@@ -15,6 +15,7 @@ import {
   getWallet,
   initWallet
 } from '../../lib/walletL1'
+import { updateOutputUsageMetrics } from '../../lib/metrics'
 
 export class OutputSubmitter {
   private db: DataSource
@@ -39,6 +40,7 @@ export class OutputSubmitter {
     while (this.isRunning) {
       await this.processOutput()
       await delay(INTERVAL_OUTPUT)
+      updateOutputUsageMetrics()
     }
   }
 

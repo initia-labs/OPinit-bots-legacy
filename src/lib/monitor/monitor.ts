@@ -5,7 +5,7 @@ import { DataSource, EntityManager } from 'typeorm'
 import MonitorHelper from './helper'
 import winston from 'winston'
 import { INTERVAL_MONITOR, config } from '../../config'
-import { updateUsageMetrics } from '../../lib/metrics'
+import { updateExecutorUsageMetrics } from '../../lib/metrics'
 
 const MAX_BLOCKS = 20 // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
 const MAX_RETRY_INTERVAL = 30_000
@@ -119,7 +119,7 @@ export abstract class Monitor {
         })
       } finally {
         await Bluebird.delay(INTERVAL_MONITOR)
-        updateUsageMetrics()
+        updateExecutorUsageMetrics()
       }
     }
   }
