@@ -2,9 +2,9 @@ import { OutputSubmitter } from './outputSubmitter'
 import { outputLogger as logger } from '../../lib/logger'
 import { once } from 'lodash'
 import { initORM } from './db'
-import { initMetricsServer } from 'loader'
-import { metricsController } from 'controller'
-import { config } from 'config'
+import { initMetricsServer } from '../../loader'
+import { metricsController } from '../../controller'
+import { config } from '../../config'
 
 let jobs: OutputSubmitter[]
 

@@ -114,7 +114,7 @@ const prometheus = () => {
   }
 
   const startStatusCodeCounter = (name: string) => {
-    const metricName = `${name}_${MetricName.REQUEST_STATUS_CODE_COUNTER}`
+    const metricName = `${MetricName.OPINIT_BOT}_${name}_${MetricName.REQUEST_STATUS_CODE_COUNTER}`
     if (!instances[metricName]) {
       create({
         type: 'counter',
@@ -130,81 +130,61 @@ const prometheus = () => {
 
 const Prometheus = prometheus()
 
-// Create metrics
-
-const metricsToCreate: CreateMetricOptions[] = [
-  {
-    type: 'gauge',
-    name: MetricName.EXECUTOR_CPU_USAGE_GAUGE,
-    help: 'CPU usage of the process.'
-  },
-  {
-    type: 'gauge',
-    name: MetricName.EXECUTOR_MEMORY_USAGE_GAUGE,
-    help: 'Memory usage of the process.'
-  },
-  {
-    type: 'gauge',
-    name: MetricName.OUTPUT_CPU_USAGE_GAUGE,
-    help: 'CPU usage of the process.'
-  },
-  {
-    type: 'gauge',
-    name: MetricName.OUTPUT_MEMORY_USAGE_GAUGE,
-    help: 'Memory usage of the process.'
-  },
-  {
-    type: 'gauge',
-    name: MetricName.BATCH_CPU_USAGE_GAUGE,
-    help: 'CPU usage of the process.'
-  },
-  {
-    type: 'gauge',
-    name: MetricName.BATCH_MEMORY_USAGE_GAUGE,
-    help: 'Memory usage of the process.'
-  }
-]
-
-// Create the metrics
-metricsToCreate.forEach((metric) => Prometheus.create(metric))
+let isMetricsInitialized = false
 
 const updateUsageMetrics = (
   cpuMetric: MetricName,
-  memoryMetric: MetricName
+  memoryMetric: MetricName,
 ) => {
-  const memoryUsage = process.memoryUsage()
-  const cpuUsage = process.cpuUsage()
+  const memoryUsage = process.memoryUsage();
+  const cpuUsage = process.cpuUsage();
 
-  const memoryUsageInMB = memoryUsage.rss / 1024 / 1024
-  const cpuUsageInSec = (cpuUsage.user + cpuUsage.system) / 1000000
+  const memoryUsageInMB = memoryUsage.rss / 1024 / 1024;
+  const cpuUsageInSec = (cpuUsage.user + cpuUsage.system) / 1000000;
+
+  if (!isMetricsInitialized) {
+    Prometheus.create({
+      type: 'gauge',
+      name: cpuMetric,
+      help: 'CPU usage of the process in seconds.',
+    });
+
+    Prometheus.create({
+      type: 'gauge',
+      name: memoryMetric,
+      help: 'Memory usage of the process in MB.',
+    });
+
+    isMetricsInitialized = true;
+  }
 
   Prometheus.add({
     name: memoryMetric,
-    data: memoryUsageInMB
-  })
+    data: memoryUsageInMB,
+  });
 
   Prometheus.add({
     name: cpuMetric,
-    data: cpuUsageInSec
-  })
-}
+    data: cpuUsageInSec,
+  });
+};
 
 export const updateExecutorUsageMetrics = () =>
   updateUsageMetrics(
     MetricName.EXECUTOR_CPU_USAGE_GAUGE,
-    MetricName.EXECUTOR_MEMORY_USAGE_GAUGE
-  )
+    MetricName.EXECUTOR_MEMORY_USAGE_GAUGE,
+  );
 
 export const updateOutputUsageMetrics = () =>
   updateUsageMetrics(
     MetricName.OUTPUT_CPU_USAGE_GAUGE,
-    MetricName.OUTPUT_MEMORY_USAGE_GAUGE
-  )
+    MetricName.OUTPUT_MEMORY_USAGE_GAUGE,
+  );
 
 export const updateBatchUsageMetrics = () =>
   updateUsageMetrics(
     MetricName.BATCH_CPU_USAGE_GAUGE,
-    MetricName.BATCH_MEMORY_USAGE_GAUGE
-  )
+    MetricName.BATCH_MEMORY_USAGE_GAUGE,
+  );
 
 export { Prometheus }
