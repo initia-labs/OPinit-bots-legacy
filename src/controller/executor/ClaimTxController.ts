@@ -5,6 +5,7 @@ import { error, success } from '../../lib/response'
 import { getClaimTxList } from '../../service'
 import { responses, routeConfig, z } from 'koa-swagger-decorator'
 import { GetClaimResponse } from '../../swagger/executor_model'
+import { wrapControllerFunction } from '../../lib/metricsMiddleware'
 
 @Controller('')
 export class ClaimTxController extends KoaController {
@@ -13,7 +14,7 @@ export class ClaimTxController extends KoaController {
     path: '/tx/claim',
     summary: 'Get tx data for claiming',
     description: 'Get claim data',
-    tags: ['Claim'],
+    tags: ['Executor'],
     operationId: 'getClaimTx',
     request: {
       query: z.object({
@@ -34,8 +35,10 @@ export class ClaimTxController extends KoaController {
   @responses(GetClaimResponse)
   @Get('/tx/claim')
   async getClaimTxList(ctx: Context): Promise<void> {
-    const claimTxList = await getClaimTxList(ctx.query as any)
-    if (claimTxList) success(ctx, claimTxList)
-    else error(ctx, ErrorTypes.API_ERROR)
+    await wrapControllerFunction('get_claim_tx_list', async (ctx) => {
+      const claimTxList = await getClaimTxList(ctx.query as any)
+      if (claimTxList) success(ctx, claimTxList)
+      else error(ctx, ErrorTypes.API_ERROR)
+    })(ctx, async () => {})
   }
 }

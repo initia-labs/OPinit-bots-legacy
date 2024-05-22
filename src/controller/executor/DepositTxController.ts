@@ -5,6 +5,10 @@ import { error, success } from '../../lib/response'
 import { getDepositTxList } from '../../service'
 import { responses, routeConfig, z } from 'koa-swagger-decorator'
 import { GetDepositResponse } from '../../swagger/executor_model'
+import {
+  metricsMiddleware,
+  wrapControllerFunction
+} from '../../lib/metricsMiddleware'
 
 @Controller('')
 export class DepositTxController extends KoaController {
@@ -13,7 +17,7 @@ export class DepositTxController extends KoaController {
     path: '/tx/deposit',
     summary: 'Get deposit tx data',
     description: 'Get deposit data',
-    tags: ['Deposit'],
+    tags: ['Executor'],
     operationId: 'getDepositTx',
     request: {
       query: z.object({
@@ -34,8 +38,10 @@ export class DepositTxController extends KoaController {
   @responses(GetDepositResponse)
   @Get('/tx/deposit')
   async getDepositTxList(ctx: Context): Promise<void> {
-    const depositTxList = await getDepositTxList(ctx.query as any)
-    if (depositTxList) success(ctx, depositTxList)
-    else error(ctx, ErrorTypes.API_ERROR)
+    await wrapControllerFunction('get_deposit_tx_list', async (ctx) => {
+      const depositTxList = await getDepositTxList(ctx.query as any)
+      if (depositTxList) success(ctx, depositTxList)
+      else error(ctx, ErrorTypes.API_ERROR)
+    })(ctx, async () => {})
   }
 }

@@ -7,7 +7,7 @@ import {
   getDB as getChallengerDB,
   initORM as initChallengerORM
 } from '../../src/worker/challenger/db'
-import { getDB as getBatchDB, initORM as initBatchORM } from '../../src/lib/db'
+import { getDB as getBatchDB, initORM as initBatchORM } from '../../src/worker/batchSubmitter/db'
 import { DataSource, EntityManager } from 'typeorm'
 import {
   ExecutorOutputEntity,

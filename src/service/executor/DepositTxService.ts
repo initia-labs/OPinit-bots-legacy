@@ -1,5 +1,5 @@
 import { ExecutorDepositTxEntity } from '../../orm'
-import { getDB } from '../../lib/db'
+import { getDB } from '../../worker/bridgeExecutor/db'
 
 export interface GetDepositTxListParam {
   sequence?: number;
@@ -24,6 +24,7 @@ export async function getDepositTxList(
   try {
     const offset = param.offset ?? 0
     const order = param.descending == 'true' ? 'DESC' : 'ASC'
+    const limit = Number(param.limit) ?? 10
 
     const qb = queryRunner.manager.createQueryBuilder(
       ExecutorDepositTxEntity,
@@ -40,21 +41,21 @@ export async function getDepositTxList(
 
     const depositTxList = await qb
       .orderBy('tx.sequence', order)
-      .skip(offset * param.limit)
-      .take(param.limit)
+      .skip(offset * limit)
+      .take(limit)
       .getMany()
 
     const count = await qb.getCount()
     let next: number | undefined
 
-    if (count > (offset + 1) * param.limit) {
+    if (count > (offset + 1) * limit) {
       next = offset + 1
     }
 
     return {
       count,
       next,
-      limit: param.limit,
+      limit,
       depositTxList
     }
   } finally {

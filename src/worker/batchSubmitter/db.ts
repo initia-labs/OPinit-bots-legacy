@@ -6,23 +6,23 @@ import {
   DataSourceOptions
 } from 'typeorm'
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions'
-import CamelToSnakeNamingStrategy from '../orm/CamelToSnakeNamingStrategy'
+import { batchLogger as logger } from '../../lib/logger'
 
-const debug = require('debug')('orm')
+import CamelToSnakeNamingStrategy from '../../orm/CamelToSnakeNamingStrategy'
 
-import { RecordEntity, ExecutorOutputEntity, BatchTxEntity } from '../orm'
+import { BatchTxEntity, ExecutorOutputEntity, RecordEntity } from '../../orm'
 
 const staticOptions = {
   supportBigNumbers: true,
   bigNumberStrings: true,
-  entities: [RecordEntity, ExecutorOutputEntity, BatchTxEntity]
+  entities: [BatchTxEntity, RecordEntity, ExecutorOutputEntity]
 }
 
 let DB: DataSource[] = []
 
 function initConnection(options: DataSourceOptions): Promise<DataSource> {
   const pgOpts = options as PostgresConnectionOptions
-  debug(
+  logger.info(
     `creating connection default to ${pgOpts.username}@${pgOpts.host}:${
       pgOpts.port || 5432
     }`
@@ -35,15 +35,20 @@ function initConnection(options: DataSourceOptions): Promise<DataSource> {
   }).initialize()
 }
 
-export async function initORM(): Promise<void> {
+export async function initORM(host?: string, port?: number): Promise<void> {
   const reader = new ConnectionOptionsReader()
   const options = (await reader.all()) as PostgresConnectionOptions[]
 
-  if (options.length && !options.filter((o) => o.name === 'default').length) {
-    options[0]['name' as any] = 'default'
-  }
-
-  DB = await Bluebird.map(options, (opt) => initConnection(opt))
+  DB = await Bluebird.map(options, (opt) => {
+    const newOptions = { ...opt }
+    if (host) {
+      newOptions.host = host
+    }
+    if (port) {
+      newOptions.port = port
+    }
+    return initConnection(newOptions)
+  })
 }
 
 export function getDB(): DataSource[] {

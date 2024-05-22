@@ -1,4 +1,4 @@
-import { getDB } from '../../lib/db'
+import { getDB } from '../../worker/batchSubmitter/db'
 import { DataSource, EntityManager } from 'typeorm'
 import { batchLogger, batchLogger as logger } from '../../lib/logger'
 import { BlockBulk, RawCommit, RPCClient } from '../../lib/rpc'
@@ -9,7 +9,7 @@ import {
   MsgRecordBatch,
   MsgPayForBlobs,
   BlobTx,
-  TxAPI,
+  TxAPI
 } from 'initia-l2'
 import { delay } from 'bluebird'
 import { INTERVAL_BATCH } from '../../config'
@@ -19,6 +19,7 @@ import { createBlob, getCelestiaFeeGasLimit } from '../../celestia/utils'
 import { bech32 } from 'bech32'
 import { TxWalletL1 } from '../../lib/walletL1'
 import { BatchError, BatchErrorTypes } from './error'
+import { updateBatchUsageMetrics } from '../../lib/metrics'
 
 const base = 200000
 const perByte = 10
@@ -56,6 +57,7 @@ export class BatchSubmitter {
     while (this.isRunning) {
       await this.processBatch()
       await delay(INTERVAL_BATCH)
+      updateBatchUsageMetrics()
     }
   }
 

@@ -32,21 +32,6 @@ function getRootApp(): Koa {
   return app
 }
 
-function createApiDocApp(): Koa {
-  // static
-  const app = new Koa()
-
-  app
-    .use(
-      serve(path.resolve(__dirname, '..', 'static'), {
-        maxage: 86400 * 1000
-      })
-    )
-    .use(notFoundMiddleware)
-
-  return app
-}
-
 async function createAPIApp(controllers: KoaController[]): Promise<Koa> {
   const app = new Koa()
 
@@ -85,8 +70,6 @@ export async function initApp(controllers: KoaController[]): Promise<Koa> {
   const app = getRootApp()
 
   app.proxy = true
-
-  const apiDocApp = createApiDocApp()
   const apiApp = await createAPIApp(controllers)
 
   app
@@ -117,7 +100,6 @@ export async function initApp(controllers: KoaController[]): Promise<Koa> {
     .use(cors())
     .use(swaggerRouter.routes())
     .use(swaggerRouter.allowedMethods())
-    .use(mount('/apidoc', apiDocApp))
     .use(mount('/', apiApp))
 
   return app

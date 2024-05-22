@@ -1,4 +1,9 @@
-import { BlockInfo, LCDClient, TxSearchOptions, TxSearchResult } from 'initia-l2'
+import {
+  BlockInfo,
+  LCDClient,
+  TxSearchOptions,
+  TxSearchResult
+} from 'initia-l2'
 import { getLatestOutputFromExecutor, getOutputFromExecutor } from '../query'
 import { WithdrawStorage } from '../storage'
 import { WithdrawalTx } from '../types'
@@ -142,7 +147,7 @@ class MonitorHelper {
     const params = new URLSearchParams()
 
     // build search params
-    options.query?.forEach(v =>
+    options.query?.forEach((v) =>
       params.append(
         'query',
         v.key === 'tx.height' ? `${v.key}=${v.value}` : `${v.key}='${v.value}'`
@@ -151,11 +156,14 @@ class MonitorHelper {
 
     delete options['query']
 
-    Object.entries(options).forEach(v => {
+    Object.entries(options).forEach((v) => {
       params.append(v[0], v[1] as string)
     })
 
-    return lcd.apiRequester.getRaw<TxSearchResult.Data>(`/cosmos/tx/v1beta1/txs`, params)
+    return lcd.apiRequester.getRaw<TxSearchResult.Data>(
+      `/cosmos/tx/v1beta1/txs`,
+      params
+    )
   }
 
   ///

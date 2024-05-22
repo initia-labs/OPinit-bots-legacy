@@ -2,6 +2,9 @@ import { OutputSubmitter } from './outputSubmitter'
 import { outputLogger as logger } from '../../lib/logger'
 import { once } from 'lodash'
 import { initORM } from './db'
+import { initMetricsServer } from '../../loader'
+import { metricsController } from '../../controller'
+import { config } from '../../config'
 
 let jobs: OutputSubmitter[]
 
@@ -33,6 +36,9 @@ export async function stopOutput(): Promise<void> {
 
 export async function startOutput(): Promise<void> {
   await initORM()
+
+  await initMetricsServer(metricsController, config.OUTPUT_METRICS_PORT)
+
   await runBot()
 
   // attach graceful shutdown
