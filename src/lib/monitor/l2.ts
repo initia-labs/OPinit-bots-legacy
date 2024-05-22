@@ -64,7 +64,7 @@ export class L2Monitor extends Monitor {
 
     if (!pair) {
       this.logger.info(
-        `[handleInitiateTokenWithdrawalEvent - ${this.name()}] No token pair for ${data['denom']}... skipping`
+        `[handleInitiateTokenWithdrawalEvent - ${this.name()}] No token pair`
       )
       return
     }

@@ -25,7 +25,7 @@ export const metricsMiddleware = (functionName: string) => {
       name: `${functionName}_${MetricName.REQUEST_STATUS_CODE_COUNTER}`,
       data: 1,
       labels: { status_code: String(ctx.status) }
-    });
+    })
 
     end()
   }

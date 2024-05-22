@@ -54,7 +54,7 @@ const prometheus = () => {
       | undefined
 
     if (type === 'counter') {
-      instance = new Counter({ name, help, labelNames: ['status_code']  })
+      instance = new Counter({ name, help, labelNames: ['status_code'] })
     } else if (type === 'gauge') {
       instance = new Gauge({ name, help })
     } else if (type === 'histogram') {
@@ -121,7 +121,6 @@ const prometheus = () => {
     }
     return instances[metricName].instance as Counter<string>
   }
-
 
   return { create, add, get, startLatencyTimer, startStatusCodeCounter }
 }
