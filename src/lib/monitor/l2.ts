@@ -8,7 +8,6 @@ import winston from 'winston'
 import { config } from '../../config'
 import { getBridgeInfo, getLastOutputInfo } from '../query'
 import { TxWalletL2, WalletType, getWallet, initWallet } from '../walletL2'
-import { MetricName, Prometheus } from '../../lib/metrics'
 
 export class L2Monitor extends Monitor {
   executorL2: TxWalletL2
