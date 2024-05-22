@@ -35,7 +35,7 @@ export class ClaimTxController extends KoaController {
   @responses(GetClaimResponse)
   @Get('/tx/claim')
   async getClaimTxList(ctx: Context): Promise<void> {
-    await wrapControllerFunction('getClaimTxList', async (ctx) => {
+    await wrapControllerFunction('get_claim_tx_list', async (ctx) => {
       const claimTxList = await getClaimTxList(ctx.query as any)
       if (claimTxList) success(ctx, claimTxList)
       else error(ctx, ErrorTypes.API_ERROR)

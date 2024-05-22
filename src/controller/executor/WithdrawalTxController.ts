@@ -35,7 +35,7 @@ export class WithdrawalTxController extends KoaController {
   @responses(GetWithdrawalResponse)
   @Get('/tx/withdrawal')
   async getWithdrawalTxList(ctx: Context): Promise<void> {
-    await wrapControllerFunction('getWithdrawalTxList', async (ctx) => {
+    await wrapControllerFunction('get_withdrawal_tx_list', async (ctx) => {
       const withdrawalTxList = await getWithdrawalTxList(ctx.query as any)
       if (withdrawalTxList) success(ctx, withdrawalTxList)
       else error(ctx, ErrorTypes.API_ERROR)

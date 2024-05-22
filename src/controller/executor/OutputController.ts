@@ -34,7 +34,7 @@ export class OutputController extends KoaController {
   @responses(GetOutputResponse)
   @Get('/output')
   async getgetOutputList(ctx: Context): Promise<void> {
-    await wrapControllerFunction('getOutputList', async (ctx) => {
+    await wrapControllerFunction('get_output_list', async (ctx) => {
       const outputList = await getOutputList(ctx.query as any)
       if (outputList) success(ctx, outputList)
       else error(ctx, ErrorTypes.API_ERROR)

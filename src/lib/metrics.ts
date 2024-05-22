@@ -10,11 +10,10 @@ import {
 type MetricType = 'counter' | 'gauge' | 'histogram' | 'summary'
 
 export enum MetricName {
-  CPU_USAGE_GAUGE = 'cpu_usage_gauge',
-  MEMORY_USAGE_GAUGE = 'memory_usage_gauge',
-  LATENCY_GAUGE = 'latency_gauge',
+  OPINIT_BOT = 'opinit_bot',
+  CPU_USAGE_GAUGE = 'opinit_bot_cpu_usage_gauge',
+  MEMORY_USAGE_GAUGE = 'opinit_bot_memory_usage_gauge',
   REQUEST_LATENCY_HISTOGRAM = 'request_latency_histogram',
-  REQUEST_COUNT = 'request_count',
   REQUEST_STATUS_CODE_COUNTER = 'status_code_counter'
 }
 
@@ -98,7 +97,7 @@ const prometheus = () => {
   }
 
   const startLatencyTimer = (name: string) => {
-    const metricName = `${name}_latency_histogram`
+    const metricName = `${MetricName.OPINIT_BOT}_${name}_${MetricName.REQUEST_LATENCY_HISTOGRAM}`
     if (!instances[metricName]) {
       create({
         type: 'histogram',

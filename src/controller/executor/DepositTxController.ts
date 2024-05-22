@@ -38,7 +38,7 @@ export class DepositTxController extends KoaController {
   @responses(GetDepositResponse)
   @Get('/tx/deposit')
   async getDepositTxList(ctx: Context): Promise<void> {
-    await wrapControllerFunction('getDepositTxList', async (ctx) => {
+    await wrapControllerFunction('get_deposit_tx_list', async (ctx) => {
       const depositTxList = await getDepositTxList(ctx.query as any)
       if (depositTxList) success(ctx, depositTxList)
       else error(ctx, ErrorTypes.API_ERROR)

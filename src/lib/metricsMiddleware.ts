@@ -12,17 +12,12 @@ export const metricsMiddleware = (functionName: string) => {
 
     const durationInMilliseconds = process.hrtime(startHrTime)[1] / 1e6
     Prometheus.add({
-      name: MetricName.REQUEST_LATENCY_HISTOGRAM,
+      name: `${MetricName.OPINIT_BOT}_${functionName}_${MetricName.REQUEST_LATENCY_HISTOGRAM}`,
       data: durationInMilliseconds
     })
 
     Prometheus.add({
-      name: MetricName.REQUEST_COUNT,
-      data: 1
-    })
-
-    Prometheus.add({
-      name: `${functionName}_${MetricName.REQUEST_STATUS_CODE_COUNTER}`,
+      name: `${MetricName.OPINIT_BOT}_${functionName}_${MetricName.REQUEST_STATUS_CODE_COUNTER}`,
       data: 1,
       labels: { status_code: String(ctx.status) }
     })

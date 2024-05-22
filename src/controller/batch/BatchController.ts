@@ -36,7 +36,7 @@ export class BatchController extends KoaController {
     }
   })
   async getBatch(ctx): Promise<void> {
-    await wrapControllerFunction('getBatch', async (ctx) => {
+    await wrapControllerFunction('get_batch', async (ctx) => {
       success(ctx, await getBatch(ctx.params.batch_index))
     })(ctx, async () => {})
   }
