@@ -4,8 +4,10 @@ import {
   Gauge,
   Histogram,
   Summary,
-  register
+  register,
+  Pushgateway
 } from 'prom-client'
+import { config } from '../config'
 
 type MetricType = 'counter' | 'gauge' | 'histogram' | 'summary'
 
@@ -33,6 +35,10 @@ interface AddMetricData {
   data: number;
   labels?: Partial<Record<string, string>>;
 }
+
+const pushgateway = new Pushgateway(config.PROMETHEUS_GATEWAY_URI, {
+  timeout: config.PROMETHEUS_TIME_OUT
+})
 
 const prometheus = () => {
   const registry = new Registry()
@@ -91,6 +97,17 @@ const prometheus = () => {
         (instance as Summary<string>).observe(data)
       }
     }
+
+    if (config.PROMETHEUS_METRICS_MODE === 'push') {
+      pushgateway
+        .pushAdd({ jobName: name })
+        .then(({ resp, body }) => {
+          console.log('Pushed metrics to the pushgateway', resp, body)
+        })
+        .catch((err) => {
+          console.error('Error pushing metrics to the pushgateway', err)
+        })
+    }
   }
 
   const get = async () => {
@@ -134,57 +151,57 @@ let isMetricsInitialized = false
 
 const updateUsageMetrics = (
   cpuMetric: MetricName,
-  memoryMetric: MetricName,
+  memoryMetric: MetricName
 ) => {
-  const memoryUsage = process.memoryUsage();
-  const cpuUsage = process.cpuUsage();
+  const memoryUsage = process.memoryUsage()
+  const cpuUsage = process.cpuUsage()
 
-  const memoryUsageInMB = memoryUsage.rss / 1024 / 1024;
-  const cpuUsageInSec = (cpuUsage.user + cpuUsage.system) / 1000000;
+  const memoryUsageInMB = memoryUsage.rss / 1024 / 1024
+  const cpuUsageInSec = (cpuUsage.user + cpuUsage.system) / 1000000
 
   if (!isMetricsInitialized) {
     Prometheus.create({
       type: 'gauge',
       name: cpuMetric,
-      help: 'CPU usage of the process in seconds.',
-    });
+      help: 'CPU usage of the process in seconds.'
+    })
 
     Prometheus.create({
       type: 'gauge',
       name: memoryMetric,
-      help: 'Memory usage of the process in MB.',
-    });
+      help: 'Memory usage of the process in MB.'
+    })
 
-    isMetricsInitialized = true;
+    isMetricsInitialized = true
   }
 
   Prometheus.add({
     name: memoryMetric,
-    data: memoryUsageInMB,
-  });
+    data: memoryUsageInMB
+  })
 
   Prometheus.add({
     name: cpuMetric,
-    data: cpuUsageInSec,
-  });
-};
+    data: cpuUsageInSec
+  })
+}
 
 export const updateExecutorUsageMetrics = () =>
   updateUsageMetrics(
     MetricName.EXECUTOR_CPU_USAGE_GAUGE,
-    MetricName.EXECUTOR_MEMORY_USAGE_GAUGE,
-  );
+    MetricName.EXECUTOR_MEMORY_USAGE_GAUGE
+  )
 
 export const updateOutputUsageMetrics = () =>
   updateUsageMetrics(
     MetricName.OUTPUT_CPU_USAGE_GAUGE,
-    MetricName.OUTPUT_MEMORY_USAGE_GAUGE,
-  );
+    MetricName.OUTPUT_MEMORY_USAGE_GAUGE
+  )
 
 export const updateBatchUsageMetrics = () =>
   updateUsageMetrics(
     MetricName.BATCH_CPU_USAGE_GAUGE,
-    MetricName.BATCH_MEMORY_USAGE_GAUGE,
-  );
+    MetricName.BATCH_MEMORY_USAGE_GAUGE
+  )
 
 export { Prometheus }

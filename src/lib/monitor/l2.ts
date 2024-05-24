@@ -57,7 +57,7 @@ export class L2Monitor extends Monitor {
 
     const pair = await config.l1lcd.ophost
       .tokenPairByL2Denom(this.bridgeId, data['denom'])
-      .catch((e) => {
+      .catch(() => {
         return null
       })
 

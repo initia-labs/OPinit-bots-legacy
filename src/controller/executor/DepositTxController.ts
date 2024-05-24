@@ -6,7 +6,6 @@ import { getDepositTxList } from '../../service'
 import { responses, routeConfig, z } from 'koa-swagger-decorator'
 import { GetDepositResponse } from '../../swagger/executor_model'
 import {
-  metricsMiddleware,
   wrapControllerFunction
 } from '../../lib/metricsMiddleware'
 
