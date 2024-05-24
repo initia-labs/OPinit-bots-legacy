@@ -8,6 +8,7 @@ import {
   Pushgateway
 } from 'prom-client'
 import { config } from '../config'
+import { prometheusLogger as logger } from '../lib/logger'
 
 type MetricType = 'counter' | 'gauge' | 'histogram' | 'summary'
 
@@ -101,11 +102,8 @@ const prometheus = () => {
     if (config.PROMETHEUS_METRICS_MODE === 'push') {
       pushgateway
         .pushAdd({ jobName: name })
-        .then(({ resp, body }) => {
-          console.log('Pushed metrics to the pushgateway', resp, body)
-        })
         .catch((err) => {
-          console.error('Error pushing metrics to the pushgateway', err)
+          logger.warn('Error pushing metrics to the pushgateway', err)
         })
     }
   }
