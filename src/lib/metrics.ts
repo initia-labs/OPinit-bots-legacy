@@ -37,9 +37,12 @@ interface AddMetricData {
   labels?: Partial<Record<string, string>>;
 }
 
-const pushgateway = new Pushgateway(config.PROMETHEUS_GATEWAY_URI, {
-  timeout: config.PROMETHEUS_TIME_OUT
-})
+let pushgateway
+if (config.PROMETHEUS_METRICS_MODE === 'push') {
+  pushgateway = new Pushgateway(config.PROMETHEUS_GATEWAY_URI, {
+    timeout: config.PROMETHEUS_TIME_OUT
+  })
+}
 
 const prometheus = () => {
   const registry = new Registry()
