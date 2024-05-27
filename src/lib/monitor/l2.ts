@@ -58,7 +58,7 @@ export class L2Monitor extends Monitor {
     const pair = await config.l1lcd.ophost
       .tokenPairByL2Denom(this.bridgeId, data['denom'])
       .catch((e) => {
-        this.logger.warn(`Failed to get token ${data['denom']} pair`)
+        this.logger.warn(`Failed to get token ${data['denom']} pair`, e)
         return null
       })
 
