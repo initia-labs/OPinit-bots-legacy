@@ -38,6 +38,6 @@ export class OutputController extends KoaController {
       const outputList = await getOutputList(ctx.query as any)
       if (outputList) success(ctx, outputList)
       else error(ctx, ErrorTypes.API_ERROR)
-    })(ctx, async () => {})
+    })(ctx)
   }
 }

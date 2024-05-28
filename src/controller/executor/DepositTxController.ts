@@ -41,6 +41,6 @@ export class DepositTxController extends KoaController {
       const depositTxList = await getDepositTxList(ctx.query as any)
       if (depositTxList) success(ctx, depositTxList)
       else error(ctx, ErrorTypes.API_ERROR)
-    })(ctx, async () => {})
+    })(ctx)
   }
 }

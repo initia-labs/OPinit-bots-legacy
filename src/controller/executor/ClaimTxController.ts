@@ -39,6 +39,6 @@ export class ClaimTxController extends KoaController {
       const claimTxList = await getClaimTxList(ctx.query as any)
       if (claimTxList) success(ctx, claimTxList)
       else error(ctx, ErrorTypes.API_ERROR)
-    })(ctx, async () => {})
+    })(ctx)
   }
 }

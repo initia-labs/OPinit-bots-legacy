@@ -13,15 +13,15 @@ import { prometheusLogger as logger } from '../lib/logger'
 type MetricType = 'counter' | 'gauge' | 'histogram' | 'summary'
 
 export enum MetricName {
-  OPINIT_BOT = 'opinit_bot',
-  REQUEST_LATENCY_HISTOGRAM = 'request_latency_histogram',
-  REQUEST_STATUS_CODE_COUNTER = 'request_status_code_counter',
-  EXECUTOR_CPU_USAGE_GAUGE = 'opinit_bot_executor_cpu_usage_gauge',
-  EXECUTOR_MEMORY_USAGE_GAUGE = 'opinit_bot_executor_memory_usage_gauge',
-  OUTPUT_CPU_USAGE_GAUGE = 'opinit_bot_output_cpu_usage_gauge',
-  OUTPUT_MEMORY_USAGE_GAUGE = 'opinit_bot_output_memory_usage_gauge',
-  BATCH_CPU_USAGE_GAUGE = 'opinit_bot_batch_cpu_usage_gauge',
-  BATCH_MEMORY_USAGE_GAUGE = 'opinit_bot_batch_memory_usage_gauge'
+  PREFIX_SERVICE_NAME = 'opinit_bot',
+  POSTFIX_REQUEST_LATENCY_HISTOGRAM = 'request_latency_histogram',
+  POSTFIX_REQUEST_STATUS_CODE_COUNTER = 'request_status_code_counter',
+  EXECUTOR_CPU_USAGE_GAUGE = `${PREFIX_SERVICE_NAME}_executor_cpu_usage_gauge`,
+  EXECUTOR_MEMORY_USAGE_GAUGE = `${PREFIX_SERVICE_NAME}_executor_memory_usage_gauge`,
+  OUTPUT_CPU_USAGE_GAUGE = `${PREFIX_SERVICE_NAME}_output_cpu_usage_gauge`,
+  OUTPUT_MEMORY_USAGE_GAUGE = `${PREFIX_SERVICE_NAME}_output_memory_usage_gauge`,
+  BATCH_CPU_USAGE_GAUGE = `${PREFIX_SERVICE_NAME}_batch_cpu_usage_gauge`,
+  BATCH_MEMORY_USAGE_GAUGE = `${PREFIX_SERVICE_NAME}_batch_memory_usage_gauge`
 }
 
 interface CreateMetricOptions {
@@ -118,8 +118,11 @@ const prometheus = () => {
     }
   }
 
+  const LatencyTimerMetricsName = (name: string) => `${MetricName.PREFIX_SERVICE_NAME}_${name}_${MetricName.POSTFIX_REQUEST_LATENCY_HISTOGRAM}`
+  const StatusCodeCounterMetricsName = (name: string) => `${MetricName.PREFIX_SERVICE_NAME}_${name}_${MetricName.POSTFIX_REQUEST_STATUS_CODE_COUNTER}`
+
   const startLatencyTimer = (name: string) => {
-    const metricName = `${MetricName.OPINIT_BOT}_${name}_${MetricName.REQUEST_LATENCY_HISTOGRAM}`
+    const metricName = LatencyTimerMetricsName(name)
     if (!instances[metricName]) {
       create({
         type: 'histogram',
@@ -132,7 +135,7 @@ const prometheus = () => {
   }
 
   const startStatusCodeCounter = (name: string) => {
-    const metricName = `${MetricName.OPINIT_BOT}_${name}_${MetricName.REQUEST_STATUS_CODE_COUNTER}`
+    const metricName = StatusCodeCounterMetricsName(name)
     if (!instances[metricName]) {
       create({
         type: 'counter',
@@ -143,7 +146,7 @@ const prometheus = () => {
     return instances[metricName].instance as Counter<string>
   }
 
-  return { create, add, get, startLatencyTimer, startStatusCodeCounter }
+  return { create, add, get, startLatencyTimer, startStatusCodeCounter, LatencyTimerMetricsName, StatusCodeCounterMetricsName }
 }
 
 const Prometheus = prometheus()

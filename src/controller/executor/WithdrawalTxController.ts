@@ -39,6 +39,6 @@ export class WithdrawalTxController extends KoaController {
       const withdrawalTxList = await getWithdrawalTxList(ctx.query as any)
       if (withdrawalTxList) success(ctx, withdrawalTxList)
       else error(ctx, ErrorTypes.API_ERROR)
-    })(ctx, async () => {})
+    })(ctx)
   }
 }

@@ -1,39 +1,35 @@
 import { Context, Next } from 'koa'
-import { Prometheus, MetricName } from './metrics'
+import { Prometheus } from './metrics'
 
 export const metricsMiddleware = (functionName: string) => {
   return async (ctx: Context, next: Next) => {
     const end = Prometheus.startLatencyTimer(functionName)
     Prometheus.startStatusCodeCounter(functionName)
 
-    const startHrTime = process.hrtime()
+    Prometheus.add({
+      name: Prometheus.StatusCodeCounterMetricsName(functionName),
+      data: 1,
+      labels: { status_code: String(ctx.status) }
+    })
 
     await next()
 
+    const startHrTime = process.hrtime()
     const durationInMilliseconds = process.hrtime(startHrTime)[1] / 1e6
-    Prometheus.add({
-      name: `${MetricName.OPINIT_BOT}_${functionName}_${MetricName.REQUEST_LATENCY_HISTOGRAM}`,
-      data: durationInMilliseconds
-    })
 
     Prometheus.add({
-      name: `${MetricName.OPINIT_BOT}_${functionName}_${MetricName.REQUEST_STATUS_CODE_COUNTER}`,
-      data: 1,
-      labels: { status_code: String(ctx.status) }
+      name: Prometheus.LatencyTimerMetricsName(functionName),
+      data: durationInMilliseconds
     })
 
     end()
   }
 }
 
-export const wrapControllerFunction = (
-  functionName: string,
-  controllerFunction: (ctx: Context) => Promise<void>
-) => {
-  return async (ctx: Context, next: Next) => {
+export const wrapControllerFunction = (functionName: string, controllerFunction: (ctx: Context) => Promise<void>) => {
+  return async (ctx: Context) => {
     await metricsMiddleware(functionName)(ctx, async () => {
       await controllerFunction(ctx)
     })
-    await next()
   }
 }
