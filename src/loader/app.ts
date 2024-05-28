@@ -75,16 +75,23 @@ export async function initApp(controllers: KoaController[]): Promise<Koa> {
     //   helmet({
     //     contentSecurityPolicy: {
     //       directives: {
-    //         defaultSrc: [`'self'`],
-    //         scriptSrc: [`'self'`, `'unsafe-inline'`, `'unsafe-eval'`, 'cdnjs.cloudflare.com', 'unpkg.com'],
-    //         fontSrc: [`'self'`, 'https:', 'data:'],
+    //         defaultSrc: [`'self'`, 'http:'],
+    //         scriptSrc: [
+    //           `'self'`,
+    //           `'unsafe-inline'`,
+    //           `'unsafe-eval'`,
+    //           'http:',
+    //           'cdnjs.cloudflare.com',
+    //           'unpkg.com',
+    //         ],
+    //         fontSrc: [`'self'`, 'http:', 'https:', 'data:'],
     //         objectSrc: [`'none'`],
-    //         imgSrc: [`'self'`, 'data:', 'validator.swagger.io'],
-    //         styleSrc: [`'self'`, 'https:', `'unsafe-inline'`],
-    //         upgradeInsecureRequests: [],
-    //         blockAllMixedContent: []
-    //       }
-    //     }
+    //         imgSrc: [`'self'`, 'http:', 'data:', 'validator.swagger.io'],
+    //         styleSrc: [`'self'`, 'http:', 'https:', `'unsafe-inline'`],
+    //         blockAllMixedContent: [],
+    //       },
+    //     },
+    //     crossOriginEmbedderPolicy: false,
     //   })
     // )
     .use(cors())
