@@ -106,10 +106,7 @@ export class L1Monitor extends Monitor {
     const latestTx0 = this.getBlockByHeight(this.latestHeight)?.block.data
       .txs[0]
 
-    if (
-      !latestTx0 ||
-      this.oracleHeight == this.latestHeight
-    ) {
+    if (!latestTx0 || this.oracleHeight == this.latestHeight) {
       this.logger.info(
         `[handleNewBlock - ${this.name()}] No new block to update oracle tx`
       )

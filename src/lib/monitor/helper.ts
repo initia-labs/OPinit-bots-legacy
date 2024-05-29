@@ -202,8 +202,7 @@ class MonitorHelper {
         let attempt = 0
         while (!blockResults && attempt < maxRetry) {
           try {
-            blockResults = await rpcClient
-              .getBlockResults(minHeight + i)
+            blockResults = await rpcClient.getBlockResults(minHeight + i)
           } catch {
             if (attempt === maxRetry) {
               throw new Error('Failed to feed block results')

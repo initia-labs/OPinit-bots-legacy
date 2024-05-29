@@ -225,3 +225,5 @@ validateCelestiaConfig()
 export const INTERVAL_BATCH = 100_000
 export const INTERVAL_MONITOR = 100
 export const INTERVAL_OUTPUT = 10_000
+
+export const SECOND = 1_000
