@@ -4,21 +4,24 @@ import {
   Gauge,
   Histogram,
   Summary,
-  register
+  register,
+  Pushgateway
 } from 'prom-client'
+import { config } from '../config'
+import { prometheusLogger as logger } from '../lib/logger'
 
 type MetricType = 'counter' | 'gauge' | 'histogram' | 'summary'
 
 export enum MetricName {
-  OPINIT_BOT = 'opinit_bot',
-  REQUEST_LATENCY_HISTOGRAM = 'request_latency_histogram',
-  REQUEST_STATUS_CODE_COUNTER = 'request_status_code_counter',
-  EXECUTOR_CPU_USAGE_GAUGE = 'opinit_bot_executor_cpu_usage_gauge',
-  EXECUTOR_MEMORY_USAGE_GAUGE = 'opinit_bot_executor_memory_usage_gauge',
-  OUTPUT_CPU_USAGE_GAUGE = 'opinit_bot_output_cpu_usage_gauge',
-  OUTPUT_MEMORY_USAGE_GAUGE = 'opinit_bot_output_memory_usage_gauge',
-  BATCH_CPU_USAGE_GAUGE = 'opinit_bot_batch_cpu_usage_gauge',
-  BATCH_MEMORY_USAGE_GAUGE = 'opinit_bot_batch_memory_usage_gauge'
+  PREFIX_SERVICE_NAME = 'opinit_bot',
+  POSTFIX_REQUEST_LATENCY_HISTOGRAM = 'request_latency_histogram',
+  POSTFIX_REQUEST_STATUS_CODE_COUNTER = 'request_status_code_counter',
+  EXECUTOR_CPU_USAGE_GAUGE = `${PREFIX_SERVICE_NAME}_executor_cpu_usage_gauge`,
+  EXECUTOR_MEMORY_USAGE_GAUGE = `${PREFIX_SERVICE_NAME}_executor_memory_usage_gauge`,
+  OUTPUT_CPU_USAGE_GAUGE = `${PREFIX_SERVICE_NAME}_output_cpu_usage_gauge`,
+  OUTPUT_MEMORY_USAGE_GAUGE = `${PREFIX_SERVICE_NAME}_output_memory_usage_gauge`,
+  BATCH_CPU_USAGE_GAUGE = `${PREFIX_SERVICE_NAME}_batch_cpu_usage_gauge`,
+  BATCH_MEMORY_USAGE_GAUGE = `${PREFIX_SERVICE_NAME}_batch_memory_usage_gauge`
 }
 
 interface CreateMetricOptions {
@@ -32,6 +35,13 @@ interface AddMetricData {
   name: string;
   data: number;
   labels?: Partial<Record<string, string>>;
+}
+
+let pushgateway
+if (config.PROMETHEUS_METRICS_MODE === 'push') {
+  pushgateway = new Pushgateway(config.PROMETHEUS_GATEWAY_URI, {
+    timeout: config.PROMETHEUS_TIME_OUT
+  })
 }
 
 const prometheus = () => {
@@ -91,6 +101,14 @@ const prometheus = () => {
         (instance as Summary<string>).observe(data)
       }
     }
+
+    if (config.PROMETHEUS_METRICS_MODE === 'push') {
+      pushgateway
+        .pushAdd({ jobName: name })
+        .catch((err) => {
+          logger.warn('Error pushing metrics to the pushgateway', err)
+        })
+    }
   }
 
   const get = async () => {
@@ -100,8 +118,11 @@ const prometheus = () => {
     }
   }
 
+  const LatencyTimerMetricsName = (name: string) => `${MetricName.PREFIX_SERVICE_NAME}_${name}_${MetricName.POSTFIX_REQUEST_LATENCY_HISTOGRAM}`
+  const StatusCodeCounterMetricsName = (name: string) => `${MetricName.PREFIX_SERVICE_NAME}_${name}_${MetricName.POSTFIX_REQUEST_STATUS_CODE_COUNTER}`
+
   const startLatencyTimer = (name: string) => {
-    const metricName = `${MetricName.OPINIT_BOT}_${name}_${MetricName.REQUEST_LATENCY_HISTOGRAM}`
+    const metricName = LatencyTimerMetricsName(name)
     if (!instances[metricName]) {
       create({
         type: 'histogram',
@@ -114,7 +135,7 @@ const prometheus = () => {
   }
 
   const startStatusCodeCounter = (name: string) => {
-    const metricName = `${MetricName.OPINIT_BOT}_${name}_${MetricName.REQUEST_STATUS_CODE_COUNTER}`
+    const metricName = StatusCodeCounterMetricsName(name)
     if (!instances[metricName]) {
       create({
         type: 'counter',
@@ -125,7 +146,7 @@ const prometheus = () => {
     return instances[metricName].instance as Counter<string>
   }
 
-  return { create, add, get, startLatencyTimer, startStatusCodeCounter }
+  return { create, add, get, startLatencyTimer, startStatusCodeCounter, LatencyTimerMetricsName, StatusCodeCounterMetricsName }
 }
 
 const Prometheus = prometheus()
@@ -134,57 +155,57 @@ let isMetricsInitialized = false
 
 const updateUsageMetrics = (
   cpuMetric: MetricName,
-  memoryMetric: MetricName,
+  memoryMetric: MetricName
 ) => {
-  const memoryUsage = process.memoryUsage();
-  const cpuUsage = process.cpuUsage();
+  const memoryUsage = process.memoryUsage()
+  const cpuUsage = process.cpuUsage()
 
-  const memoryUsageInMB = memoryUsage.rss / 1024 / 1024;
-  const cpuUsageInSec = (cpuUsage.user + cpuUsage.system) / 1000000;
+  const memoryUsageInMB = memoryUsage.rss / 1024 / 1024
+  const cpuUsageInSec = (cpuUsage.user + cpuUsage.system) / 1000000
 
   if (!isMetricsInitialized) {
     Prometheus.create({
       type: 'gauge',
       name: cpuMetric,
-      help: 'CPU usage of the process in seconds.',
-    });
+      help: 'CPU usage of the process in seconds.'
+    })
 
     Prometheus.create({
       type: 'gauge',
       name: memoryMetric,
-      help: 'Memory usage of the process in MB.',
-    });
+      help: 'Memory usage of the process in MB.'
+    })
 
-    isMetricsInitialized = true;
+    isMetricsInitialized = true
   }
 
   Prometheus.add({
     name: memoryMetric,
-    data: memoryUsageInMB,
-  });
+    data: memoryUsageInMB
+  })
 
   Prometheus.add({
     name: cpuMetric,
-    data: cpuUsageInSec,
-  });
-};
+    data: cpuUsageInSec
+  })
+}
 
 export const updateExecutorUsageMetrics = () =>
   updateUsageMetrics(
     MetricName.EXECUTOR_CPU_USAGE_GAUGE,
-    MetricName.EXECUTOR_MEMORY_USAGE_GAUGE,
-  );
+    MetricName.EXECUTOR_MEMORY_USAGE_GAUGE
+  )
 
 export const updateOutputUsageMetrics = () =>
   updateUsageMetrics(
     MetricName.OUTPUT_CPU_USAGE_GAUGE,
-    MetricName.OUTPUT_MEMORY_USAGE_GAUGE,
-  );
+    MetricName.OUTPUT_MEMORY_USAGE_GAUGE
+  )
 
 export const updateBatchUsageMetrics = () =>
   updateUsageMetrics(
     MetricName.BATCH_CPU_USAGE_GAUGE,
-    MetricName.BATCH_MEMORY_USAGE_GAUGE,
-  );
+    MetricName.BATCH_MEMORY_USAGE_GAUGE
+  )
 
 export { Prometheus }

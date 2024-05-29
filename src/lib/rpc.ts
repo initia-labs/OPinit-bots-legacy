@@ -93,7 +93,14 @@ export class RPCSocket {
 
   public connect(): void {
     this.disconnect()
-    this.ws = new Websocket(this.wsUrl)
+
+    const isSecure = this.wsUrl.startsWith('wss')
+    const agent = isSecure
+      ? new https.Agent({ keepAlive: true })
+      : new http.Agent({ keepAlive: true })
+
+    this.ws = new Websocket(this.wsUrl, { agent })
+
     this.ws.on('open', () => this.onConnect())
     this.ws.on('close', (code, reason) =>
       this.onDisconnect(code, reason.toString())

@@ -1,7 +1,9 @@
-import { LCDClient as LCDClientL1 } from 'initia-l1'
+import { APIRequester, LCDClient as LCDClientL1 } from 'initia-l1'
 import { LCDClient as LCDClientL2 } from 'initia-l2'
 import { validateCelestiaConfig } from './celestia/utils'
 import * as dotenv from 'dotenv'
+import http from 'http'
+import https from 'https'
 
 const envFile =
   process.env.NODE_ENV === 'test' || !process.env.WORKER_NAME
@@ -52,10 +54,26 @@ const {
   EXECUTOR_L2_MONITOR_HEIGHT,
   BATCH_SUBMITTER_ADDR,
   ENABLE_API_ONLY,
-  ENABLE_ORACLE
+  ENABLE_ORACLE,
+
+  // prometheus
+  PROMETHEUS_METRICS_MODE,
+  PROMETHEUS_GATEWAY_URI,
+  PROMETHEUS_TIME_OUT
 } = process.env
 
 const supportedPublishBatchTargets = ['l1', 'celestia']
+
+const getUri = (uri, defaultUri = 'http://127.0.0.1:1317') => uri ? uri.split(',')[0] : defaultUri;
+const createApiRequester = (uri) => new APIRequester(
+  getUri(uri),
+  {
+    httpAgent: new http.Agent({ keepAlive: true }),
+    httpsAgent: new https.Agent({ keepAlive: true }),
+  }
+);
+
+
 
 export const config = {
   EXECUTOR_PORT: EXECUTOR_PORT ? parseInt(EXECUTOR_PORT) : 5000,
@@ -133,35 +151,33 @@ export const config = {
   L2_CHAIN_ID: L2_CHAIN_ID ? L2_CHAIN_ID : '',
   L1_CLIENT_ID: L1_CLIENT_ID ? L1_CLIENT_ID : '',
   l1lcd: new LCDClientL1(
-    L1_LCD_URI ? L1_LCD_URI.split(',')[0] : 'http://127.0.0.1:1317',
+    getUri(L1_LCD_URI),
     {
       gasPrices: '0.15uinit',
       gasAdjustment: '2',
       chainId: L1_CHAIN_ID
-    }
+    },
+    createApiRequester(L1_LCD_URI)
   ),
   l2lcd: new LCDClientL2(
-    L2_LCD_URI ? L2_LCD_URI.split(',')[0] : 'http://127.0.0.1:1317',
+    getUri(L2_LCD_URI),
     {
       gasPrices: L2_GAS_PRICES || '0umin',
       gasAdjustment: '2',
       chainId: L2_CHAIN_ID
-    }
+    },
+    createApiRequester(L2_LCD_URI)
   ),
   batchlcd: (() => {
+    const uri = !PUBLISH_BATCH_TARGET || PUBLISH_BATCH_TARGET == 'l1' ? L1_LCD_URI : BATCH_LCD_URI
     return new LCDClientL1(
-      !PUBLISH_BATCH_TARGET || PUBLISH_BATCH_TARGET == 'l1'
-        ? L1_LCD_URI
-          ? L1_LCD_URI.split(',')[0]
-          : 'http://127.0.0.1:1317'
-        : BATCH_LCD_URI
-          ? BATCH_LCD_URI.split(',')[0]
-          : 'http://127.0.0.1:1317',
+      getUri(uri),
       {
         gasPrices: BATCH_GAS_PRICES || `0.2${BATCH_DENOM ?? 'uinit'}`,
         gasAdjustment: '2',
         chainId: BATCH_CHAIN_ID ? BATCH_CHAIN_ID : L1_CHAIN_ID
-      }
+      },
+      createApiRequester(uri)
     )
   })(),
   SLACK_WEB_HOOK: SLACK_WEB_HOOK ? SLACK_WEB_HOOK : '',
@@ -189,7 +205,18 @@ export const config = {
     : 0,
   BATCH_SUBMITTER_ADDR: BATCH_SUBMITTER_ADDR || '',
   ENABLE_API_ONLY: ENABLE_API_ONLY ? ENABLE_API_ONLY == 'true' : false,
-  ENABLE_ORACLE: ENABLE_ORACLE ? ENABLE_ORACLE == 'true' : false
+  ENABLE_ORACLE: ENABLE_ORACLE ? ENABLE_ORACLE == 'true' : false,
+
+  // prometheus
+  PROMETHEUS_METRICS_MODE: PROMETHEUS_METRICS_MODE
+    ? PROMETHEUS_METRICS_MODE
+    : 'pull',
+  PROMETHEUS_GATEWAY_URI: PROMETHEUS_GATEWAY_URI
+    ? PROMETHEUS_GATEWAY_URI
+    : 'http://127.0.0.1:9091',
+  PROMETHEUS_TIME_OUT: PROMETHEUS_TIME_OUT
+    ? parseInt(PROMETHEUS_TIME_OUT)
+    : 5000
 }
 
 // check celestia config

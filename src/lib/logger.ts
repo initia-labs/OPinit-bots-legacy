@@ -61,6 +61,7 @@ function createLogger(name: string) {
   return logger
 }
 
+export const prometheusLogger = createLogger('Prometheus')
 export const executorLogger = createLogger('Executor')
 export const outputLogger = createLogger('Output')
 export const batchLogger = createLogger('Batch')

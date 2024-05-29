@@ -20,6 +20,7 @@ To run OPinit bots, you should check the following version. This is needed to en
 | L1 Node | MiniMove | MiniWasm | MiniEVM | OPinit-bots |
 | ------- | -------- | -------- | ------- | ----------- |
 | v0.2.10 |  v0.2.12 |  v0.2.15 |  -      |    v0.1.6   |
+| v0.2.15 |  v0.3.0  |  v0.2.15 |  -      |    v0.1.12  |
 
 ### Step1. Create Bridge
 
@@ -84,6 +85,10 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | EXECUTOR_L2_MONITOR_HEIGHT | L2 monitor start height (optional)         | 0                        |
 | ENABLE_API_ONLY            | Enable API only mode (optional)            | false                    |
 | SLACK_WEB_HOOK             | Slack web hook for notification (optional) | ''                       |
+| EXECUTOR_METRICS_PORT      | Executor metrics port                      | 8080                     |
+| PROMETHEUS_METRICS_MODE    | Prometheus metrics mode ['pull', 'push']   | 'pull'                   |
+| PROMETHEUS_GATEWAY_URI     | Prometheus push gateway URI                | 'http://127.0.0.1:9091' |
+| PROMETHEUS_TIME_OUT        | Prometheus push time out (unit: ms)        | 5000                     |
 
 > Note that if `EXECUTOR_L1_MONITOR_HEIGHT` and `EXECUTOR_L2_MONITOR_HEIGHT` are not set, `executor` will start monitoring from height stored on `state` table. If you want to start monitoring from specific height, you should set them in `.env.executor` file.
 
@@ -96,6 +101,10 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | BRIDGE_ID                 | Bridge ID                                  | ''                       |
 | OUTPUT_SUBMITTER_MNEMONIC | Mnemonic seed for output submitter         | ''                       |
 | SLACK_WEB_HOOK            | Slack web hook for notification (optional) | ''                       |
+| OUTPUT_METRICS_PORT       | Output metrics port                        | 8081                     |
+| PROMETHEUS_METRICS_MODE   | Prometheus metrics mode ['pull', 'push']   | 'pull'                   |
+| PROMETHEUS_GATEWAY_URI    | Prometheus push gateway URI                | 'http://127.0.0.1:9091' |
+| PROMETHEUS_TIME_OUT       | Prometheus push time out (unit: ms)        | 5000                     |
 
 - `.env.batch`
 
@@ -117,6 +126,10 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | CELESTIA_NAMESPACE_ID       | Celestia namespace id (optional)                             | ''                         |
 | PUBLISH_BATCH_TARGET        | Target chain to publish batch (supports: ['l1', 'celestia']) | 'l1'                       |
 | ENABLE_API_ONLY             | Enable API only mode (optional)                              | false                      |
+| BATCH_METRICS_PORT          | Batch metrics port                                           | 8082                       |
+| PROMETHEUS_METRICS_MODE     | Prometheus metrics mode ['pull', 'push']                     | 'pull'                     |
+| PROMETHEUS_GATEWAY_URI      | Prometheus push gateway URI                                  | 'http://127.0.0.1:9091'   |
+| PROMETHEUS_TIME_OUT         | Prometheus push time out (unit: ms)                          | 5000                       |
 
 - `.env.challenger`
 
