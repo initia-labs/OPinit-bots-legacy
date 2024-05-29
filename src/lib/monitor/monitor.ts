@@ -30,16 +30,19 @@ export abstract class Monitor {
     this.bridgeId = config.BRIDGE_ID
   }
 
-  public getBlockByHeight(height: number): Block | null {
-    return this.blockQueue.find((block) => block[0] === height)?.[1] || null
+  public getBlockByHeight(height: number): Block {
+    const block = this.blockQueue.find((block) => block[0] === height)
+    if (!block) throw new Error(`block not found for height ${height}`)
+    return block[1]
   }
 
-  public getBlockResultsByHeight(height: number): BlockResults | null {
-    return (
-      this.blockResultsQueue.find(
-        (blockResults) => blockResults[0] === height
-      )?.[1] || null
+  public getBlockResultsByHeight(height: number): BlockResults {
+    const blockResult = this.blockResultsQueue.find(
+      (blockResults) => blockResults[0] === height
     )
+    if (!blockResult)
+      throw new Error(`block result not found for height ${height}`)
+    return blockResult[1]
   }
 
   public async run(): Promise<void> {
@@ -111,6 +114,7 @@ export abstract class Monitor {
           this.syncedHeight + 1,
           maxHeight
         )
+
         this.blockResultsQueue = await this.helper.feedBlockResults(
           this.rpcClient,
           this.syncedHeight + 1,

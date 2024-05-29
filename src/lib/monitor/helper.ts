@@ -167,34 +167,55 @@ class MonitorHelper {
   public async feedBlock(
     rpcClient: RPCClient,
     minHeight: number,
-    maxHeight: number
+    maxHeight: number,
+    maxRetry = 3
   ): Promise<[number, Block][]> {
     const blocks = await Promise.all(
       Array.from({ length: maxHeight - minHeight + 1 }, async (_, i) => {
-        const block = await rpcClient.getBlock(minHeight + i).catch(() => null)
-        return block ? [minHeight + i, block] : null
+        let block
+        let attempt = 0
+        while (block === null && attempt < maxRetry) {
+          try {
+            block = await rpcClient.getBlock(minHeight + i).catch(() => null)
+          } catch {
+            if (attempt === maxRetry) {
+              throw new Error('Failed to feed block')
+            }
+            attempt++
+          }
+        }
+        return [minHeight + i, block as Block]
       })
     )
-    return blocks.filter((block) => block !== null) as [number, Block][]
+    return blocks as [number, Block][]
   }
 
   public async feedBlockResults(
     rpcClient: RPCClient,
     minHeight: number,
-    maxHeight: number
+    maxHeight: number,
+    maxRetry = 3
   ): Promise<[number, BlockResults][]> {
     const blockResults = await Promise.all(
       Array.from({ length: maxHeight - minHeight + 1 }, async (_, i) => {
-        const blockResults = await rpcClient
-          .getBlockResults(minHeight + i)
-          .catch(() => null)
-        return blockResults ? [minHeight + i, blockResults] : null
+        let blockResults
+        let attempt = 0
+        while (blockResults === null && attempt < maxRetry) {
+          try {
+            blockResults = await rpcClient
+              .getBlockResults(minHeight + i)
+              .catch(() => null)
+          } catch {
+            if (attempt === maxRetry) {
+              throw new Error('Failed to feed block results')
+            }
+            attempt++
+          }
+        }
+        return [minHeight + i, blockResults as BlockResults]
       })
     )
-    return blockResults.filter((blockResults) => blockResults !== null) as [
-      number,
-      BlockResults
-    ][]
+    return blockResults as [number, BlockResults][]
   }
 
   ///
