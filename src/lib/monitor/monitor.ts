@@ -94,8 +94,6 @@ export abstract class Monitor {
         if (!this.latestHeight || !(this.latestHeight > this.syncedHeight))
           continue
 
-        await this.handleNewBlock()
-
         // cap the query to fetch 20 blocks at maximum
         // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
         const maxHeight = Math.min(
@@ -120,6 +118,8 @@ export abstract class Monitor {
           this.syncedHeight + 1,
           maxHeight
         )
+        
+        await this.handleNewBlock()
 
         await this.db.transaction(async (manager: EntityManager) => {
           for (const metadata of blockchainData.block_metas.reverse()) {
