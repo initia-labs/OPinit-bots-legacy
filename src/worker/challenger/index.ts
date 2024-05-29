@@ -1,4 +1,4 @@
-import { RPCClient, RPCSocket } from '../../lib/rpc'
+import { RPCClient } from '../../lib/rpc'
 import { Monitor } from '../../lib/monitor'
 import { Challenger } from './challenger'
 import { initORM, finalizeORM } from './db'
@@ -12,16 +12,8 @@ let monitors: (Monitor | Challenger)[]
 
 async function runBot(): Promise<void> {
   monitors = [
-    new L1Monitor(
-      new RPCSocket(config.L1_RPC_URI, 10000, logger),
-      new RPCClient(config.L1_RPC_URI, logger),
-      logger
-    ),
-    new L2Monitor(
-      new RPCSocket(config.L2_RPC_URI, 10000, logger),
-      new RPCClient(config.L2_RPC_URI, logger),
-      logger
-    ),
+    new L1Monitor(new RPCClient(config.L1_RPC_URI, logger), logger),
+    new L2Monitor(new RPCClient(config.L2_RPC_URI, logger), logger),
     new Challenger(logger)
   ]
   try {

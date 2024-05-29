@@ -26,7 +26,10 @@ export const metricsMiddleware = (functionName: string) => {
   }
 }
 
-export const wrapControllerFunction = (functionName: string, controllerFunction: (ctx: Context) => Promise<void>) => {
+export const wrapControllerFunction = (
+  functionName: string,
+  controllerFunction: (ctx: Context) => Promise<void>
+) => {
   return async (ctx: Context) => {
     await metricsMiddleware(functionName)(ctx, async () => {
       await controllerFunction(ctx)

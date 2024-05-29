@@ -6,7 +6,7 @@ import {
 import { OutputInfo } from 'initia-l2'
 import { Monitor } from '../../lib/monitor'
 import { EntityManager } from 'typeorm'
-import { RPCClient, RPCSocket } from '../../lib/rpc'
+import { RPCClient } from '../../lib/rpc'
 import winston from 'winston'
 import { getDB } from './db'
 import { config } from '../../config'
@@ -17,11 +17,10 @@ export class L2Monitor extends Monitor {
   startBlockNumber: number
 
   constructor(
-    public socket: RPCSocket,
     public rpcClient: RPCClient,
     logger: winston.Logger
   ) {
-    super(socket, rpcClient, logger);
+    super(rpcClient, logger);
     [this.db] = getDB()
     this.outputIndex = 0
   }
@@ -88,10 +87,8 @@ export class L2Monitor extends Monitor {
   }
 
   public async handleEvents(manager: EntityManager): Promise<boolean> {
-    const [isEmpty, events] = await this.helper.fetchAllEvents(
-      this.rpcClient,
-      this.currentHeight
-    )
+    const blockResults = this.getBlockResultsByHeight(this.currentHeight)
+    const [isEmpty, events] = await this.helper.fetchAllEvents(blockResults)
 
     if (isEmpty) return false
 

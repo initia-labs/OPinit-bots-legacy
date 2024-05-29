@@ -1,5 +1,5 @@
 import Bluebird from 'bluebird'
-import { RPCClient, RPCSocket } from '../rpc'
+import { Block, BlockResults, RPCClient } from '../rpc'
 import { StateEntity } from '../../orm'
 import { DataSource, EntityManager } from 'typeorm'
 import MonitorHelper from './helper'
@@ -13,6 +13,10 @@ const MAX_RETRY_INTERVAL = 30_000
 export abstract class Monitor {
   public syncedHeight: number
   public currentHeight: number
+  public latestHeight: number
+  public blockQueue: [number, Block][] = []
+  public blockResultsQueue: [number, BlockResults][] = []
+
   protected db: DataSource
   protected isRunning = false
   protected bridgeId: number
@@ -20,11 +24,25 @@ export abstract class Monitor {
   helper: MonitorHelper = new MonitorHelper()
 
   constructor(
-    public socket: RPCSocket,
     public rpcClient: RPCClient,
     public logger: winston.Logger
   ) {
     this.bridgeId = config.BRIDGE_ID
+  }
+
+  public getBlockByHeight(height: number): Block | null {
+    const block = this.blockQueue.find((block) => block[0] === height)
+    if (!block) return null
+    return block[1]
+  }
+
+  public getBlockResultsByHeight(height: number): BlockResults {
+    const blockResult = this.blockResultsQueue.find(
+      (blockResults) => blockResults[0] === height
+    )
+    if (!blockResult)
+      throw new Error(`block result not found for height ${height}`)
+    return blockResult[1]
   }
 
   public async run(): Promise<void> {
@@ -48,13 +66,11 @@ export abstract class Monitor {
         .save({ name: this.name(), height: this.syncedHeight })
     }
 
-    this.socket.initialize()
     this.isRunning = true
     await this.monitor()
   }
 
   public stop(): void {
-    this.socket.stop()
     this.isRunning = false
   }
 
@@ -74,19 +90,36 @@ export abstract class Monitor {
     await this.prepareMonitor()
     while (this.isRunning) {
       try {
-        const latestHeight = this.socket.latestHeight
-        if (!latestHeight || !(latestHeight > this.syncedHeight)) continue
+        this.latestHeight = await this.rpcClient.getLatestBlockHeight()
+        if (!this.latestHeight || !(this.latestHeight > this.syncedHeight))
+          continue
 
-        await this.handleNewBlock()
+        // cap the query to fetch 20 blocks at maximum
+        // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
+        const maxHeight = Math.min(
+          this.latestHeight,
+          this.syncedHeight + MAX_BLOCKS
+        )
 
         const blockchainData = await this.rpcClient.getBlockchain(
           this.syncedHeight + 1,
-          // cap the query to fetch 20 blocks at maximum
-          // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
-          Math.min(latestHeight, this.syncedHeight + MAX_BLOCKS)
+          maxHeight
+        )
+        if (blockchainData === null) continue
+
+        this.blockQueue = await this.helper.feedBlock(
+          this.rpcClient,
+          this.syncedHeight + 1,
+          maxHeight
         )
 
-        if (blockchainData === null) continue
+        this.blockResultsQueue = await this.helper.feedBlockResults(
+          this.rpcClient,
+          this.syncedHeight + 1,
+          maxHeight
+        )
+        
+        await this.handleNewBlock()
 
         await this.db.transaction(async (manager: EntityManager) => {
           for (const metadata of blockchainData.block_metas.reverse()) {

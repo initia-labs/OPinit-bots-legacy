@@ -4,17 +4,16 @@ import {
   ChallengerFinalizeWithdrawalTxEntity
 } from '../../orm'
 import { EntityManager } from 'typeorm'
-import { RPCClient, RPCSocket } from '../../lib/rpc'
+import { RPCClient } from '../../lib/rpc'
 import { getDB } from './db'
 import winston from 'winston'
 
 export class L1Monitor extends Monitor {
   constructor(
-    public socket: RPCSocket,
     public rpcClient: RPCClient,
     logger: winston.Logger
   ) {
-    super(socket, rpcClient, logger);
+    super(rpcClient, logger);
     [this.db] = getDB()
   }
 
@@ -59,10 +58,8 @@ export class L1Monitor extends Monitor {
   }
 
   public async handleEvents(manager: EntityManager): Promise<boolean> {
-    const [isEmpty, events] = await this.helper.fetchAllEvents(
-      this.rpcClient,
-      this.currentHeight
-    )
+    const blockResults = this.getBlockResultsByHeight(this.currentHeight)
+    const [isEmpty, events] = await this.helper.fetchAllEvents(blockResults)
 
     if (isEmpty) return false
 

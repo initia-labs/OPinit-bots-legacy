@@ -10,7 +10,7 @@ import { WithdrawalTx } from '../types'
 import { sha3_256 } from '../util'
 import OutputEntity from '../../orm/executor/OutputEntity'
 import { EntityManager, EntityTarget, ObjectLiteral } from 'typeorm'
-import { RPCClient } from '../../lib/rpc'
+import { Block, BlockResults, RPCClient } from '../../lib/rpc'
 
 class MonitorHelper {
   ///
@@ -107,10 +107,8 @@ class MonitorHelper {
   }
 
   public async fetchAllEvents(
-    rpcClient: RPCClient,
-    height: number
+    blockResults: BlockResults | null
   ): Promise<[boolean, any[]]> {
-    const blockResults = await rpcClient.getBlockResults(height)
     if (!blockResults) {
       return [true, []]
     }
@@ -164,6 +162,59 @@ class MonitorHelper {
       `/cosmos/tx/v1beta1/txs`,
       params
     )
+  }
+
+  public async feedBlock(
+    rpcClient: RPCClient,
+    minHeight: number,
+    maxHeight: number,
+    maxRetry = 3
+  ): Promise<[number, Block][]> {
+    const blocks = await Promise.all(
+      Array.from({ length: maxHeight - minHeight + 1 }, async (_, i) => {
+        let block
+        let attempt = 0
+        while (!block && attempt < maxRetry) {
+          try {
+            block = await rpcClient.getBlock(minHeight + i)
+          } catch {
+            if (attempt === maxRetry) {
+              throw new Error('Failed to feed block')
+            }
+            attempt++
+          }
+        }
+        return [minHeight + i, block as Block]
+      })
+    )
+    return blocks as [number, Block][]
+  }
+
+  public async feedBlockResults(
+    rpcClient: RPCClient,
+    minHeight: number,
+    maxHeight: number,
+    maxRetry = 3
+  ): Promise<[number, BlockResults][]> {
+    const blockResults = await Promise.all(
+      Array.from({ length: maxHeight - minHeight + 1 }, async (_, i) => {
+        let blockResults
+        let attempt = 0
+        while (!blockResults && attempt < maxRetry) {
+          try {
+            blockResults = await rpcClient
+              .getBlockResults(minHeight + i)
+          } catch {
+            if (attempt === maxRetry) {
+              throw new Error('Failed to feed block results')
+            }
+            attempt++
+          }
+        }
+        return [minHeight + i, blockResults as BlockResults]
+      })
+    )
+    return blockResults as [number, BlockResults][]
   }
 
   ///
