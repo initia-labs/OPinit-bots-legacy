@@ -8,12 +8,15 @@ import { INTERVAL_MONITOR, config } from '../../config'
 import { updateExecutorUsageMetrics } from '../../lib/metrics'
 
 const MAX_BLOCKS = 20 // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
+const MAX_QUEUE_SIZE = 1000
 const MAX_RETRY_INTERVAL = 30_000
 
 export abstract class Monitor {
   public syncedHeight: number
   public currentHeight: number
   public latestHeight: number
+
+  public isFirstRun = true
   public blockQueue: [number, Block][] = []
   public blockResultsQueue: [number, BlockResults][] = []
 
@@ -30,18 +33,68 @@ export abstract class Monitor {
     this.bridgeId = config.BRIDGE_ID
   }
 
+
+  public async feedQueue(): Promise<void> {
+    if (!this.isFirstRun) throw new Error('not first run')
+    this.isFirstRun = false
+    for (let i = 0; ; i++) {
+      try {
+       
+        this.blockQueue = this.blockQueue.filter(([height, _]) => height > this.syncedHeight)
+        this.blockResultsQueue = this.blockResultsQueue.filter(([height, _]) => height > this.syncedHeight)
+
+        if (this.blockQueue.length < MAX_QUEUE_SIZE) {
+          const feedStartHeight = this.blockQueue.length > 0 ? this.blockQueue[this.blockQueue.length - 1][0] + 1 : this.syncedHeight + 1
+          const feedEndHeight = Math.min(
+            this.latestHeight,
+            feedStartHeight + MAX_BLOCKS
+          )
+
+          const newBlocks = await this.helper.feedBlock(
+            this.rpcClient,
+            feedStartHeight,
+            feedEndHeight
+          )
+          this.blockQueue = this.blockQueue.concat(newBlocks)
+        }
+
+        if (this.blockResultsQueue.length < MAX_QUEUE_SIZE) {
+          const feedStartHeight = this.blockResultsQueue.length > 0 ? this.blockResultsQueue[this.blockResultsQueue.length - 1][0] + 1 : this.syncedHeight + 1
+          const feedEndHeight = Math.min(
+            this.latestHeight,
+            feedStartHeight + MAX_BLOCKS
+          )
+          const newBlockResults = await this.helper.feedBlockResults(
+            this.rpcClient,
+            feedStartHeight,
+            feedEndHeight
+          )
+          this.blockResultsQueue = this.blockResultsQueue.concat(newBlockResults)
+        }
+
+        if (i % 10 === 0) this.logger.info(`feedQueue: syncedHeight ${this.syncedHeight}, blockQueue ${this.blockQueue.length}, blockResultsQueue ${this.blockResultsQueue.length}`)
+      } catch (e) {
+        this.logger.error(`Error in feedQueue: `, e)
+      } finally {
+        await Bluebird.delay(INTERVAL_MONITOR)
+      }
+    }
+  }
+
   public getBlockByHeight(height: number): Block | null {
     const block = this.blockQueue.find((block) => block[0] === height)
     if (!block) return null
     return block[1]
   }
 
-  public getBlockResultsByHeight(height: number): BlockResults {
+  public async getBlockResultsByHeight(height: number): Promise<BlockResults> {
     const blockResult = this.blockResultsQueue.find(
       (blockResults) => blockResults[0] === height
     )
-    if (!blockResult)
-      throw new Error(`block result not found for height ${height}`)
+    if (!blockResult) {
+      const res = await this.helper.feedBlockResults(this.rpcClient, height, height)
+      return res[0][1]
+    }
     return blockResult[1]
   }
 
@@ -88,6 +141,7 @@ export abstract class Monitor {
 
   public async monitor(): Promise<void> {
     await this.prepareMonitor()
+    this.feedQueue()
     while (this.isRunning) {
       try {
         this.latestHeight = await this.rpcClient.getLatestBlockHeight()
@@ -107,17 +161,17 @@ export abstract class Monitor {
         )
         if (blockchainData === null) continue
 
-        this.blockQueue = await this.helper.feedBlock(
-          this.rpcClient,
-          this.syncedHeight + 1,
-          maxHeight
-        )
+        // this.blockQueue = await this.helper.feedBlock(
+        //   this.rpcClient,
+        //   this.syncedHeight + 1,
+        //   maxHeight
+        // )
 
-        this.blockResultsQueue = await this.helper.feedBlockResults(
-          this.rpcClient,
-          this.syncedHeight + 1,
-          maxHeight
-        )
+        // this.blockResultsQueue = await this.helper.feedBlockResults(
+        //   this.rpcClient,
+        //   this.syncedHeight + 1,
+        //   maxHeight
+        // )
         
         await this.handleNewBlock()
 
