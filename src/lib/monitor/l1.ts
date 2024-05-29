@@ -101,12 +101,12 @@ export class L1Monitor extends Monitor {
 
   public async handleNewBlock(): Promise<void> {
     if (!config.ENABLE_ORACLE) return
+    if (!this.latestHeight) return
 
     const latestTx0 = this.getBlockByHeight(this.latestHeight)?.block.data
       .txs[0]
 
     if (
-      !this.latestHeight ||
       !latestTx0 ||
       this.oracleHeight == this.latestHeight
     ) {
