@@ -30,9 +30,9 @@ export abstract class Monitor {
     this.bridgeId = config.BRIDGE_ID
   }
 
-  public getBlockByHeight(height: number): Block {
+  public getBlockByHeight(height: number): Block | null {
     const block = this.blockQueue.find((block) => block[0] === height)
-    if (!block) throw new Error(`block not found for height ${height}`)
+    if (!block) return null
     return block[1]
   }
 
