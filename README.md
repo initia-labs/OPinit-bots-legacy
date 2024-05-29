@@ -87,7 +87,7 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | SLACK_WEB_HOOK             | Slack web hook for notification (optional) | ''                       |
 | EXECUTOR_METRICS_PORT      | Executor metrics port                      | 8080                     |
 | PROMETHEUS_METRICS_MODE    | Prometheus metrics mode ['pull', 'push']   | 'pull'                   |
-| PROMETHEUS_GATEWAY_URI     | Prometheus push gateway URI                | 'https://127.0.0.1:9091' |
+| PROMETHEUS_GATEWAY_URI     | Prometheus push gateway URI                | 'http://127.0.0.1:9091' |
 | PROMETHEUS_TIME_OUT        | Prometheus push time out (unit: ms)        | 5000                     |
 
 > Note that if `EXECUTOR_L1_MONITOR_HEIGHT` and `EXECUTOR_L2_MONITOR_HEIGHT` are not set, `executor` will start monitoring from height stored on `state` table. If you want to start monitoring from specific height, you should set them in `.env.executor` file.
@@ -103,7 +103,7 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | SLACK_WEB_HOOK            | Slack web hook for notification (optional) | ''                       |
 | OUTPUT_METRICS_PORT       | Output metrics port                        | 8081                     |
 | PROMETHEUS_METRICS_MODE   | Prometheus metrics mode ['pull', 'push']   | 'pull'                   |
-| PROMETHEUS_GATEWAY_URI    | Prometheus push gateway URI                | 'https://127.0.0.1:9091' |
+| PROMETHEUS_GATEWAY_URI    | Prometheus push gateway URI                | 'http://127.0.0.1:9091' |
 | PROMETHEUS_TIME_OUT       | Prometheus push time out (unit: ms)        | 5000                     |
 
 - `.env.batch`
@@ -128,7 +128,7 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | ENABLE_API_ONLY             | Enable API only mode (optional)                              | false                      |
 | BATCH_METRICS_PORT          | Batch metrics port                                           | 8082                       |
 | PROMETHEUS_METRICS_MODE     | Prometheus metrics mode ['pull', 'push']                     | 'pull'                     |
-| PROMETHEUS_GATEWAY_URI      | Prometheus push gateway URI                                  | 'https://127.0.0.1:9091'   |
+| PROMETHEUS_GATEWAY_URI      | Prometheus push gateway URI                                  | 'http://127.0.0.1:9091'   |
 | PROMETHEUS_TIME_OUT         | Prometheus push time out (unit: ms)                          | 5000                       |
 
 - `.env.challenger`
