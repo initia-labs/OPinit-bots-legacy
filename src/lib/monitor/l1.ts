@@ -102,11 +102,14 @@ export class L1Monitor extends Monitor {
   public async handleNewBlock(): Promise<void> {
     if (!config.ENABLE_ORACLE) return
 
-    const latestHeight = await this.rpcClient.getLatestBlockHeight()
-    const latestTx0 = (await this.rpcClient.getBlock(latestHeight))?.block.data
+    const latestTx0 = this.getBlockByHeight(this.latestHeight)?.block.data
       .txs[0]
 
-    if (!latestHeight || !latestTx0 || this.oracleHeight == latestHeight) {
+    if (
+      !this.latestHeight ||
+      !latestTx0 ||
+      this.oracleHeight == this.latestHeight
+    ) {
       this.logger.info(
         `[handleNewBlock - ${this.name()}] No new block to update oracle tx`
       )
@@ -116,7 +119,7 @@ export class L1Monitor extends Monitor {
     const msgs = [
       new MsgUpdateOracle(
         this.executorL2.key.accAddress,
-        latestHeight,
+        this.latestHeight,
         latestTx0
       )
     ]
@@ -127,12 +130,12 @@ export class L1Monitor extends Monitor {
         `
           [handleNewBlock - ${this.name()}] Succeeded to update oracle tx in height
           currentHeight: ${this.currentHeight} 
-          latestHeight: ${latestHeight}
+          latestHeight: ${this.latestHeight}
           txhash: ${res.txhash}
         `
       )
 
-      this.oracleHeight = latestHeight
+      this.oracleHeight = this.latestHeight
       await this.db
         .getRepository(StateEntity)
         .save({ name: 'oracle_height', height: this.oracleHeight })
@@ -142,7 +145,7 @@ export class L1Monitor extends Monitor {
         `
           [handleNewBlock - ${this.name()}] Failed to submit tx
           currentHeight: ${this.currentHeight}
-          latestHeight: ${latestHeight}
+          latestHeight: ${this.latestHeight}
           Error: ${errMsg}
         `
       )
@@ -187,10 +190,8 @@ export class L1Monitor extends Monitor {
   }
 
   public async handleEvents(manager: EntityManager): Promise<any> {
-    const [isEmpty, events] = await this.helper.fetchAllEvents(
-      this.rpcClient,
-      this.currentHeight
-    )
+    const blockResults = this.getBlockResultsByHeight(this.currentHeight)
+    const [isEmpty, events] = await this.helper.fetchAllEvents(blockResults)
     if (isEmpty) {
       this.logger.info(
         `[handleEvents - ${this.name()}] No events in height: ${this.currentHeight}`

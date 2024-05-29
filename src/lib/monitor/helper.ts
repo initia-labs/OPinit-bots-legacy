@@ -10,7 +10,7 @@ import { WithdrawalTx } from '../types'
 import { sha3_256 } from '../util'
 import OutputEntity from '../../orm/executor/OutputEntity'
 import { EntityManager, EntityTarget, ObjectLiteral } from 'typeorm'
-import { RPCClient } from '../../lib/rpc'
+import { Block, BlockResults, RPCClient } from '../../lib/rpc'
 
 class MonitorHelper {
   ///
@@ -107,10 +107,8 @@ class MonitorHelper {
   }
 
   public async fetchAllEvents(
-    rpcClient: RPCClient,
-    height: number
+    blockResults: BlockResults | null
   ): Promise<[boolean, any[]]> {
-    const blockResults = await rpcClient.getBlockResults(height)
     if (!blockResults) {
       return [true, []]
     }
@@ -164,6 +162,39 @@ class MonitorHelper {
       `/cosmos/tx/v1beta1/txs`,
       params
     )
+  }
+
+  public async feedBlock(
+    rpcClient: RPCClient,
+    minHeight: number,
+    maxHeight: number
+  ): Promise<[number, Block][]> {
+    const blocks = await Promise.all(
+      Array.from({ length: maxHeight - minHeight + 1 }, async (_, i) => {
+        const block = await rpcClient.getBlock(minHeight + i).catch(() => null)
+        return block ? [minHeight + i, block] : null
+      })
+    )
+    return blocks.filter((block) => block !== null) as [number, Block][]
+  }
+
+  public async feedBlockResults(
+    rpcClient: RPCClient,
+    minHeight: number,
+    maxHeight: number
+  ): Promise<[number, BlockResults][]> {
+    const blockResults = await Promise.all(
+      Array.from({ length: maxHeight - minHeight + 1 }, async (_, i) => {
+        const blockResults = await rpcClient
+          .getBlockResults(minHeight + i)
+          .catch(() => null)
+        return blockResults ? [minHeight + i, blockResults] : null
+      })
+    )
+    return blockResults.filter((blockResults) => blockResults !== null) as [
+      number,
+      BlockResults
+    ][]
   }
 
   ///

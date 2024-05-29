@@ -1,5 +1,5 @@
 import Bluebird from 'bluebird'
-import { RPCClient } from '../rpc'
+import { Block, BlockResults, RPCClient } from '../rpc'
 import { StateEntity } from '../../orm'
 import { DataSource, EntityManager } from 'typeorm'
 import MonitorHelper from './helper'
@@ -13,6 +13,10 @@ const MAX_RETRY_INTERVAL = 30_000
 export abstract class Monitor {
   public syncedHeight: number
   public currentHeight: number
+  public latestHeight: number
+  public blockQueue: [number, Block][] = []
+  public blockResultsQueue: [number, BlockResults][] = []
+
   protected db: DataSource
   protected isRunning = false
   protected bridgeId: number
@@ -24,6 +28,18 @@ export abstract class Monitor {
     public logger: winston.Logger
   ) {
     this.bridgeId = config.BRIDGE_ID
+  }
+
+  public getBlockByHeight(height: number): Block | null {
+    return this.blockQueue.find((block) => block[0] === height)?.[1] || null
+  }
+
+  public getBlockResultsByHeight(height: number): BlockResults | null {
+    return (
+      this.blockResultsQueue.find(
+        (blockResults) => blockResults[0] === height
+      )?.[1] || null
+    )
   }
 
   public async run(): Promise<void> {
@@ -71,19 +87,35 @@ export abstract class Monitor {
     await this.prepareMonitor()
     while (this.isRunning) {
       try {
-        const latestHeight = await this.rpcClient.getLatestBlockHeight()
-        if (!latestHeight || !(latestHeight > this.syncedHeight)) continue
+        this.latestHeight = await this.rpcClient.getLatestBlockHeight()
+        if (!this.latestHeight || !(this.latestHeight > this.syncedHeight))
+          continue
 
         await this.handleNewBlock()
 
-        const blockchainData = await this.rpcClient.getBlockchain(
-          this.syncedHeight + 1,
-          // cap the query to fetch 20 blocks at maximum
-          // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
-          Math.min(latestHeight, this.syncedHeight + MAX_BLOCKS)
+        // cap the query to fetch 20 blocks at maximum
+        // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
+        const maxHeight = Math.min(
+          this.latestHeight,
+          this.syncedHeight + MAX_BLOCKS
         )
 
+        const blockchainData = await this.rpcClient.getBlockchain(
+          this.syncedHeight + 1,
+          maxHeight
+        )
         if (blockchainData === null) continue
+
+        this.blockQueue = await this.helper.feedBlock(
+          this.rpcClient,
+          this.syncedHeight + 1,
+          maxHeight
+        )
+        this.blockResultsQueue = await this.helper.feedBlockResults(
+          this.rpcClient,
+          this.syncedHeight + 1,
+          maxHeight
+        )
 
         await this.db.transaction(async (manager: EntityManager) => {
           for (const metadata of blockchainData.block_metas.reverse()) {

@@ -89,10 +89,8 @@ export class L2Monitor extends Monitor {
   }
 
   public async handleEvents(manager: EntityManager): Promise<boolean> {
-    const [isEmpty, events] = await this.helper.fetchAllEvents(
-      this.rpcClient,
-      this.currentHeight
-    )
+    const blockResults = this.getBlockResultsByHeight(this.currentHeight)
+    const [isEmpty, events] = await this.helper.fetchAllEvents(blockResults)
     if (isEmpty) {
       this.logger.info(
         `[handleEvents - ${this.name()}] No events in height: ${this.currentHeight}`

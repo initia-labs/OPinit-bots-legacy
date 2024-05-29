@@ -330,7 +330,7 @@ export class RPCClient {
   }
 }
 
-interface Block {
+export interface Block {
   block_id: {
     hash: string;
     parts: {
