@@ -64,16 +64,13 @@ const {
 
 const supportedPublishBatchTargets = ['l1', 'celestia']
 
-const getUri = (uri, defaultUri = 'http://127.0.0.1:1317') => uri ? uri.split(',')[0] : defaultUri;
-const createApiRequester = (uri) => new APIRequester(
-  getUri(uri),
-  {
+const getUri = (uri, defaultUri = 'http://127.0.0.1:1317') =>
+  uri ? uri.split(',')[0] : defaultUri
+const createApiRequester = (uri) =>
+  new APIRequester(getUri(uri), {
     httpAgent: new http.Agent({ keepAlive: true }),
-    httpsAgent: new https.Agent({ keepAlive: true }),
-  }
-);
-
-
+    httpsAgent: new https.Agent({ keepAlive: true })
+  })
 
 export const config = {
   EXECUTOR_PORT: EXECUTOR_PORT ? parseInt(EXECUTOR_PORT) : 5000,
@@ -169,7 +166,10 @@ export const config = {
     createApiRequester(L2_LCD_URI)
   ),
   batchlcd: (() => {
-    const uri = !PUBLISH_BATCH_TARGET || PUBLISH_BATCH_TARGET == 'l1' ? L1_LCD_URI : BATCH_LCD_URI
+    const uri =
+      !PUBLISH_BATCH_TARGET || PUBLISH_BATCH_TARGET == 'l1'
+        ? L1_LCD_URI
+        : BATCH_LCD_URI
     return new LCDClientL1(
       getUri(uri),
       {

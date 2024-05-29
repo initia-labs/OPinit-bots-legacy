@@ -3,7 +3,7 @@ import { Monitor } from './monitor'
 import { EntityManager } from 'typeorm'
 import { BlockInfo } from 'initia-l2'
 import { getDB } from '../../worker/bridgeExecutor/db'
-import { RPCClient, RPCSocket } from '../rpc'
+import { RPCClient } from '../rpc'
 import winston from 'winston'
 import { config } from '../../config'
 import { getBridgeInfo, getLastOutputInfo } from '../query'
@@ -13,11 +13,10 @@ export class L2Monitor extends Monitor {
   executorL2: TxWalletL2
 
   constructor(
-    public socket: RPCSocket,
     public rpcClient: RPCClient,
     logger: winston.Logger
   ) {
-    super(socket, rpcClient, logger);
+    super(rpcClient, logger);
     [this.db] = getDB()
     initWallet(WalletType.Executor, config.l2lcd)
     this.executorL2 = getWallet(WalletType.Executor)
@@ -132,9 +131,10 @@ export class L2Monitor extends Monitor {
 
   async handleOutput(manager: EntityManager): Promise<void> {
     if (!(await this.checkSubmissionInterval())) {
-      this.logger.info(
-        `[handleOutput - ${this.name()}] Submission interval not reached`
-      )
+      if (this.currentHeight % 10 === 0)
+        this.logger.info(
+          `[handleOutput - ${this.name()}] Submission interval not reached`
+        )
       return
     }
 

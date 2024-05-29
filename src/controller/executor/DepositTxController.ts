@@ -5,9 +5,7 @@ import { error, success } from '../../lib/response'
 import { getDepositTxList } from '../../service'
 import { responses, routeConfig, z } from 'koa-swagger-decorator'
 import { GetDepositResponse } from '../../swagger/executor_model'
-import {
-  wrapControllerFunction
-} from '../../lib/metricsMiddleware'
+import { wrapControllerFunction } from '../../lib/metricsMiddleware'
 
 @Controller('')
 export class DepositTxController extends KoaController {

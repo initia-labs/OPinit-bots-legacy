@@ -103,11 +103,9 @@ const prometheus = () => {
     }
 
     if (config.PROMETHEUS_METRICS_MODE === 'push') {
-      pushgateway
-        .pushAdd({ jobName: name })
-        .catch((err) => {
-          logger.warn('Error pushing metrics to the pushgateway', err)
-        })
+      pushgateway.pushAdd({ jobName: name }).catch((err) => {
+        logger.warn('Error pushing metrics to the pushgateway', err)
+      })
     }
   }
 
@@ -118,8 +116,10 @@ const prometheus = () => {
     }
   }
 
-  const LatencyTimerMetricsName = (name: string) => `${MetricName.PREFIX_SERVICE_NAME}_${name}_${MetricName.POSTFIX_REQUEST_LATENCY_HISTOGRAM}`
-  const StatusCodeCounterMetricsName = (name: string) => `${MetricName.PREFIX_SERVICE_NAME}_${name}_${MetricName.POSTFIX_REQUEST_STATUS_CODE_COUNTER}`
+  const LatencyTimerMetricsName = (name: string) =>
+    `${MetricName.PREFIX_SERVICE_NAME}_${name}_${MetricName.POSTFIX_REQUEST_LATENCY_HISTOGRAM}`
+  const StatusCodeCounterMetricsName = (name: string) =>
+    `${MetricName.PREFIX_SERVICE_NAME}_${name}_${MetricName.POSTFIX_REQUEST_STATUS_CODE_COUNTER}`
 
   const startLatencyTimer = (name: string) => {
     const metricName = LatencyTimerMetricsName(name)
@@ -146,7 +146,15 @@ const prometheus = () => {
     return instances[metricName].instance as Counter<string>
   }
 
-  return { create, add, get, startLatencyTimer, startStatusCodeCounter, LatencyTimerMetricsName, StatusCodeCounterMetricsName }
+  return {
+    create,
+    add,
+    get,
+    startLatencyTimer,
+    startStatusCodeCounter,
+    LatencyTimerMetricsName,
+    StatusCodeCounterMetricsName
+  }
 }
 
 const Prometheus = prometheus()

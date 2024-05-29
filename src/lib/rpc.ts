@@ -311,11 +311,82 @@ export class RPCClient {
     const abciInfo: ABCIInfo = await this.getRequest(`/abci_info`)
 
     if (abciInfo) {
-      return parseInt(abciInfo.last_block_height)
+      return parseInt(abciInfo.response.last_block_height)
     }
 
     throw new Error(`failed to get latest block height`)
   }
+
+  async getBlock(height: number): Promise<Block | null> {
+    const block: Block = await this.getRequest(`/block`, {
+      height: height.toString()
+    })
+
+    if (!block) {
+      this.logger.info('failed get block from rpc')
+      return null
+    }
+    return block
+  }
+}
+
+interface Block {
+  block_id: {
+    hash: string;
+    parts: {
+      total: number;
+      hash: string;
+    };
+  };
+  block: {
+    header: {
+      version: {
+        block: string;
+      };
+      chain_id: string;
+      height: string;
+      time: string;
+      last_block_id: {
+        hash: string;
+        parts: {
+          total: number;
+          hash: string;
+        };
+      };
+      last_commit_hash: string;
+      data_hash: string;
+      validators_hash: string;
+      next_validators_hash: string;
+      consensus_hash: string;
+      app_hash: string;
+      last_results_hash: string;
+      evidence_hash: string;
+      proposer_address: string;
+    };
+    data: {
+      txs: string[];
+    };
+    evidence: {
+      evidence: any[];
+    };
+    last_commit: {
+      height: string;
+      round: number;
+      block_id: {
+        hash: string;
+        parts: {
+          total: number;
+          hash: string;
+        };
+      };
+      signatures: {
+        block_id_flag: number;
+        validator_address: string;
+        timestamp: string;
+        signature: string;
+      }[];
+    };
+  };
 }
 
 export interface BlockResults {
@@ -361,8 +432,10 @@ interface InvalidBlock {
 }
 
 interface ABCIInfo {
-  data: string;
-  version: string;
-  last_block_height: string;
-  last_block_app_hash: string;
+  response: {
+    data: string;
+    version: string;
+    last_block_height: string;
+    last_block_app_hash: string;
+  };
 }

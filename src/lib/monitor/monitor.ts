@@ -1,5 +1,5 @@
 import Bluebird from 'bluebird'
-import { RPCClient, RPCSocket } from '../rpc'
+import { RPCClient } from '../rpc'
 import { StateEntity } from '../../orm'
 import { DataSource, EntityManager } from 'typeorm'
 import MonitorHelper from './helper'
@@ -20,7 +20,6 @@ export abstract class Monitor {
   helper: MonitorHelper = new MonitorHelper()
 
   constructor(
-    public socket: RPCSocket,
     public rpcClient: RPCClient,
     public logger: winston.Logger
   ) {
@@ -48,13 +47,11 @@ export abstract class Monitor {
         .save({ name: this.name(), height: this.syncedHeight })
     }
 
-    this.socket.initialize()
     this.isRunning = true
     await this.monitor()
   }
 
   public stop(): void {
-    this.socket.stop()
     this.isRunning = false
   }
 
@@ -74,7 +71,7 @@ export abstract class Monitor {
     await this.prepareMonitor()
     while (this.isRunning) {
       try {
-        const latestHeight = this.socket.latestHeight
+        const latestHeight = await this.rpcClient.getLatestBlockHeight()
         if (!latestHeight || !(latestHeight > this.syncedHeight)) continue
 
         await this.handleNewBlock()

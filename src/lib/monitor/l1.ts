@@ -14,7 +14,7 @@ import {
   StateEntity
 } from '../../orm'
 import { EntityManager } from 'typeorm'
-import { RPCClient, RPCSocket } from '../rpc'
+import { RPCClient } from '../rpc'
 import { getDB } from '../../worker/bridgeExecutor/db'
 import winston from 'winston'
 import { config } from '../../config'
@@ -25,11 +25,10 @@ export class L1Monitor extends Monitor {
   oracleHeight: number
 
   constructor(
-    public socket: RPCSocket,
     public rpcClient: RPCClient,
     logger: winston.Logger
   ) {
-    super(socket, rpcClient, logger);
+    super(rpcClient, logger);
     [this.db] = getDB()
     initWallet(WalletType.Executor, config.l2lcd)
     this.executorL2 = getWallet(WalletType.Executor)
@@ -103,8 +102,9 @@ export class L1Monitor extends Monitor {
   public async handleNewBlock(): Promise<void> {
     if (!config.ENABLE_ORACLE) return
 
-    const latestHeight = this.socket.latestHeight
-    const latestTx0 = this.socket.latestTx0
+    const latestHeight = await this.rpcClient.getLatestBlockHeight()
+    const latestTx0 = (await this.rpcClient.getBlock(latestHeight))?.block.data
+      .txs[0]
 
     if (!latestHeight || !latestTx0 || this.oracleHeight == latestHeight) {
       this.logger.info(
