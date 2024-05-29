@@ -72,7 +72,7 @@ export abstract class Monitor {
           this.blockResultsQueue = this.blockResultsQueue.concat(newBlockResults)
         }
 
-        if (i % 10 === 0) this.logger.info(`feedQueue: syncedHeight ${this.syncedHeight}, blockQueue ${this.blockQueue.length}, blockResultsQueue ${this.blockResultsQueue.length}`)
+        if (this.blockQueue.length > 0 || this.blockResultsQueue.length > 0) this.logger.info(`${this.name()} feedQueue: syncedHeight ${this.syncedHeight}, blockQueue ${this.blockQueue.length}, blockResultsQueue ${this.blockResultsQueue.length}`)
       } catch (e) {
         this.logger.error(`Error in feedQueue: `, e)
       } finally {
@@ -92,6 +92,7 @@ export abstract class Monitor {
       (blockResults) => blockResults[0] === height
     )
     if (!blockResult) {
+      this.logger.info(`${this.name()} fetching block results for height ${height}...`)
       const res = await this.helper.feedBlockResults(this.rpcClient, height, height)
       return res[0][1]
     }
