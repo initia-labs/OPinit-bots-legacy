@@ -12,17 +12,24 @@ import {
   ExecutorUnconfirmedTxEntity,
   ExecutorOutputEntity,
   StateEntity
-} from '../../orm'
+} from '../../../orm'
 import { EntityManager } from 'typeorm'
-import { RPCClient } from '../rpc'
-import { getDB } from '../../worker/bridgeExecutor/db'
+import { RPCClient } from '../../../lib/rpc'
+import { getDB } from '../db'
 import winston from 'winston'
-import { config } from '../../config'
-import { TxWalletL2, WalletType, getWallet, initWallet } from '../walletL2'
+import { config } from '../../../config'
+import {
+  TxWalletL2,
+  WalletType,
+  getWallet,
+  initWallet
+} from '../../../lib/walletL2'
+import { Resurrector } from './resurrector'
 
 export class L1Monitor extends Monitor {
   executorL2: TxWalletL2
   oracleHeight: number
+  resurrector: Resurrector
 
   constructor(
     public rpcClient: RPCClient,
@@ -32,7 +39,7 @@ export class L1Monitor extends Monitor {
     [this.db] = getDB()
     initWallet(WalletType.Executor, config.l2lcd)
     this.executorL2 = getWallet(WalletType.Executor)
-
+    this.resurrector = new Resurrector(logger, this.executorL2)
     this.oracleHeight = 0
   }
 
@@ -100,15 +107,22 @@ export class L1Monitor extends Monitor {
   }
 
   public async handleNewBlock(): Promise<void> {
+    await this.resurrector.ressurect()
+
     if (!config.ENABLE_ORACLE) return
-    if (!this.latestHeight) return
+    if (!this.latestHeight || this.oracleHeight == this.latestHeight) {
+      this.logger.info(
+        `[handleNewBlock - ${this.name()}] No new block to update oracle tx`
+      )
+      return
+    }
 
     const latestTx0 = this.getBlockByHeight(this.latestHeight)?.block.data
       .txs[0]
 
-    if (!latestTx0 || this.oracleHeight == this.latestHeight) {
+    if (!latestTx0) {
       this.logger.info(
-        `[handleNewBlock - ${this.name()}] No new block to update oracle tx`
+        `[handleNewBlock - ${this.name()}] No txs in height: ${this.latestHeight}`
       )
       return
     }

@@ -1,13 +1,18 @@
-import { ExecutorOutputEntity, ExecutorWithdrawalTxEntity } from '../../orm'
+import { ExecutorOutputEntity, ExecutorWithdrawalTxEntity } from '../../../orm'
 import { Monitor } from './monitor'
 import { EntityManager } from 'typeorm'
 import { BlockInfo } from 'initia-l2'
-import { getDB } from '../../worker/bridgeExecutor/db'
-import { RPCClient } from '../rpc'
+import { getDB } from '../db'
+import { RPCClient } from '../../../lib/rpc'
 import winston from 'winston'
-import { config } from '../../config'
-import { getBridgeInfo, getLastOutputInfo } from '../query'
-import { TxWalletL2, WalletType, getWallet, initWallet } from '../walletL2'
+import { config } from '../../../config'
+import { getBridgeInfo, getLastOutputInfo } from '../../../lib/query'
+import {
+  TxWalletL2,
+  WalletType,
+  getWallet,
+  initWallet
+} from '../../../lib/walletL2'
 
 export class L2Monitor extends Monitor {
   executorL2: TxWalletL2

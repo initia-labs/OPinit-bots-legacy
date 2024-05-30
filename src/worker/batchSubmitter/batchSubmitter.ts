@@ -14,7 +14,7 @@ import {
 import { delay } from 'bluebird'
 import { INTERVAL_BATCH } from '../../config'
 import { config } from '../../config'
-import MonitorHelper from '../../lib/monitor/helper'
+import MonitorHelper from '../bridgeExecutor/monitor/helper'
 import { createBlob, getCelestiaFeeGasLimit } from '../../celestia/utils'
 import { bech32 } from 'bech32'
 import { TxWalletL1 } from '../../lib/walletL1'

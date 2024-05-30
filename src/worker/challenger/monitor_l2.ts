@@ -4,7 +4,7 @@ import {
   ChallengerWithdrawalTxEntity
 } from '../../orm'
 import { OutputInfo } from 'initia-l2'
-import { Monitor } from '../../lib/monitor'
+import { Monitor } from '../bridgeExecutor/monitor'
 import { EntityManager } from 'typeorm'
 import { RPCClient } from '../../lib/rpc'
 import winston from 'winston'

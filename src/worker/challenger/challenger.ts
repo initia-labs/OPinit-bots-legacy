@@ -18,7 +18,7 @@ import {
   getOutputInfoByIndex,
   getBridgeInfo
 } from '../../lib/query'
-import MonitorHelper from '../../lib/monitor/helper'
+import MonitorHelper from '../bridgeExecutor/monitor/helper'
 import winston from 'winston'
 import {
   TxWalletL1,

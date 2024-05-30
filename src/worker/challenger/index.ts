@@ -1,5 +1,5 @@
 import { RPCClient } from '../../lib/rpc'
-import { Monitor } from '../../lib/monitor'
+import { Monitor } from '../bridgeExecutor/monitor'
 import { Challenger } from './challenger'
 import { initORM, finalizeORM } from './db'
 import { challengerLogger as logger } from '../../lib/logger'

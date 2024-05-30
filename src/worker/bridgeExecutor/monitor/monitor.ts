@@ -1,11 +1,11 @@
 import Bluebird from 'bluebird'
-import { Block, BlockResults, RPCClient } from '../rpc'
-import { StateEntity } from '../../orm'
+import { Block, BlockResults, RPCClient } from '../../../lib/rpc'
+import { StateEntity } from '../../../orm'
 import { DataSource, EntityManager } from 'typeorm'
 import MonitorHelper from './helper'
 import winston from 'winston'
-import { INTERVAL_MONITOR, SECOND, config } from '../../config'
-import { updateExecutorUsageMetrics } from '../../lib/metrics'
+import { INTERVAL_MONITOR, SECOND, config } from '../../../config'
+import { updateExecutorUsageMetrics } from '../../../lib/metrics'
 
 const MAX_BLOCKS = 20 // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
 const MAX_QUEUE_SIZE = 1000
@@ -178,18 +178,6 @@ export abstract class Monitor {
           maxHeight
         )
         if (blockchainData === null) continue
-
-        // this.blockQueue = await this.helper.feedBlock(
-        //   this.rpcClient,
-        //   this.syncedHeight + 1,
-        //   maxHeight
-        // )
-
-        // this.blockResultsQueue = await this.helper.feedBlockResults(
-        //   this.rpcClient,
-        //   this.syncedHeight + 1,
-        //   maxHeight
-        // )
 
         await this.handleNewBlock()
 

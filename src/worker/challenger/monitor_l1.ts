@@ -1,4 +1,4 @@
-import { Monitor } from '../../lib/monitor'
+import { Monitor } from '../bridgeExecutor/monitor'
 import {
   ChallengerDepositTxEntity,
   ChallengerFinalizeWithdrawalTxEntity

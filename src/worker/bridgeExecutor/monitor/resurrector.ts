@@ -1,32 +1,32 @@
-import { getDB } from './db'
-import UnconfirmedTxEntity from '../../orm/executor/UnconfirmedTxEntity'
+import { getDB } from '../db'
+import UnconfirmedTxEntity from '../../../orm/executor/UnconfirmedTxEntity'
 import { Coin, MsgFinalizeTokenDeposit } from 'initia-l2'
-import { INTERVAL_MONITOR, config } from '../../config'
+import { SECOND, config } from '../../../config'
 import { DataSource } from 'typeorm'
 import Bluebird from 'bluebird'
 import winston from 'winston'
-import {
-  TxWalletL2,
-  WalletType,
-  getWallet,
-  initWallet
-} from '../../lib/walletL2'
+import { TxWalletL2, WalletType, initWallet } from '../../../lib/walletL2'
 import {
   buildFailedTxNotification,
   buildResolveErrorNotification,
   notifySlack
-} from '../../lib/slack'
+} from '../../../lib/slack'
 
 export class Resurrector {
   private db: DataSource
   isRunning = true
-  executorL2: TxWalletL2
   errorCounter = 0
 
-  constructor(public logger: winston.Logger) {
+  constructor(
+    public logger: winston.Logger,
+    public executorL2: TxWalletL2
+  ) {
     [this.db] = getDB()
     initWallet(WalletType.Executor, config.l2lcd)
-    this.executorL2 = getWallet(WalletType.Executor)
+  }
+
+  public name(): string {
+    return 'resurrector'
   }
 
   async updateProcessed(unconfirmedTx: UnconfirmedTxEntity): Promise<void> {
@@ -40,7 +40,7 @@ export class Resurrector {
     )
 
     this.logger.info(
-      `Resurrected failed tx: ${unconfirmedTx.bridgeId} ${unconfirmedTx.sequence}`
+      `[updateProcessed - ${this.name()}] Resurrected failed tx sequence ${unconfirmedTx.sequence}`
     )
   }
 
@@ -69,14 +69,14 @@ export class Resurrector {
         false
       )
     } catch (err) {
-      if (this.errorCounter++ < 20) {
-        await Bluebird.delay(5 * 1000)
+      if (this.errorCounter++ < 30) {
+        await Bluebird.delay(SECOND)
         return
       }
       this.errorCounter = 0
       await notifySlack(txKey, buildFailedTxNotification(unconfirmedTx))
       this.logger.error(
-        `Failed to resubmit tx: bridge id ${unconfirmedTx.bridgeId} sequence ${unconfirmedTx.sequence}`,
+        `[resubmitFailedDepositTx - ${this.name()}] Failed to resubmit tx: bridge id ${unconfirmedTx.bridgeId} sequence ${unconfirmedTx.sequence}`,
         err
       )
     }
@@ -93,32 +93,22 @@ export class Resurrector {
   public async ressurect(): Promise<void> {
     const unconfirmedTxs = await this.getunconfirmedTxs()
 
+    if (unconfirmedTxs.length === 0) {
+      this.logger.info(`[ressurect - ${this.name()}] No unconfirmed txs found`)
+      return
+    }
+
+    this.logger.info(
+      `[ressurect - ${this.name()}] Found ${unconfirmedTxs.length} unconfirmed txs`
+    )
     for (const unconfirmedTx of unconfirmedTxs) {
       const error = unconfirmedTx.error
-
       // Check x/opchild/errors.go
       if (error.includes('deposit already finalized')) {
         await this.updateProcessed(unconfirmedTx)
         continue
       }
       await this.resubmitFailedDepositTx(unconfirmedTx)
-    }
-  }
-
-  stop(): void {
-    this.isRunning = false
-  }
-
-  public async run() {
-    while (this.isRunning) {
-      try {
-        await this.ressurect()
-      } catch (err) {
-        this.stop()
-        throw new Error(err)
-      } finally {
-        await Bluebird.delay(INTERVAL_MONITOR)
-      }
     }
   }
 }
