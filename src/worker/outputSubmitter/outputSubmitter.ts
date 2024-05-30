@@ -6,7 +6,7 @@ import { outputLogger as logger } from '../../lib/logger'
 import { ErrorTypes } from '../../lib/error'
 import { config } from '../../config'
 import { getLastOutputInfo } from '../../lib/query'
-import MonitorHelper from '../../lib/monitor/helper'
+import MonitorHelper from '../bridgeExecutor/monitor/helper'
 import { DataSource, EntityManager } from 'typeorm'
 import { getDB } from './db'
 import {

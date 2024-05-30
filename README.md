@@ -72,7 +72,8 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | L1_RPC_URI                 | L1 node RPC URI                            | <http://127.0.0.1:26657> |
 | L2_LCD_URI                 | L2 node LCD URI                            | <http://127.0.0.1:1317>  |
 | L2_RPC_URI                 | L2 node RPC URI                            | <http://127.0.0.1:26657> |
-| L2_GAS_PRICES              | Gas prices for L2 chain                    | '0.15umin'               |
+| L1_GAS_PRICES              | Gas prices for L1 chain                    | '0.15uinit'              |
+| L2_GAS_PRICES              | Gas prices for L2 chain                    | '0umin'                  |
 | BRIDGE_ID                  | Bridge ID                                  | ''                       |
 | EXECUTOR_PORT              | Executor port                              | 5000                     |
 | EXECUTOR_MNEMONIC          | Mnemonic seed for executor                 | ''                       |
@@ -98,6 +99,7 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | ------------------------- | ------------------------------------------ | ------------------------ |
 | L1_LCD_URI                | L1 node LCD URI                            | <http://127.0.0.1:1317>  |
 | L1_RPC_URI                | L1 node RPC URI                            | <http://127.0.0.1:26657> |
+| L1_GAS_PRICES             | Gas prices for L1 chain                    | '0.15uinit'              |
 | BRIDGE_ID                 | Bridge ID                                  | ''                       |
 | OUTPUT_SUBMITTER_MNEMONIC | Mnemonic seed for output submitter         | ''                       |
 | SLACK_WEB_HOOK            | Slack web hook for notification (optional) | ''                       |
@@ -128,7 +130,7 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | ENABLE_API_ONLY             | Enable API only mode (optional)                              | false                      |
 | BATCH_METRICS_PORT          | Batch metrics port                                           | 8082                       |
 | PROMETHEUS_METRICS_MODE     | Prometheus metrics mode ['pull', 'push']                     | 'pull'                     |
-| PROMETHEUS_GATEWAY_URI      | Prometheus push gateway URI                                  | 'http://127.0.0.1:9091'   |
+| PROMETHEUS_GATEWAY_URI      | Prometheus push gateway URI                                  | 'http://127.0.0.1:9091'    |
 | PROMETHEUS_TIME_OUT         | Prometheus push time out (unit: ms)                          | 5000                       |
 
 - `.env.challenger`
@@ -139,6 +141,7 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | L1_RPC_URI             | L1 node RPC URI                            | <http://127.0.0.1:26657> |
 | L2_LCD_URI             | L2 node LCD URI                            | <http://127.0.0.1:1317>  |
 | L2_RPC_URI             | L2 node RPC URI                            | <http://127.0.0.1:26657> |
+| L1_GAS_PRICES          | Gas prices for L1 chain                    | '0.15uinit'              |
 | BRIDGE_ID              | Bridge ID                                  | ''                       |
 | CHALLENGER_MNEMONIC    | Mnemonic seed for challenger               | ''                       |
 | DELETE_OUTPUT_PROPOSAL | Delete output proposal                     | false                    |

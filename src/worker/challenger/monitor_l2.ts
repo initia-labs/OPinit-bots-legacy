@@ -4,7 +4,7 @@ import {
   ChallengerWithdrawalTxEntity
 } from '../../orm'
 import { OutputInfo } from 'initia-l2'
-import { Monitor } from '../../lib/monitor'
+import { Monitor } from '../bridgeExecutor/monitor'
 import { EntityManager } from 'typeorm'
 import { RPCClient } from '../../lib/rpc'
 import winston from 'winston'
@@ -87,7 +87,7 @@ export class L2Monitor extends Monitor {
   }
 
   public async handleEvents(manager: EntityManager): Promise<boolean> {
-    const blockResults = this.getBlockResultsByHeight(this.currentHeight)
+    const blockResults = await this.getBlockResultsByHeight(this.currentHeight)
     const [isEmpty, events] = await this.helper.fetchAllEvents(blockResults)
 
     if (isEmpty) return false

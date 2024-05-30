@@ -39,6 +39,7 @@ const {
   BATCH_SUBMITTER_MNEMONIC,
   CHALLENGER_MNEMONIC,
   USE_LOG_FILE,
+  L1_GAS_PRICES,
   L2_GAS_PRICES,
   L1_CHAIN_ID,
   L2_CHAIN_ID,
@@ -150,7 +151,7 @@ export const config = {
   l1lcd: new LCDClientL1(
     getUri(L1_LCD_URI),
     {
-      gasPrices: '0.15uinit',
+      gasPrices: L1_GAS_PRICES || '0.15uinit',
       gasAdjustment: '2',
       chainId: L1_CHAIN_ID
     },
@@ -225,3 +226,5 @@ validateCelestiaConfig()
 export const INTERVAL_BATCH = 100_000
 export const INTERVAL_MONITOR = 100
 export const INTERVAL_OUTPUT = 10_000
+
+export const SECOND = 1_000

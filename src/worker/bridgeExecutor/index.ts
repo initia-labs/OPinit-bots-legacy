@@ -1,6 +1,6 @@
 import { RPCClient } from '../../lib/rpc'
-import { L1Monitor } from '../../lib/monitor/l1'
-import { L2Monitor } from '../../lib/monitor/l2'
+import { L1Monitor } from './monitor/l1'
+import { L2Monitor } from './monitor/l2'
 import { executorController, metricsController } from '../../controller'
 
 import { executorLogger as logger } from '../../lib/logger'
@@ -8,15 +8,13 @@ import { initORM, finalizeORM } from './db'
 import { initServer, finalizeServer, initMetricsServer } from '../../loader'
 import { once } from 'lodash'
 import { config } from '../../config'
-import { Resurrector } from './Resurrector'
 
 let monitors
 
 async function runBot(): Promise<void> {
   monitors = [
     new L1Monitor(new RPCClient(config.L1_RPC_URI, logger), logger),
-    new L2Monitor(new RPCClient(config.L2_RPC_URI, logger), logger),
-    new Resurrector(logger)
+    new L2Monitor(new RPCClient(config.L2_RPC_URI, logger), logger)
   ]
   try {
     await Promise.all(
