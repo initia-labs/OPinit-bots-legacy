@@ -15,8 +15,9 @@ const MAX_RESURRECT_SIZE = 100
 
 export class Resurrector {
   private db: DataSource
+  unconfirmedTxs: UnconfirmedTxEntity[] = []
+  proccessedTxsNum: number
   isRunning = true
-  errorCounter = 0
   helper: MonitorHelper = new MonitorHelper()
 
   constructor(
@@ -41,8 +42,9 @@ export class Resurrector {
       { processed: true }
     )
 
+    this.proccessedTxsNum++
     this.logger.info(
-      `[updateProcessed - ${this.name()}] Resurrected failed tx sequence ${unconfirmedTx.sequence}`
+      `[updateProcessed - ${this.name()}] Resurrected failed tx sequence ${unconfirmedTx.sequence} current processed txs: ${this.proccessedTxsNum} / ${this.unconfirmedTxs.length}`
     )
   }
 
@@ -94,9 +96,6 @@ export class Resurrector {
         const msg = this.createMsg(unconfirmedTx)
         await this.executorL2.transaction([msg])
         await this.updateProcessed(unconfirmedTx)
-        this.logger.info(
-          `[resubmitFailedDepositTxAtomic - ${this.name()}] Succeed to resubmit failed tx sequence ${unconfirmedTx.sequence}`
-        )
       } catch (err) {
         const errMsg = this.helper.extractErrorMessage(err)
         await this.handleErrors(unconfirmedTx, errMsg)
@@ -128,25 +127,28 @@ export class Resurrector {
   }
 
   public async ressurect(): Promise<void> {
-    const unconfirmedTxs = await this.getUnconfirmedTxs()
+    this.unconfirmedTxs = await this.getUnconfirmedTxs()
+    this.proccessedTxsNum = 0 
 
-    if (unconfirmedTxs.length === 0) {
+    if (this.unconfirmedTxs.length === 0) {
       this.logger.info(`[ressurect - ${this.name()}] No unconfirmed txs found`)
       return
     }
 
     this.logger.info(
-      `[ressurect - ${this.name()}] Found ${unconfirmedTxs.length} unconfirmed txs`
+      `[ressurect - ${this.name()}] Found ${this.unconfirmedTxs.length} unconfirmed txs`
     )
 
     const unconfirmedTxsChunks: UnconfirmedTxEntity[] = []
-    for (const unconfirmedTx of unconfirmedTxs) {
+    
+    for (const unconfirmedTx of this.unconfirmedTxs) {
       unconfirmedTxsChunks.push(unconfirmedTx)
       if (unconfirmedTxsChunks.length === MAX_RESURRECT_SIZE) {
         await this.resubmitFailedDepositTxs(unconfirmedTxsChunks)
         unconfirmedTxsChunks.length = 0
       }
     }
+
     if (unconfirmedTxsChunks.length > 0) {
       await this.resubmitFailedDepositTxs(unconfirmedTxsChunks)
     }
