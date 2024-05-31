@@ -103,16 +103,16 @@ export class Resurrector {
     })
   }
 
-  public async ressurect(): Promise<void> {
+  public async resurrect(): Promise<void> {
     const unconfirmedTxs = await this.getUnconfirmedTxs()
 
     if (unconfirmedTxs.length === 0) {
-      this.logger.info(`[ressurect - ${this.name()}] No unconfirmed txs found`)
+      this.logger.info(`[resurrect - ${this.name()}] No unconfirmed txs found`)
       return
     }
 
     this.logger.info(
-      `[ressurect - ${this.name()}] Found ${unconfirmedTxs.length} unconfirmed txs`
+      `[resurrect - ${this.name()}] Found ${unconfirmedTxs.length} unconfirmed txs`
     )
 
     const unconfirmedTxsChunks: UnconfirmedTxEntity[] = []
