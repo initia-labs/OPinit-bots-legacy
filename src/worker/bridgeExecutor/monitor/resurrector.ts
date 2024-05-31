@@ -1,16 +1,15 @@
 import { getDB } from '../db'
 import UnconfirmedTxEntity from '../../../orm/executor/UnconfirmedTxEntity'
 import { Coin, Msg, MsgFinalizeTokenDeposit } from 'initia-l2'
-import { SECOND, config } from '../../../config'
+import { config } from '../../../config'
 import { DataSource } from 'typeorm'
-import Bluebird from 'bluebird'
 import winston from 'winston'
 import { TxWalletL2, WalletType, initWallet } from '../../../lib/walletL2'
 import {
-  buildFailedTxNotification,
   buildResolveErrorNotification,
   notifySlack
 } from '../../../lib/slack'
+import MonitorHelper from './helper'
 
 const MAX_RESURRECT_SIZE = 100
 
@@ -18,6 +17,7 @@ export class Resurrector {
   private db: DataSource
   isRunning = true
   errorCounter = 0
+  helper: MonitorHelper = new MonitorHelper()
 
   constructor(
     public logger: winston.Logger,
@@ -82,16 +82,40 @@ export class Resurrector {
         false
       )
     } catch (err) {
-      if (this.errorCounter++ < 30) {
-        await Bluebird.delay(SECOND)
-        return
+      await this.resubmitFailedDepositTxAtomic(unconfirmedTxs)
+    }
+  }
+
+  async resubmitFailedDepositTxAtomic(
+    unconfirmedTxs: UnconfirmedTxEntity[]
+  ): Promise<void> {
+    for (const unconfirmedTx of unconfirmedTxs) {
+      try {
+        const msg = this.createMsg(unconfirmedTx)
+        await this.executorL2.transaction([msg])
+        await this.updateProcessed(unconfirmedTx)
+        this.logger.info(
+          `[resubmitFailedDepositTxAtomic - ${this.name()}] Succeed to resubmit failed tx sequence ${unconfirmedTx.sequence}`
+        )
+      } catch (err) {
+        const errMsg = this.helper.extractErrorMessage(err)
+        await this.handleErrors(unconfirmedTx, errMsg)
       }
-      this.errorCounter = 0
-      await notifySlack(txKey, buildFailedTxNotification(unconfirmedTxs[0]))
+    }
+  }
+
+  async handleErrors(unconfirmedTx: UnconfirmedTxEntity, errMsg: string): Promise<void> {
+    // Check x/opchild/errors.go
+    if (
+      errMsg.includes('deposit already finalized')
+      || errMsg.includes('not allowed to receive funds')
+    ) {
+      await this.updateProcessed(unconfirmedTx)
+    } else {
       this.logger.error(
-        `[resubmitFailedDepositTxs - ${this.name()}] Failed to resubmit txs: bridge id ${unconfirmedTxs[0].bridgeId} sequence ${unconfirmedTxs[0].sequence}`,
-        err
+        `[handleErrors - ${this.name()}] Failed to resubmit tx: sequence ${unconfirmedTx.sequence}, ${errMsg}`,
       )
+      throw new Error(`failed to resubmit ${unconfirmedTx.sequence}: ${errMsg}`)
     }
   }
 
@@ -117,11 +141,6 @@ export class Resurrector {
 
     const unconfirmedTxsChunks: UnconfirmedTxEntity[] = []
     for (const unconfirmedTx of unconfirmedTxs) {
-      // Check x/opchild/errors.go
-      if (unconfirmedTx.error.includes('deposit already finalized')) {
-        await this.updateProcessed(unconfirmedTx)
-        continue
-      }
       unconfirmedTxsChunks.push(unconfirmedTx)
       if (unconfirmedTxsChunks.length === MAX_RESURRECT_SIZE) {
         await this.resubmitFailedDepositTxs(unconfirmedTxsChunks)
