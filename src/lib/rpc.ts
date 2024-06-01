@@ -243,6 +243,10 @@ export class RPCClient {
     min_height: number,
     max_height: number
   ): Promise<Blockchain | null> {
+    if (min_height > max_height) {
+      return null
+    }
+    
     const blockchainResult: Blockchain = await this.getRequest(`/blockchain`, {
       minHeight: min_height.toString(),
       maxHeight: max_height.toString()
