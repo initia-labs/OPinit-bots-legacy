@@ -5,10 +5,7 @@ import { config } from '../../../config'
 import { DataSource } from 'typeorm'
 import winston from 'winston'
 import { TxWalletL2, WalletType, initWallet } from '../../../lib/walletL2'
-import {
-  buildResolveErrorNotification,
-  notifySlack
-} from '../../../lib/slack'
+import { buildResolveErrorNotification, notifySlack } from '../../../lib/slack'
 import MonitorHelper from './helper'
 
 const MAX_RESURRECT_SIZE = 100
@@ -103,18 +100,23 @@ export class Resurrector {
     }
   }
 
-  async handleErrors(unconfirmedTx: UnconfirmedTxEntity, errMsg: string): Promise<void> {
+  async handleErrors(
+    unconfirmedTx: UnconfirmedTxEntity,
+    errMsg: string
+  ): Promise<void> {
     // Check x/opchild/errors.go
     if (
-      errMsg.includes('deposit already finalized')
-      || errMsg.includes('not allowed to receive funds')
+      errMsg.includes('deposit already finalized') ||
+      errMsg.includes('not allowed to receive funds')
     ) {
       await this.updateProcessed(unconfirmedTx)
     } else {
       this.logger.error(
-        `[handleErrors - ${this.name()}] Failed to resubmit tx: sequence ${unconfirmedTx.sequence}, ${errMsg}`,
+        `[handleErrors - ${this.name()}] Failed to resubmit tx: sequence ${unconfirmedTx.sequence}, ${errMsg}`
       )
-      throw new Error(`failed to resubmit ${unconfirmedTx.sequence}: ${errMsg}`)
+      throw new Error(
+        `failed to resubmit ${unconfirmedTx.sequence}: ${errMsg}`
+      )
     }
   }
 
@@ -128,7 +130,7 @@ export class Resurrector {
 
   public async ressurect(): Promise<void> {
     this.unconfirmedTxs = await this.getUnconfirmedTxs()
-    this.proccessedTxsNum = 0 
+    this.proccessedTxsNum = 0
 
     if (this.unconfirmedTxs.length === 0) {
       this.logger.info(`[ressurect - ${this.name()}] No unconfirmed txs found`)
@@ -140,7 +142,7 @@ export class Resurrector {
     )
 
     const unconfirmedTxsChunks: UnconfirmedTxEntity[] = []
-    
+
     for (const unconfirmedTx of this.unconfirmedTxs) {
       unconfirmedTxsChunks.push(unconfirmedTx)
       if (unconfirmedTxsChunks.length === MAX_RESURRECT_SIZE) {

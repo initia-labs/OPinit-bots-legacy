@@ -108,7 +108,7 @@ export class L1Monitor extends Monitor {
 
   public async handleNewBlock(): Promise<void> {
     // ressurect every unconfirmed tx before handling new block
-    await this.resurrector.ressurect() 
+    await this.resurrector.ressurect()
 
     if (!config.ENABLE_ORACLE) return
     if (!this.latestHeight || this.oracleHeight == this.latestHeight) {
@@ -118,8 +118,8 @@ export class L1Monitor extends Monitor {
       return
     }
 
-    const latestTx0 = (await this.getBlockByHeight(this.latestHeight))?.block.data
-      .txs[0]
+    const latestTx0 = (await this.getBlockByHeight(this.latestHeight))?.block
+      .data.txs[0]
 
     if (!latestTx0) {
       this.logger.info(

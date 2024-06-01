@@ -243,24 +243,27 @@ export class RPCClient {
 
   async getBlockchain(
     min_height: number,
-    max_height: number,
+    max_height: number
   ): Promise<Blockchain | null> {
     if (min_height > max_height) {
       return null
     }
-    
+
     for (let retry = 0; retry < MAX_RETRY; retry++) {
       try {
-        const blockchainResult: Blockchain = await this.getRequest(`/blockchain`, {
-          minHeight: min_height.toString(),
-          maxHeight: max_height.toString()
-        })
-    
+        const blockchainResult: Blockchain = await this.getRequest(
+          `/blockchain`,
+          {
+            minHeight: min_height.toString(),
+            maxHeight: max_height.toString()
+          }
+        )
+
         if (!blockchainResult) {
           this.logger.warn('failed get blockchain from rpc')
           return null
         }
-    
+
         return blockchainResult
       } catch (e) {
         this.logger.error(`getBlockchain failed by ${e}... retrying ${retry}`)
@@ -268,7 +271,7 @@ export class RPCClient {
         await delay(SECOND)
       }
     }
-    
+
     throw new Error(`getBlockchain failed after ${MAX_RETRY} retries`)
   }
 

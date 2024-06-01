@@ -4,7 +4,7 @@ import { StateEntity } from '../../../orm'
 import { DataSource, EntityManager } from 'typeorm'
 import MonitorHelper from './helper'
 import winston from 'winston'
-import { INTERVAL_MONITOR, SECOND, config } from '../../../config'
+import { INTERVAL_MONITOR, config } from '../../../config'
 import { updateExecutorUsageMetrics } from '../../../lib/metrics'
 
 const MAX_BLOCKS = 20 // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
@@ -29,13 +29,9 @@ export abstract class Monitor {
   ) {
     this.bridgeId = config.BRIDGE_ID
   }
-  
+
   public async getBlockByHeight(height: number): Promise<Block | null> {
-    const res = await this.helper.feedBlock(
-      this.rpcClient,
-      height,
-      height
-    )
+    const res = await this.helper.feedBlock(this.rpcClient, height, height)
     return res[0][1]
   }
 
@@ -80,9 +76,7 @@ export abstract class Monitor {
   async handleBlockWithStateUpdate(manager: EntityManager): Promise<void> {
     await this.handleBlock(manager)
     if (this.syncedHeight % 10 === 0) {
-      this.logger.info(
-        `${this.name()} syncedHeight ${this.syncedHeight}`
-      )
+      this.logger.info(`${this.name()} syncedHeight ${this.syncedHeight}`)
     }
     this.syncedHeight++
     await manager

@@ -5,7 +5,8 @@ import {
   Histogram,
   Summary,
   register,
-  Pushgateway, collectDefaultMetrics
+  Pushgateway,
+  collectDefaultMetrics
 } from 'prom-client'
 import { config } from '../config'
 import { prometheusLogger as logger } from '../lib/logger'
@@ -58,7 +59,7 @@ const prometheus = () => {
     }
   > = {}
 
-  collectDefaultMetrics({register: registry})
+  collectDefaultMetrics({ register: registry })
 
   const create = ({ type, name, help, buckets }: CreateMetricOptions): void => {
     let instance:
