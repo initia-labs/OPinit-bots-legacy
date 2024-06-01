@@ -7,8 +7,9 @@ import {
 } from 'typeorm'
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions'
 import CamelToSnakeNamingStrategy from '../../orm/CamelToSnakeNamingStrategy'
+import dbg from 'debug'
 
-const debug = require('debug')('orm')
+const debug = dbg('orm')
 
 import {
   ChallengerOutputEntity,
