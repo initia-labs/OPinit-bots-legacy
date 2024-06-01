@@ -8,7 +8,7 @@ import { INTERVAL_MONITOR, SECOND, config } from '../../../config'
 import { updateExecutorUsageMetrics } from '../../../lib/metrics'
 
 const MAX_BLOCKS = 20 // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
-const MAX_QUEUE_SIZE = 1000
+const MAX_QUEUE_SIZE = 100
 const MAX_RETRY_INTERVAL = 30_000
 
 export abstract class Monitor {
@@ -32,10 +32,11 @@ export abstract class Monitor {
   ) {
     this.bridgeId = config.BRIDGE_ID
   }
-
+  
   public async feedQueue(): Promise<void> {
     if (!this.isFirstRun) throw new Error('not first run')
     this.isFirstRun = false
+    
     for (let i = 0; ; i++) {
       try {
         this.blockQueue = this.blockQueue.filter(
@@ -62,7 +63,7 @@ export abstract class Monitor {
             feedStartHeight,
             feedEndHeight
           )
-          this.blockQueue = this.blockQueue.concat(newBlocks)
+          this.blockQueue.push(...newBlocks)
         }
 
         if (this.blockResultsQueue.length < MAX_QUEUE_SIZE) {
@@ -79,8 +80,7 @@ export abstract class Monitor {
             feedStartHeight,
             feedEndHeight
           )
-          this.blockResultsQueue =
-            this.blockResultsQueue.concat(newBlockResults)
+          this.blockResultsQueue.push(...newBlockResults)
         }
       } catch (e) {
         this.logger.error(`Error in feedQueue: `, e)

@@ -107,7 +107,8 @@ export class L1Monitor extends Monitor {
   }
 
   public async handleNewBlock(): Promise<void> {
-    await this.resurrector.ressurect()
+    // ressurect every unconfirmed tx before handling new block
+    await this.resurrector.ressurect() 
 
     if (!config.ENABLE_ORACLE) return
     if (!this.latestHeight || this.oracleHeight == this.latestHeight) {
@@ -122,7 +123,7 @@ export class L1Monitor extends Monitor {
 
     if (!latestTx0) {
       this.logger.info(
-        `[handleNewBlock - ${this.name()}] No txs in height: ${this.latestHeight}`
+        `[handleNewBlock - ${this.name()}] No txs in L2 height: ${this.latestHeight}`
       )
       return
     }
@@ -246,7 +247,7 @@ export class L1Monitor extends Monitor {
 
       await this.executorL2.transaction(msgs)
       this.logger.info(
-        `[proccessMsgs - ${this.name()}] Succeeded to submit tx in height: ${this.currentHeight}`
+        `[proccessMsgs - ${this.name()}] Succeeded to submit tx in height: ${this.currentHeight} Msgs length: ${msgs.length}`
       )
     } catch (err) {
       const errMsg = this.helper.extractErrorMessage(err)
