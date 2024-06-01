@@ -12,7 +12,7 @@ WORKDIR /usr/src/app
 
 COPY --from=builder /usr/src/app/dist ./dist
 COPY package*.json ./
-RUN npm install --production
+RUN npm install --omit=dev
 
 COPY entrypoint.sh ./
 RUN ["chmod", "+x", "./entrypoint.sh"]
