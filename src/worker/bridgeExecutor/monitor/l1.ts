@@ -118,7 +118,7 @@ export class L1Monitor extends Monitor {
       return
     }
 
-    const latestTx0 = this.getBlockByHeight(this.latestHeight)?.block.data
+    const latestTx0 = (await this.getBlockByHeight(this.latestHeight))?.block.data
       .txs[0]
 
     if (!latestTx0) {

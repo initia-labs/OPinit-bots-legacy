@@ -3,6 +3,8 @@ import axios, { AxiosRequestConfig } from 'axios'
 import Websocket from 'ws'
 import * as http from 'http'
 import * as https from 'https'
+import { delay } from 'bluebird'
+import { SECOND } from 'config'
 
 const MAX_RETRY = 10
 
@@ -241,23 +243,33 @@ export class RPCClient {
 
   async getBlockchain(
     min_height: number,
-    max_height: number
+    max_height: number,
   ): Promise<Blockchain | null> {
     if (min_height > max_height) {
       return null
     }
     
-    const blockchainResult: Blockchain = await this.getRequest(`/blockchain`, {
-      minHeight: min_height.toString(),
-      maxHeight: max_height.toString()
-    })
-
-    if (!blockchainResult) {
-      this.logger.info('failed get blockchain from rpc')
-      return null
+    for (let retry = 0; retry < MAX_RETRY; retry++) {
+      try {
+        const blockchainResult: Blockchain = await this.getRequest(`/blockchain`, {
+          minHeight: min_height.toString(),
+          maxHeight: max_height.toString()
+        })
+    
+        if (!blockchainResult) {
+          this.logger.warn('failed get blockchain from rpc')
+          return null
+        }
+    
+        return blockchainResult
+      } catch (e) {
+        this.logger.error(`getBlockchain failed by ${e}... retrying ${retry}`)
+        this.rotateRPC()
+        await delay(SECOND)
+      }
     }
-
-    return blockchainResult
+    
+    throw new Error(`getBlockchain failed after ${MAX_RETRY} retries`)
   }
 
   async getBlockResults(height: number): Promise<BlockResults | null> {

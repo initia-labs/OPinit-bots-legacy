@@ -90,9 +90,16 @@ export abstract class Monitor {
     }
   }
 
-  public getBlockByHeight(height: number): Block | null {
+  public async getBlockByHeight(height: number): Promise<Block | null> {
     const block = this.blockQueue.find((block) => block[0] === height)
-    if (!block) return null
+    if (!block) {
+      const res = await this.helper.feedBlock(
+        this.rpcClient,
+        height,
+        height
+      )
+      return res[0][1]
+    }
     return block[1]
   }
 
@@ -159,7 +166,7 @@ export abstract class Monitor {
 
   public async monitor(): Promise<void> {
     await this.prepareMonitor()
-    this.feedQueue()
+    // this.feedQueue()
     while (this.isRunning) {
       try {
         this.latestHeight = await this.rpcClient.getLatestBlockHeight()
