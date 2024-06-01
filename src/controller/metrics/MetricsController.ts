@@ -3,7 +3,7 @@ import { KoaController, Get, Controller } from 'koa-joi-controllers'
 import { routeConfig } from 'koa-swagger-decorator'
 import { Prometheus } from '../../lib/metrics'
 
-// @Controller('')
+@Controller('')
 export class MetricsController extends KoaController {
   @routeConfig({
     method: 'get',
