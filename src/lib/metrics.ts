@@ -6,7 +6,7 @@ import {
   Summary,
   register,
   Pushgateway, collectDefaultMetrics
-} from 'prom-client';
+} from 'prom-client'
 import { config } from '../config'
 import { prometheusLogger as logger } from '../lib/logger'
 
