@@ -4,7 +4,7 @@ import Websocket from 'ws'
 import * as http from 'http'
 import * as https from 'https'
 import { delay } from 'bluebird'
-import { SECOND } from 'config'
+import { SECOND } from '../config'
 
 const MAX_RETRY = 10
 
