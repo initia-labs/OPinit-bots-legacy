@@ -24,6 +24,7 @@ import { updateBatchUsageMetrics } from '../../lib/metrics'
 const base = 200000
 const perByte = 10
 const maxBytes = 500000 // 500kb
+const maxBulkSize = 1000
 
 export class BatchSubmitter {
   private submitterAddress: string
@@ -61,6 +62,7 @@ export class BatchSubmitter {
     }
   }
 
+
   async processBatch() {
     await this.db.transaction(async (manager: EntityManager) => {
       const latestBatch = await this.getStoredBatch(manager)
@@ -76,22 +78,26 @@ export class BatchSubmitter {
         return
       }
 
-      const batch = await this.getBatch(
-        output.startBlockNumber,
-        output.endBlockNumber
-      )
-      const batchInfo: string[] = await this.publishBatch(batch)
-      await this.saveBatchToDB(
-        manager,
-        batchInfo,
-        this.batchIndex,
-        output.startBlockNumber,
-        output.endBlockNumber
-      )
+      for (let i = output.startBlockNumber; i <= output.endBlockNumber; i += maxBulkSize) {
+        await this.processBatchRange(manager, i, Math.min(i + maxBulkSize - 1, output.endBlockNumber))
+      }
+      
       logger.info(
         `${this.batchIndex}th batch (${output.startBlockNumber}, ${output.endBlockNumber}) is successfully saved`
       )
     })
+  }
+
+  async processBatchRange(manager:EntityManager, start: number, end: number) {
+    const batch = await this.getBatch(start, end)
+    const batchInfo: string[] = await this.publishBatch(batch)
+    await this.saveBatchToDB(
+      manager,
+      batchInfo,
+      this.batchIndex,
+      start,
+      end
+    )
   }
 
   // Get [start, end] batch from L2 and last commit info
