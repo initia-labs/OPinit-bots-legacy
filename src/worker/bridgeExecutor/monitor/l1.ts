@@ -123,7 +123,7 @@ export class L1Monitor extends Monitor {
 
     if (!latestTx0) {
       this.logger.info(
-        `[handleNewBlock - ${this.name()}] No txs in L2 height: ${this.latestHeight}`
+        `[handleNewBlock - ${this.name()}] No txs in L1 height: ${this.latestHeight}`
       )
       return
     }

@@ -81,11 +81,11 @@ export class Resurrector {
         false
       )
     } catch (err) {
-      await this.resubmitFailedDepositTxAtomic(unconfirmedTxs)
+      await this.resubmitFailedDepositTxSplit(unconfirmedTxs)
     }
   }
 
-  async resubmitFailedDepositTxAtomic(
+  async resubmitFailedDepositTxSplit(
     unconfirmedTxs: UnconfirmedTxEntity[]
   ): Promise<void> {
     for (const unconfirmedTx of unconfirmedTxs) {
