@@ -7,8 +7,7 @@ import { executorLogger as logger } from '../../lib/logger'
 import { initORM, finalizeORM } from './db'
 import { initServer, finalizeServer, initMetricsServer } from '../../loader'
 import { once } from 'lodash'
-import { config } from '../../config'
-import {isInvokedFromEntrypoint} from "../../entrypoint"
+import { config, isInvokedFromEntrypoint } from '../../config'
 
 let monitors
 

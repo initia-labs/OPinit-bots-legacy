@@ -6,8 +6,7 @@ import { challengerLogger as logger } from '../../lib/logger'
 import { once } from 'lodash'
 import { L1Monitor } from './monitor_l1'
 import { L2Monitor } from './monitor_l2'
-import { config } from '../../config'
-import {isInvokedFromEntrypoint} from "../../entrypoint"
+import { config, isInvokedFromEntrypoint } from '../../config'
 
 let monitors: (Monitor | Challenger)[]
 

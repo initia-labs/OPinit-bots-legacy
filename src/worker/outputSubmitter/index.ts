@@ -4,8 +4,7 @@ import { once } from 'lodash'
 import { initORM } from './db'
 import { initMetricsServer } from '../../loader'
 import { metricsController } from '../../controller'
-import { config } from '../../config'
-import {isInvokedFromEntrypoint} from "../../entrypoint"
+import { config, isInvokedFromEntrypoint } from '../../config'
 
 let jobs: OutputSubmitter[]
 

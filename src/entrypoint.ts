@@ -7,23 +7,13 @@ import { startExecutor } from './worker/bridgeExecutor'
 import { startBatch } from './worker/batchSubmitter'
 import { startChallenger } from './worker/challenger'
 import { startOutput } from './worker/outputSubmitter'
+import { isInvokedFromEntrypoint } from './config'
 
 const modeToEntrypointMap: Record<string, () => Promise<void>> = {
     executor: startExecutor,
     batch: startBatch,
     challenger: startChallenger,
     output: startOutput,
-}
-
-// utility function to determine if the module is invoked from the entrypoint.
-// it checks if the module is the main module and if the filename includes "entrypoint",
-// which will always be:
-// - true for bundle
-// - false for individual worker files
-//
-// NOTE: this needs to be a function instead of const, as it needs to be hoisted
-export function isInvokedFromEntrypoint(module: NodeJS.Module | undefined): boolean {
-    return require.main === module && (module?.filename.includes("entrypoint") || false)
 }
 
 const entrypoint = (mode: string): Promise<void> => {
