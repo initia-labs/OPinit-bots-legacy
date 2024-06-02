@@ -4,11 +4,10 @@ import { StateEntity } from '../../../orm'
 import { DataSource, EntityManager } from 'typeorm'
 import MonitorHelper from './helper'
 import winston from 'winston'
-import { INTERVAL_MONITOR, SECOND, config } from '../../../config'
+import { INTERVAL_MONITOR, config } from '../../../config'
 import { updateExecutorUsageMetrics } from '../../../lib/metrics'
 
 const MAX_BLOCKS = 20 // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
-const MAX_QUEUE_SIZE = 1000
 const MAX_RETRY_INTERVAL = 30_000
 
 export abstract class Monitor {
@@ -17,8 +16,6 @@ export abstract class Monitor {
   public latestHeight: number
 
   public isFirstRun = true
-  public blockQueue: [number, Block][] = []
-  public blockResultsQueue: [number, BlockResults][] = []
 
   protected db: DataSource
   protected isRunning = false
@@ -33,85 +30,18 @@ export abstract class Monitor {
     this.bridgeId = config.BRIDGE_ID
   }
 
-  public async feedQueue(): Promise<void> {
-    if (!this.isFirstRun) throw new Error('not first run')
-    this.isFirstRun = false
-    for (let i = 0; ; i++) {
-      try {
-        this.blockQueue = this.blockQueue.filter(
-          // eslint-disable-next-line
-          ([height, _]) => height > this.syncedHeight
-        )
-        this.blockResultsQueue = this.blockResultsQueue.filter(
-          // eslint-disable-next-line
-          ([height, _]) => height > this.syncedHeight
-        )
-
-        if (this.blockQueue.length < MAX_QUEUE_SIZE) {
-          const feedStartHeight =
-            this.blockQueue.length > 0
-              ? this.blockQueue[this.blockQueue.length - 1][0] + 1
-              : this.syncedHeight + 1
-          const feedEndHeight = Math.min(
-            this.latestHeight,
-            feedStartHeight + MAX_BLOCKS
-          )
-
-          const newBlocks = await this.helper.feedBlock(
-            this.rpcClient,
-            feedStartHeight,
-            feedEndHeight
-          )
-          this.blockQueue = this.blockQueue.concat(newBlocks)
-        }
-
-        if (this.blockResultsQueue.length < MAX_QUEUE_SIZE) {
-          const feedStartHeight =
-            this.blockResultsQueue.length > 0
-              ? this.blockResultsQueue[this.blockResultsQueue.length - 1][0] + 1
-              : this.syncedHeight + 1
-          const feedEndHeight = Math.min(
-            this.latestHeight,
-            feedStartHeight + MAX_BLOCKS
-          )
-          const newBlockResults = await this.helper.feedBlockResults(
-            this.rpcClient,
-            feedStartHeight,
-            feedEndHeight
-          )
-          this.blockResultsQueue =
-            this.blockResultsQueue.concat(newBlockResults)
-        }
-      } catch (e) {
-        this.logger.error(`Error in feedQueue: `, e)
-      } finally {
-        await Bluebird.delay(SECOND)
-      }
-    }
-  }
-
-  public getBlockByHeight(height: number): Block | null {
-    const block = this.blockQueue.find((block) => block[0] === height)
-    if (!block) return null
-    return block[1]
+  public async getBlockByHeight(height: number): Promise<Block | null> {
+    const res = await this.helper.feedBlock(this.rpcClient, height, height)
+    return res[0][1]
   }
 
   public async getBlockResultsByHeight(height: number): Promise<BlockResults> {
-    const blockResult = this.blockResultsQueue.find(
-      (blockResults) => blockResults[0] === height
+    const res = await this.helper.feedBlockResults(
+      this.rpcClient,
+      height,
+      height
     )
-    if (!blockResult) {
-      this.logger.info(
-        `${this.name()} fetching block results for height ${height}...`
-      )
-      const res = await this.helper.feedBlockResults(
-        this.rpcClient,
-        height,
-        height
-      )
-      return res[0][1]
-    }
-    return blockResult[1]
+    return res[0][1]
   }
 
   public async run(): Promise<void> {
@@ -146,9 +76,7 @@ export abstract class Monitor {
   async handleBlockWithStateUpdate(manager: EntityManager): Promise<void> {
     await this.handleBlock(manager)
     if (this.syncedHeight % 10 === 0) {
-      this.logger.info(
-        `${this.name()} syncedHeight ${this.syncedHeight}, blockQueue ${this.blockQueue.length}, blockResultsQueue ${this.blockResultsQueue.length}`
-      )
+      this.logger.info(`${this.name()} syncedHeight ${this.syncedHeight}`)
     }
     this.syncedHeight++
     await manager
@@ -159,7 +87,6 @@ export abstract class Monitor {
 
   public async monitor(): Promise<void> {
     await this.prepareMonitor()
-    this.feedQueue()
     while (this.isRunning) {
       try {
         this.latestHeight = await this.rpcClient.getLatestBlockHeight()
