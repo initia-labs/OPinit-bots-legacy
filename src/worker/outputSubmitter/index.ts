@@ -5,6 +5,7 @@ import { initORM } from './db'
 import { initMetricsServer } from '../../loader'
 import { metricsController } from '../../controller'
 import { config } from '../../config'
+import {isInvokedFromEntrypoint} from "../../entrypoint"
 
 let jobs: OutputSubmitter[]
 
@@ -46,6 +47,7 @@ export async function startOutput(): Promise<void> {
   signals.forEach((signal) => process.on(signal, once(stopOutput)))
 }
 
-if (require.main === module) {
+// start right away is the main module and not invoked from the entrypoint
+if (!isInvokedFromEntrypoint(module) && require.main === module) {
   startOutput().catch(console.log)
 }

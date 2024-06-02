@@ -8,6 +8,7 @@ import { initORM, finalizeORM } from './db'
 import { initServer, finalizeServer, initMetricsServer } from '../../loader'
 import { once } from 'lodash'
 import { config } from '../../config'
+import {isInvokedFromEntrypoint} from "../../entrypoint"
 
 let monitors
 
@@ -68,7 +69,8 @@ export async function startExecutor(): Promise<void> {
   signals.forEach((signal) => process.on(signal, once(stopExecutor)))
 }
 
-if (require.main === module) {
+// start right away is the main module and not invoked from the entrypoint
+if (!isInvokedFromEntrypoint(module) && require.main === module) {
   startExecutor().catch(console.log)
 }
 

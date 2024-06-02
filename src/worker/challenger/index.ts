@@ -7,6 +7,7 @@ import { once } from 'lodash'
 import { L1Monitor } from './monitor_l1'
 import { L2Monitor } from './monitor_l2'
 import { config } from '../../config'
+import {isInvokedFromEntrypoint} from "../../entrypoint"
 
 let monitors: (Monitor | Challenger)[]
 
@@ -50,6 +51,7 @@ export async function startChallenger(): Promise<void> {
   signals.forEach((signal) => process.on(signal, once(stopChallenger)))
 }
 
-if (require.main === module) {
+// start right away is the main module and not invoked from the entrypoint
+if (!isInvokedFromEntrypoint(module) && require.main === module) {
   startChallenger().catch(console.log)
 }
