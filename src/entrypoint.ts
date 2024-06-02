@@ -23,7 +23,7 @@ const modeToEntrypointMap: Record<string, () => Promise<void>> = {
 //
 // NOTE: this needs to be a function instead of const, as it needs to be hoisted
 export function isInvokedFromEntrypoint(module: NodeJS.Module | undefined): boolean {
-    return (require.main === module && module?.filename.includes("entrypoint")) || false
+    return require.main === module && (module?.filename.includes("entrypoint") || false)
 }
 
 const entrypoint = (mode: string): Promise<void> => {
