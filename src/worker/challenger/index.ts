@@ -50,7 +50,7 @@ export async function startChallenger(): Promise<void> {
   signals.forEach((signal) => process.on(signal, once(stopChallenger)))
 }
 
-// start right away is the main module and not invoked from the entrypoint
+// start right away if NOT invoked from entrypoint
 if (!isInvokedFromEntrypoint(module) && require.main === module) {
   startChallenger().catch(console.log)
 }

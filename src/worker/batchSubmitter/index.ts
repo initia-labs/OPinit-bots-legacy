@@ -55,7 +55,7 @@ export async function startBatch(): Promise<void> {
   signals.forEach((signal) => process.on(signal, once(stopBatch)))
 }
 
-// start right away is the main module and not invoked from the entrypoint
+// start right away if NOT invoked from entrypoint
 if (!isInvokedFromEntrypoint(module) && require.main === module) {
   startBatch().catch(console.log)
 }

@@ -68,7 +68,7 @@ export async function startExecutor(): Promise<void> {
   signals.forEach((signal) => process.on(signal, once(stopExecutor)))
 }
 
-// start right away is the main module and not invoked from the entrypoint
+// start right away if NOT invoked from entrypoint
 if (!isInvokedFromEntrypoint(module) && require.main === module) {
   startExecutor().catch(console.log)
 }

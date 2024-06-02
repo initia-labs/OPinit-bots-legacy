@@ -46,7 +46,7 @@ export async function startOutput(): Promise<void> {
   signals.forEach((signal) => process.on(signal, once(stopOutput)))
 }
 
-// start right away is the main module and not invoked from the entrypoint
+// start right away if NOT invoked from entrypoint
 if (!isInvokedFromEntrypoint(module) && require.main === module) {
   startOutput().catch(console.log)
 }
