@@ -18,6 +18,7 @@ const modeToEntrypointMap: Record<string, () => Promise<void>> = {
 
 const entrypoint = (mode: string): Promise<void> => {
     return Promise.resolve()
+        .then(() => console.log("Starting worker in mode:", mode))
         .then(() => modeToEntrypointMap[mode] || Promise.reject(`unknown mode: ${mode}, available options = ${Object.keys(modeToEntrypointMap)}`))
         .then(workerFn => workerFn())
 
