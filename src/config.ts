@@ -223,6 +223,17 @@ export const config = {
 // check celestia config
 validateCelestiaConfig()
 
+// utility function to determine if the module is invoked from the entrypoint.
+// it checks if the module is the main module and if the filename includes "entrypoint",
+// which will always be:
+// - true for bundle
+// - false for individual worker files
+//
+// NOTE: this needs to be a function instead of const, as it needs to be hoisted
+export function isInvokedFromEntrypoint(module: NodeJS.Module | undefined): boolean {
+  return require.main === module && (module?.filename.includes("entrypoint") || false)
+}
+
 export const INTERVAL_BATCH = 100_000
 export const INTERVAL_MONITOR = 100
 export const INTERVAL_OUTPUT = 10_000

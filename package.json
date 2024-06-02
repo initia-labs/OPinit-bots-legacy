@@ -22,10 +22,10 @@
     "clean": "tsc --build --clean",
     "l2setup": "export NODE_ENV=test && npm run build && node ./dist/scripts/setupL2.js",
     "prod:build": "rollup -c",
-    "prod:executor": "WORKER_NAME=executor node ./dist/workers.js",
-    "prod:batch": "WORKER_NAME=batch node ./dist/workers.js",
-    "prod:challenger": "WORKER_NAME=challenger node ./dist/workers.js",
-    "prod:output": "WORKER_NAME=output node ./dist/workers.js"
+    "prod:executor": "WORKER_NAME=executor node ./dist/entrypoint.js",
+    "prod:batch": "WORKER_NAME=batch node ./dist/entrypoint.js",
+    "prod:challenger": "WORKER_NAME=challenger node ./dist/entrypoint.js",
+    "prod:output": "WORKER_NAME=output node ./dist/entrypoint.js"
   },
   "repository": {
     "type": "git",

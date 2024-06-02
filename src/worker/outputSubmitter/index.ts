@@ -4,7 +4,7 @@ import { once } from 'lodash'
 import { initORM } from './db'
 import { initMetricsServer } from '../../loader'
 import { metricsController } from '../../controller'
-import { config } from '../../config'
+import { config, isInvokedFromEntrypoint } from '../../config'
 
 let jobs: OutputSubmitter[]
 
@@ -46,6 +46,7 @@ export async function startOutput(): Promise<void> {
   signals.forEach((signal) => process.on(signal, once(stopOutput)))
 }
 
-if (require.main === module) {
+// start right away if NOT invoked from entrypoint
+if (!isInvokedFromEntrypoint(module) && require.main === module) {
   startOutput().catch(console.log)
 }

@@ -4,7 +4,7 @@ import { BatchSubmitter } from './batchSubmitter'
 import { initServer, finalizeServer, initMetricsServer } from '../../loader'
 import { batchController, metricsController } from '../../controller'
 import { once } from 'lodash'
-import { config } from '../../config'
+import { config, isInvokedFromEntrypoint } from '../../config'
 
 let jobs: BatchSubmitter[] = []
 
@@ -55,6 +55,7 @@ export async function startBatch(): Promise<void> {
   signals.forEach((signal) => process.on(signal, once(stopBatch)))
 }
 
-if (require.main === module) {
+// start right away if NOT invoked from entrypoint
+if (!isInvokedFromEntrypoint(module) && require.main === module) {
   startBatch().catch(console.log)
 }
