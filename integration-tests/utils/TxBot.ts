@@ -15,11 +15,11 @@ export class TxBot {
 
   constructor(public bridgeId: number) {}
 
-  async deposit(sender: TxWalletL1, reciever: TxWalletL2, coin: Coin) {
+  async deposit(sender: TxWalletL1, receiver: TxWalletL2, coin: Coin) {
     const msg = new MsgInitiateTokenDeposit(
       sender.key.accAddress,
       this.bridgeId,
-      reciever.key.accAddress,
+      receiver.key.accAddress,
       coin
     )
 

@@ -108,7 +108,7 @@ export class L1Monitor extends Monitor {
 
   public async handleNewBlock(): Promise<void> {
     // ressurect every unconfirmed tx before handling new block
-    await this.resurrector.ressurect()
+    await this.resurrector.resurrect()
 
     if (!config.ENABLE_ORACLE) return
     if (!this.latestHeight || this.oracleHeight == this.latestHeight) {
