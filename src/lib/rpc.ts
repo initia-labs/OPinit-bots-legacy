@@ -1,5 +1,4 @@
 import * as winston from 'winston'
-import axios, { AxiosRequestConfig } from 'axios'
 import Websocket from 'ws'
 import * as http from 'http'
 import * as https from 'https'

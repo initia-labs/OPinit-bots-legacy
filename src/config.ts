@@ -1,9 +1,8 @@
-import { APIRequester, LCDClient as LCDClientL1 } from 'initia-l1'
+import { LCDClient as LCDClientL1 } from 'initia-l1'
 import { LCDClient as LCDClientL2 } from 'initia-l2'
 import { validateCelestiaConfig } from './celestia/utils'
 import * as dotenv from 'dotenv'
-import http from 'http'
-import https from 'https'
+import APIRequesterSingleton from './lib/apiRequester'
 
 const envFile =
   process.env.NODE_ENV === 'test' || !process.env.WORKER_NAME
@@ -67,11 +66,6 @@ const supportedPublishBatchTargets = ['l1', 'celestia']
 
 const getUri = (uri, defaultUri = 'http://127.0.0.1:1317') =>
   uri ? uri.split(',')[0] : defaultUri
-const createApiRequester = (uri) =>
-  new APIRequester(getUri(uri), {
-    httpAgent: new http.Agent({ keepAlive: true }),
-    httpsAgent: new https.Agent({ keepAlive: true })
-  })
 
 export const config = {
   EXECUTOR_PORT: EXECUTOR_PORT ? parseInt(EXECUTOR_PORT) : 5000,
@@ -155,7 +149,7 @@ export const config = {
       gasAdjustment: '2',
       chainId: L1_CHAIN_ID
     },
-    createApiRequester(L1_LCD_URI)
+    APIRequesterSingleton.getInstance(getUri(L1_LCD_URI))
   ),
   l2lcd: new LCDClientL2(
     getUri(L2_LCD_URI),
@@ -164,7 +158,7 @@ export const config = {
       gasAdjustment: '2',
       chainId: L2_CHAIN_ID
     },
-    createApiRequester(L2_LCD_URI)
+    APIRequesterSingleton.getInstance(getUri(L2_LCD_URI))
   ),
   batchlcd: (() => {
     const uri =
@@ -178,7 +172,7 @@ export const config = {
         gasAdjustment: '2',
         chainId: BATCH_CHAIN_ID ? BATCH_CHAIN_ID : L1_CHAIN_ID
       },
-      createApiRequester(uri)
+      APIRequesterSingleton.getInstance(getUri(uri))
     )
   })(),
   SLACK_WEB_HOOK: SLACK_WEB_HOOK ? SLACK_WEB_HOOK : '',
@@ -230,8 +224,13 @@ validateCelestiaConfig()
 // - false for individual worker files
 //
 // NOTE: this needs to be a function instead of const, as it needs to be hoisted
-export function isInvokedFromEntrypoint(module: NodeJS.Module | undefined): boolean {
-  return require.main === module && (module?.filename.includes("entrypoint") || false)
+export function isInvokedFromEntrypoint(
+  module: NodeJS.Module | undefined
+): boolean {
+  return (
+    require.main === module &&
+    (module?.filename.includes('entrypoint') || false)
+  )
 }
 
 export const INTERVAL_BATCH = 100_000

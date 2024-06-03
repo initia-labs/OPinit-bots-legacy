@@ -62,7 +62,6 @@ export class BatchSubmitter {
     }
   }
 
-
   async processBatch() {
     await this.db.transaction(async (manager: EntityManager) => {
       const latestBatch = await this.getStoredBatch(manager)
@@ -78,26 +77,28 @@ export class BatchSubmitter {
         return
       }
 
-      for (let i = output.startBlockNumber; i <= output.endBlockNumber; i += maxBulkSize) {
-        await this.processBatchRange(manager, i, Math.min(i + maxBulkSize - 1, output.endBlockNumber))
+      for (
+        let i = output.startBlockNumber;
+        i <= output.endBlockNumber;
+        i += maxBulkSize
+      ) {
+        await this.processBatchRange(
+          manager,
+          i,
+          Math.min(i + maxBulkSize - 1, output.endBlockNumber)
+        )
       }
-      
+
       logger.info(
         `${this.batchIndex}th batch (${output.startBlockNumber}, ${output.endBlockNumber}) is successfully saved`
       )
     })
   }
 
-  async processBatchRange(manager:EntityManager, start: number, end: number) {
+  async processBatchRange(manager: EntityManager, start: number, end: number) {
     const batch = await this.getBatch(start, end)
     const batchInfo: string[] = await this.publishBatch(batch)
-    await this.saveBatchToDB(
-      manager,
-      batchInfo,
-      this.batchIndex,
-      start,
-      end
-    )
+    await this.saveBatchToDB(manager, batchInfo, this.batchIndex, start, end)
   }
 
   // Get [start, end] batch from L2 and last commit info

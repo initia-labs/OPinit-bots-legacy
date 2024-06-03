@@ -1,8 +1,5 @@
-import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import { config } from '../config'
-import * as http from 'http'
-import * as https from 'https'
 import UnconfirmedTxEntity from '../orm/executor/UnconfirmedTxEntity'
 import { ChallengedOutputEntity } from '../orm/index'
 import AxiosSingleton from './axios'
@@ -19,7 +16,7 @@ export async function notifySlack(
 
   const keyExists = postedKeys.has(key)
   const axiosInsance = AxiosSingleton.getInstance()
-  
+
   if (isError) {
     if (!keyExists) {
       await axiosInsance.post(config.SLACK_WEB_HOOK, text)

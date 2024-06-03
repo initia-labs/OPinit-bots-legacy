@@ -5,7 +5,6 @@ import {
   OutputResponse,
   WithdrawalTxResponse
 } from './types'
-import axios from 'axios'
 import AxiosSingleton from './axios'
 
 /// LCD query
