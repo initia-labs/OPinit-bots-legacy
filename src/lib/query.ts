@@ -6,6 +6,7 @@ import {
   WithdrawalTxResponse
 } from './types'
 import axios from 'axios'
+import AxiosSingleton from './axios'
 
 /// LCD query
 
@@ -44,8 +45,8 @@ export async function getWithdrawalTxFromExecutor(
   sequence: number
 ): Promise<WithdrawalTxResponse> {
   const url = `${config.EXECUTOR_URI}/tx/withdrawal/${bridge_id}/${sequence}`
-
-  const res = await axios.get(url)
+  const axiosInstance = AxiosSingleton.getInstance()
+  const res = await axiosInstance.get(url)
   return res.data
 }
 
@@ -54,7 +55,8 @@ export async function getDepositTxFromExecutor(
   sequence: number
 ): Promise<DepositTxResponse> {
   const url = `${config.EXECUTOR_URI}/tx/deposit/${bridge_id}/${sequence}`
-  const res = await axios.get(url)
+  const axiosInstance = AxiosSingleton.getInstance()
+  const res = await axiosInstance.get(url)
   return res.data
 }
 
@@ -63,14 +65,16 @@ export async function getOutputFromExecutor(
   outputIndex: number
 ): Promise<OutputResponse> {
   const url = `${config.EXECUTOR_URI}/output/${outputIndex}`
-  const res = await axios.get(url)
+  const axiosInstance = AxiosSingleton.getInstance()
+  const res = await axiosInstance.get(url)
   return res.data
 }
 
 // fetching the latest output from l2 chain
 export async function getLatestOutputFromExecutor(): Promise<OutputResponse> {
   const url = `${config.EXECUTOR_URI}/output/latest`
-  const res = await axios.get(url)
+  const axiosInstance = AxiosSingleton.getInstance()
+  const res = await axiosInstance.get(url)
   return res.data
 }
 
@@ -79,7 +83,8 @@ export const checkHealth = async (url: string, timeout = 60_000) => {
 
   while (Date.now() - startTime < timeout) {
     try {
-      const response = await axios.get(url)
+      const axiosInstance = AxiosSingleton.getInstance()
+      const response = await axiosInstance.get(url)
       if (response.status === 200) return
     } catch {
       continue
