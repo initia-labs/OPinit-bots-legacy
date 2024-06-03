@@ -1,10 +1,10 @@
 import * as winston from 'winston'
-import axios, { AxiosRequestConfig } from 'axios'
 import Websocket from 'ws'
 import * as http from 'http'
 import * as https from 'https'
 import { delay } from 'bluebird'
 import { SECOND } from '../config'
+import AxiosSingleton from './axios'
 
 const MAX_RETRY = 10
 
@@ -205,14 +205,7 @@ export class RPCClient {
     path: string,
     params?: Record<string, string>
   ): Promise<any> {
-    const options: AxiosRequestConfig = {
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'initia-rollup'
-      },
-      httpsAgent: new https.Agent({ keepAlive: true }),
-      httpAgent: new http.Agent({ keepAlive: true })
-    }
+    const axiosInsance = AxiosSingleton.getInstance()
 
     let url = `${this.rpcUrl}${path}`
     params &&
@@ -225,7 +218,7 @@ export class RPCClient {
     }
 
     try {
-      const response = await axios.get(url, options)
+      const response = await axiosInsance.get(url)
       if (response.status !== 200) {
         throw new Error(`Invalid status code: ${response.status}`)
       }

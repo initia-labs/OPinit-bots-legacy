@@ -1,18 +1,10 @@
-import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import { config } from '../config'
-import * as http from 'http'
-import * as https from 'https'
 import UnconfirmedTxEntity from '../orm/executor/UnconfirmedTxEntity'
 import { ChallengedOutputEntity } from '../orm/index'
+import AxiosSingleton from './axios'
 
 const postedKeys = new Set<string>()
-
-const ax = axios.create({
-  httpAgent: new http.Agent({ keepAlive: true }),
-  httpsAgent: new https.Agent({ keepAlive: true }),
-  timeout: 15000
-})
 
 export async function notifySlack(
   key: string,
@@ -23,15 +15,16 @@ export async function notifySlack(
     return
 
   const keyExists = postedKeys.has(key)
+  const axiosInsance = AxiosSingleton.getInstance()
 
   if (isError) {
     if (!keyExists) {
-      await ax.post(config.SLACK_WEB_HOOK, text)
+      await axiosInsance.post(config.SLACK_WEB_HOOK, text)
       postedKeys.add(key)
     }
   } else {
     if (keyExists) {
-      await ax.post(config.SLACK_WEB_HOOK, text)
+      await axiosInsance.post(config.SLACK_WEB_HOOK, text)
       postedKeys.delete(key)
     }
   }
