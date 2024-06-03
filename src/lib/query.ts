@@ -76,18 +76,3 @@ export async function getLatestOutputFromExecutor(): Promise<OutputResponse> {
   const res = await axiosInstance.get(url)
   return res.data
 }
-
-export const checkHealth = async (url: string, timeout = 60_000) => {
-  const startTime = Date.now()
-
-  while (Date.now() - startTime < timeout) {
-    try {
-      const axiosInstance = AxiosSingleton.getInstance()
-      const response = await axiosInstance.get(url)
-      if (response.status === 200) return
-    } catch {
-      continue
-    }
-    await new Promise((res) => setTimeout(res, 1_000))
-  }
-}
