@@ -45,7 +45,7 @@ export async function getWithdrawalTxFromExecutor(
 ): Promise<WithdrawalTxResponse> {
   const url = `${config.EXECUTOR_URI}/tx/withdrawal/${bridge_id}/${sequence}`
 
-  const res = await axios.get(url)
+  const res = await axios.get(url, { maxRedirects: 0 })
   return res.data
 }
 
@@ -54,7 +54,7 @@ export async function getDepositTxFromExecutor(
   sequence: number
 ): Promise<DepositTxResponse> {
   const url = `${config.EXECUTOR_URI}/tx/deposit/${bridge_id}/${sequence}`
-  const res = await axios.get(url)
+  const res = await axios.get(url, { maxRedirects: 0 })
   return res.data
 }
 
@@ -63,14 +63,14 @@ export async function getOutputFromExecutor(
   outputIndex: number
 ): Promise<OutputResponse> {
   const url = `${config.EXECUTOR_URI}/output/${outputIndex}`
-  const res = await axios.get(url)
+  const res = await axios.get(url, { maxRedirects: 0 })
   return res.data
 }
 
 // fetching the latest output from l2 chain
 export async function getLatestOutputFromExecutor(): Promise<OutputResponse> {
   const url = `${config.EXECUTOR_URI}/output/latest`
-  const res = await axios.get(url)
+  const res = await axios.get(url, { maxRedirects: 0 })
   return res.data
 }
 
@@ -79,7 +79,7 @@ export const checkHealth = async (url: string, timeout = 60_000) => {
 
   while (Date.now() - startTime < timeout) {
     try {
-      const response = await axios.get(url)
+      const response = await axios.get(url, { maxRedirects: 0 })
       if (response.status === 200) return
     } catch {
       continue

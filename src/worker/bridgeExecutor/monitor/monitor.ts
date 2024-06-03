@@ -15,8 +15,6 @@ export abstract class Monitor {
   public currentHeight: number
   public latestHeight: number
 
-  public isFirstRun = true
-
   protected db: DataSource
   protected isRunning = false
   protected bridgeId: number

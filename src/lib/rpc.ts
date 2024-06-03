@@ -211,7 +211,8 @@ export class RPCClient {
         'User-Agent': 'initia-rollup'
       },
       httpsAgent: new https.Agent({ keepAlive: true }),
-      httpAgent: new http.Agent({ keepAlive: true })
+      httpAgent: new http.Agent({ keepAlive: true }),
+      maxRedirects: 0
     }
 
     let url = `${this.rpcUrl}${path}`

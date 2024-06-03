@@ -11,7 +11,8 @@ const postedKeys = new Set<string>()
 const ax = axios.create({
   httpAgent: new http.Agent({ keepAlive: true }),
   httpsAgent: new https.Agent({ keepAlive: true }),
-  timeout: 15000
+  timeout: 15000,
+  maxRedirects: 0
 })
 
 export async function notifySlack(
