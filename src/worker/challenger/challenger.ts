@@ -28,8 +28,6 @@ import {
 } from '../../lib/walletL1'
 import { buildChallengerNotification, notifySlack } from '../../lib/slack'
 
-const THRESHOLD_MISS_INTERVAL = 5
-
 export class Challenger {
   private isRunning = false
   private db: DataSource
@@ -42,8 +40,6 @@ export class Challenger {
   l2OutputIndexToCheck: number
 
   submissionIntervalMs: number
-  missCount: number // count of miss interval to finalize deposit tx
-  threshold: number // threshold of miss interval to finalize deposit tx
   helper: MonitorHelper
   challenger: TxWalletL1
 
@@ -51,7 +47,6 @@ export class Challenger {
     [this.db] = getDB()
     this.bridgeId = config.BRIDGE_ID
     this.isRunning = true
-    this.missCount = 0
 
     this.helper = new MonitorHelper()
     initWallet(WalletType.Challenger, config.l1lcd)
@@ -145,18 +140,10 @@ export class Challenger {
       })
 
     if (!depositFinalizeTxFromChallenger) {
-      this.missCount += 1
-      this.logger.info(
+      this.logger.warn(
         `[L1 Challenger] deposit tx with sequence "${this.l1DepositSequenceToCheck}" is not finalized`
       )
-      if (this.missCount <= THRESHOLD_MISS_INTERVAL || !lastOutputInfo) {
-        return await delay(this.submissionIntervalMs)
-      }
-      return await this.handleChallengedOutputProposal(
-        manager,
-        lastOutputInfo.output_index,
-        `not finalized deposit tx within ${THRESHOLD_MISS_INTERVAL} submission interval ${depositFinalizeTxFromChallenger}`
-      )
+      return
     }
 
     // case 2. not equal deposit tx between L1 and L2
@@ -189,7 +176,6 @@ export class Challenger {
       `[L1 Challenger] deposit tx matched in sequence : ${this.l1DepositSequenceToCheck}`
     )
 
-    this.missCount = 0
     this.l1LastCheckedSequence = this.l1DepositSequenceToCheck
 
     await manager.getRepository(ChallengeEntity).update(
