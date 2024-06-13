@@ -91,6 +91,13 @@ class MonitorHelper {
     })
   }
 
+  public async getAllOutput<T extends ObjectLiteral>(
+    manager: EntityManager,
+    entityClass: EntityTarget<T>,
+  ): Promise<T[]> {
+    return await manager.getRepository<T>(entityClass).find()
+  }
+
   public async saveEntity<T extends ObjectLiteral>(
     manager: EntityManager,
     entityClass: EntityTarget<T>,

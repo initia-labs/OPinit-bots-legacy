@@ -114,9 +114,15 @@ export class L2Monitor extends Monitor {
     return true
   }
 
-  async checkSubmissionInterval(): Promise<boolean> {
+  async checkSubmissionInterval(manager: EntityManager): Promise<boolean> {
     const lastOutputSubmitted = await getLastOutputInfo(this.bridgeId)
+    const lastOutputFromDB = await this.helper.getLastOutputFromDB(
+      manager,
+      ExecutorOutputEntity
+    )
+    if (!lastOutputFromDB) return true
     if (lastOutputSubmitted) {
+      if (lastOutputFromDB.outputIndex !== lastOutputSubmitted.output_index) return false
       const lastOutputSubmittedTime =
         lastOutputSubmitted.output_proposal.l1_block_time
       const bridgeInfo = await getBridgeInfo(this.bridgeId)
@@ -133,7 +139,7 @@ export class L2Monitor extends Monitor {
   }
 
   async handleOutput(manager: EntityManager): Promise<void> {
-    if (!(await this.checkSubmissionInterval())) {
+    if (!(await this.checkSubmissionInterval(manager))) {
       if (this.currentHeight % 10 === 0)
         this.logger.info(
           `[handleOutput - ${this.name()}] Submission interval not reached`
