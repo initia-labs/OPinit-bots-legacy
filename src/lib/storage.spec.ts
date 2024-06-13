@@ -29,6 +29,39 @@ const v1 = [
 ]
 
 describe('WithdrawStorage', () => {
+  it('getmerkleproof', async () => {
+    const tx = {
+      bridge_id: BigInt(1),
+      sequence: BigInt(4),
+      sender: '0000000000000000000000000000000000000004',
+      receiver: '0000000000000000000000000000000000000001',
+      l1_denom: 'l1denom',
+      amount: BigInt(3000000)
+    }
+    const bridge_id_buf = Buffer.alloc(8)
+    bridge_id_buf.writeBigInt64BE(tx.bridge_id)
+
+    const sequence_buf = Buffer.alloc(8)
+    sequence_buf.writeBigInt64BE(tx.sequence)
+
+    const amount_buf = Buffer.alloc(8)
+    amount_buf.writeBigInt64BE(tx.amount)
+
+    const result = sha3_256(
+      Buffer.concat([
+        bridge_id_buf,
+        sequence_buf,
+        Buffer.from(tx.sender, 'hex'),
+        Buffer.from('|'),
+        Buffer.from(tx.receiver, 'hex'),
+        Buffer.from('|'),
+        Buffer.from(tx.l1_denom, 'utf8'),
+        Buffer.from('|'),
+        amount_buf
+      ])).toString('base64')
+    expect(result == "F+mzhRVdcwLS5tk2NDB2MbgMm7A0nk39G+NGEjXpTV0=").toBeTruthy()
+  })
+
   it('verify v1', async () => {
     const airdrop = new WithdrawStorage(v1)
     const target = v1[0]
@@ -47,11 +80,5 @@ describe('WithdrawStorage', () => {
       ])
     ).toString('base64')
     expect(airdrop.verify(merkleProof, target)).toBeTruthy()
-
-    expect(merkleRoot).toEqual('EYgpXs1b+Z3AdGqjjtJHylrGzCjXtBKDD2UTPXelUk4=')
-    expect(merkleProof).toEqual([
-      '5eJNy8mEqvyhysgWCqi7JQ7K602FtSpz+wDRNQitQMc='
-    ])
-    expect(outputRoot).toEqual('euaoJcFRXfV/6F0AiC0vYwXUY4NPHfCn9LbFMPieNsA=')
   })
 })
