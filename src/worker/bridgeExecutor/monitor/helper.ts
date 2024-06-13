@@ -95,7 +95,9 @@ class MonitorHelper {
     manager: EntityManager,
     entityClass: EntityTarget<T>,
   ): Promise<T[]> {
-    return await manager.getRepository<T>(entityClass).find()
+    return await manager.getRepository<T>(entityClass).find({
+      order: { outputIndex: 'ASC' } as any
+    })
   }
 
   public async saveEntity<T extends ObjectLiteral>(
