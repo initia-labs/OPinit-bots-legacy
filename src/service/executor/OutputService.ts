@@ -20,30 +20,27 @@ export async function getOutputList(
   param: GetOutputListParam
 ): Promise<GetOutputListResponse> {
   const [db] = getDB()
-  const queryRunner = db.createQueryRunner('slave')
-  try {
     const offset = param.offset ?? 0
     const order = param.descending ? 'DESC' : 'ASC'
-    const limit = Number(param.limit) ?? 10
+    const limit = Number(param.limit) ?? 20
 
-    const qb = queryRunner.manager.createQueryBuilder(
-      ExecutorOutputEntity,
-      'output'
-    )
+    const outputRepo = db.getRepository(ExecutorOutputEntity)
+    const outputWhereCond = {}
 
     if (param.output_index) {
-      qb.andWhere('output.output_index = :output_index', {
-        output_index: param.output_index
-      })
+      outputWhereCond['outputIndex'] = param.output_index
     }
 
-    const outputList = await qb
-      .orderBy('output.output_index', order)
-      .skip(offset * limit)
-      .take(limit)
-      .getMany()
+    const outputList = await outputRepo.find({
+      where: outputWhereCond,
+      order: {
+        outputIndex: order
+      },
+      skip: offset * limit,
+      take: limit
+    })
 
-    const count = await qb.getCount()
+    const count = outputList.length
     let next: number | undefined
 
     if (count > (offset + 1) * limit) {
@@ -56,7 +53,4 @@ export async function getOutputList(
       limit,
       outputList
     }
-  } finally {
-    queryRunner.release()
-  }
 }

@@ -37,44 +37,38 @@ export async function getClaimTxList(
   param: GetClaimTxListParam
 ): Promise<GetClaimTxListResponse> {
   const [db] = getDB()
-  const queryRunner = db.createQueryRunner('slave')
 
-  try {
     const offset = param.offset ?? 0
-    const order = param.descending == 'true' ? 'DESC' : 'ASC'
-    const limit = Number(param.limit) ?? 10
+    const order = param.descending ? 'DESC' : 'ASC'
+    const limit = Number(param.limit) ?? 20
 
     const claimTxList: ClaimTx[] = []
 
-    const withdrawalQb = queryRunner.manager.createQueryBuilder(
-      ExecutorWithdrawalTxEntity,
-      'tx'
-    )
+    const withdrawalRepo = db.getRepository(ExecutorWithdrawalTxEntity)
+    const withdrawalWhereCond = {}
 
     if (param.address) {
-      withdrawalQb.andWhere('tx.receiver = :receiver', { receiver: param.address })
+      withdrawalWhereCond['receiver'] = param.address
     }
 
     if (param.sequence) {
-      withdrawalQb.andWhere('tx.sequence = :sequence', {
-        sequence: param.sequence
-      })
+      withdrawalWhereCond['sequence'] = param.sequence
     }
 
-    const withdrawalTxs = await withdrawalQb
-      .orderBy('tx.sequence', order)
-      .skip(offset * limit)
-      .take(limit)
-      .getMany()
-
+    const withdrawalTxs = await withdrawalRepo.find({
+      where: withdrawalWhereCond,
+      order: {
+        sequence: order
+      },
+      skip: offset * limit,
+      take: limit
+    })
+    
     withdrawalTxs.map(async (withdrawalTx) => {
-      const outputQb = queryRunner.manager
-        .createQueryBuilder(ExecutorOutputEntity, 'output')
-        .where('output.output_index = :outputIndex', {
-          outputIndex: withdrawalTx.outputIndex
+      const output = await db.getRepository(ExecutorOutputEntity)
+        .findOne({
+          where: { outputIndex: withdrawalTx.outputIndex }
         })
-
-      const output = await outputQb.getOne()
 
       if (!output) {
         throw new APIError(ErrorTypes.NOT_FOUND_ERROR)
@@ -96,7 +90,8 @@ export async function getClaimTxList(
       claimTxList.push(claimData)
     })
 
-    const count = await withdrawalQb.getCount()
+    const count = withdrawalTxs.length
+
     let next: number | undefined
 
     if (count > (offset + 1) * limit) {
@@ -109,7 +104,4 @@ export async function getClaimTxList(
       limit,
       claimTxList
     }
-  } finally {
-    await queryRunner.release()
-  }
 }
