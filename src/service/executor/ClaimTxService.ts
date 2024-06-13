@@ -52,7 +52,7 @@ export async function getClaimTxList(
     )
 
     if (param.address) {
-      withdrawalQb.andWhere('tx.sender = :sender', { sender: param.address })
+      withdrawalQb.andWhere('tx.receiver = :receiver', { receiver: param.address })
     }
 
     if (param.sequence) {

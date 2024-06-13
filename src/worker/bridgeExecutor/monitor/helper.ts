@@ -94,9 +94,13 @@ class MonitorHelper {
   public async getAllOutput<T extends ObjectLiteral>(
     manager: EntityManager,
     entityClass: EntityTarget<T>,
+    startIndex = 0
   ): Promise<T[]> {
     return await manager.getRepository<T>(entityClass).find({
-      order: { outputIndex: 'ASC' } as any
+      where: {
+        outputIndex: startIndex as any
+      },
+      order: { outputIndex: 'ASC' } as any,
     })
   }
 

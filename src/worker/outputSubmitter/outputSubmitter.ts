@@ -58,9 +58,10 @@ export class OutputSubmitter {
       const outputs = await this.helper.getAllOutput(
         manager,
         ExecutorOutputEntity,
+        this.syncedOutputIndex
       )
 
-      return outputs.filter(output => output.outputIndex >= this.syncedOutputIndex)
+      return outputs
     } catch (err) {
       if (err.response?.data.type === ErrorTypes.NOT_FOUND_ERROR) {
         logger.warn(
