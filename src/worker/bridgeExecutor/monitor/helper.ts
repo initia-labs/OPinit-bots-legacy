@@ -12,7 +12,7 @@ import { WithdrawStorage } from '../../../lib/storage'
 import { WithdrawalTx } from '../../../lib/types'
 import { sha3_256 } from '../../../lib/util'
 import OutputEntity from '../../../orm/executor/OutputEntity'
-import { EntityManager, EntityTarget, ObjectLiteral } from 'typeorm'
+import { EntityManager, EntityTarget, MoreThanOrEqual, ObjectLiteral } from 'typeorm'
 import { Block, BlockResults, RPCClient } from '../../../lib/rpc'
 
 class MonitorHelper {
@@ -98,7 +98,7 @@ class MonitorHelper {
   ): Promise<T[]> {
     return await manager.getRepository<T>(entityClass).find({
       where: {
-        outputIndex: startIndex as any
+        outputIndex: MoreThanOrEqual(startIndex) as any
       },
       order: { outputIndex: 'ASC' } as any,
     })
