@@ -6,7 +6,7 @@ export interface GetOutputListParam {
   height?: number;
   offset?: number;
   limit: number;
-  descending: string;
+  descending: boolean;
 }
 
 export interface GetOutputListResponse {
@@ -23,7 +23,7 @@ export async function getOutputList(
   const queryRunner = db.createQueryRunner('slave')
   try {
     const offset = param.offset ?? 0
-    const order = param.descending == 'true' ? 'DESC' : 'ASC'
+    const order = param.descending ? 'DESC' : 'ASC'
     const limit = Number(param.limit) ?? 10
 
     const qb = queryRunner.manager.createQueryBuilder(
