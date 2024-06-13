@@ -112,6 +112,7 @@ export class OutputSubmitter {
     }
 
     await this.submitter.transaction(msgs, undefined, 1000 * 60 * 10) // 10 minutes
-    logger.info(`succeed to propose ${outputEntities.length} outputs from ${outputEntities[0].outputIndex} to ${outputEntities[outputEntities.length - 1].outputIndex}`)
+    this.processedBlockNumber = outputEntities[outputEntities.length - 1].endBlockNumber
+    logger.info(`succeed to propose ${outputEntities.length} outputs from ${outputEntities[0].outputIndex} to ${outputEntities[outputEntities.length - 1].outputIndex}, processed block number ${this.processedBlockNumber}`)
   }
 }
