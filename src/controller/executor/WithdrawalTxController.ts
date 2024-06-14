@@ -1,5 +1,11 @@
 import { Context } from 'koa'
-import { KoaController, Get, Controller, Validator, Validate } from 'koa-joi-controllers'
+import {
+  KoaController,
+  Get,
+  Controller,
+  Validator,
+  Validate
+} from 'koa-joi-controllers'
 import { ErrorTypes } from '../../lib/error'
 import { error, success } from '../../lib/response'
 import { getWithdrawalTxList } from '../../service'
@@ -38,7 +44,10 @@ export class WithdrawalTxController extends KoaController {
   @responses(GetWithdrawalResponse)
   @Validate({
     query: {
-      address: Joi.string().optional().regex(INIT_ACCOUNT_REGEX).description('User address'),
+      address: Joi.string()
+        .optional()
+        .regex(INIT_ACCOUNT_REGEX)
+        .description('User address'),
       sequence: Joi.number().optional(),
       limit: Joi.number().optional().default(20),
       offset: Joi.number().optional().default(0),

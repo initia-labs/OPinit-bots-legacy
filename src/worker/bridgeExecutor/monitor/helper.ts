@@ -12,7 +12,12 @@ import { WithdrawStorage } from '../../../lib/storage'
 import { WithdrawalTx } from '../../../lib/types'
 import { sha3_256 } from '../../../lib/util'
 import OutputEntity from '../../../orm/executor/OutputEntity'
-import { EntityManager, EntityTarget, MoreThanOrEqual, ObjectLiteral } from 'typeorm'
+import {
+  EntityManager,
+  EntityTarget,
+  MoreThanOrEqual,
+  ObjectLiteral
+} from 'typeorm'
 import { Block, BlockResults, RPCClient } from '../../../lib/rpc'
 
 class MonitorHelper {
@@ -100,7 +105,7 @@ class MonitorHelper {
       where: {
         outputIndex: MoreThanOrEqual(startIndex) as any
       },
-      order: { outputIndex: 'ASC' } as any,
+      order: { outputIndex: 'ASC' } as any
     })
   }
 

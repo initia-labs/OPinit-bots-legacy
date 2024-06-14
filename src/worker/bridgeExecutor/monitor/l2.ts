@@ -124,7 +124,9 @@ export class L2Monitor extends Monitor {
 
     // if no output from DB, create output
     if (!lastOutputFromDB) {
-      this.logger.info(`[checkSubmissionInterval - ${this.name()}] No output from DB`)
+      this.logger.info(
+        `[checkSubmissionInterval - ${this.name()}] No output from DB`
+      )
       return true
     }
 
@@ -132,26 +134,30 @@ export class L2Monitor extends Monitor {
     if (!lastOutputSubmitted) return false
 
     // if output index not matched, wait for submission
-    if (lastOutputSubmitted.output_index !== lastOutputFromDB.outputIndex) return false
-    
+    if (lastOutputSubmitted.output_index !== lastOutputFromDB.outputIndex)
+      return false
+
     const lastOutputSubmittedTime =
       lastOutputSubmitted.output_proposal.l1_block_time
-      const bridgeInfo = await getBridgeInfo(this.bridgeId)
+    const bridgeInfo = await getBridgeInfo(this.bridgeId)
     const submissionInterval =
       bridgeInfo.bridge_config.submission_interval.seconds.toNumber()
-    const targetTimeSec = this.dateToSeconds(lastOutputSubmittedTime) +
-        Math.floor(submissionInterval * config.SUBMISSION_THRESHOLD)
+    const targetTimeSec =
+      this.dateToSeconds(lastOutputSubmittedTime) +
+      Math.floor(submissionInterval * config.SUBMISSION_THRESHOLD)
 
     // if submission interval not reached, wait for submission
-    if (
-      this.getCurTimeSec() < targetTimeSec
-    ) {
-      this.logger.info(`[checkSubmissionInterval - ${this.name()}] need to wait for submission interval ${targetTimeSec - this.getCurTimeSec()}`)
+    if (this.getCurTimeSec() < targetTimeSec) {
+      this.logger.info(
+        `[checkSubmissionInterval - ${this.name()}] need to wait for submission interval ${targetTimeSec - this.getCurTimeSec()}`
+      )
       return false
     }
-    
+
     // if submission interval reached, create output
-    this.logger.info(`[checkSubmissionInterval - ${this.name()}] Submission interval reached`)
+    this.logger.info(
+      `[checkSubmissionInterval - ${this.name()}] Submission interval reached`
+    )
     return true
   }
 
@@ -207,8 +213,10 @@ export class L2Monitor extends Monitor {
       startBlockNumber,
       endBlockNumber
     )
-    
-    this.logger.info(`output entity created: block height (${startBlockNumber} - ${endBlockNumber})`)
+
+    this.logger.info(
+      `output entity created: block height (${startBlockNumber} - ${endBlockNumber})`
+    )
     await this.helper.saveEntity(manager, ExecutorOutputEntity, outputEntity)
   }
 

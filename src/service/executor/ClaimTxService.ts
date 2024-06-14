@@ -38,70 +38,69 @@ export async function getClaimTxList(
 ): Promise<GetClaimTxListResponse> {
   const [db] = getDB()
 
-    const offset = param.offset ?? 0
-    const order = param.descending ? 'DESC' : 'ASC'
-    const limit = Number(param.limit) ?? 20
+  const offset = param.offset ?? 0
+  const order = param.descending ? 'DESC' : 'ASC'
+  const limit = Number(param.limit) ?? 20
 
-    const claimTxList: ClaimTx[] = []
+  const claimTxList: ClaimTx[] = []
 
-    const withdrawalRepo = db.getRepository(ExecutorWithdrawalTxEntity)
-    const withdrawalWhereCond = {}
+  const withdrawalRepo = db.getRepository(ExecutorWithdrawalTxEntity)
+  const withdrawalWhereCond = {}
 
-    if (param.address) {
-      withdrawalWhereCond['receiver'] = param.address
-    }
+  if (param.address) {
+    withdrawalWhereCond['receiver'] = param.address
+  }
 
-    if (param.sequence) {
-      withdrawalWhereCond['sequence'] = param.sequence
-    }
+  if (param.sequence) {
+    withdrawalWhereCond['sequence'] = param.sequence
+  }
 
-    const withdrawalTxs = await withdrawalRepo.find({
-      where: withdrawalWhereCond,
-      order: {
-        sequence: order
-      },
-      skip: offset * limit,
-      take: limit
-    })
-    
-    withdrawalTxs.map(async (withdrawalTx) => {
-      const output = await db.getRepository(ExecutorOutputEntity)
-        .findOne({
-          where: { outputIndex: withdrawalTx.outputIndex }
-        })
+  const withdrawalTxs = await withdrawalRepo.find({
+    where: withdrawalWhereCond,
+    order: {
+      sequence: order
+    },
+    skip: offset * limit,
+    take: limit
+  })
 
-      if (!output) {
-        throw new APIError(ErrorTypes.NOT_FOUND_ERROR)
-      }
-
-      const claimData: ClaimTx = {
-        bridgeId: parseInt(withdrawalTx.bridgeId),
-        outputIndex: withdrawalTx.outputIndex,
-        merkleProof: withdrawalTx.merkleProof,
-        sender: withdrawalTx.sender,
-        receiver: withdrawalTx.receiver,
-        amount: parseInt(withdrawalTx.amount),
-        l2Denom: withdrawalTx.l2Denom,
-        version: sha3_256(withdrawalTx.outputIndex).toString('base64'),
-        stateRoot: output.stateRoot,
-        merkleRoot: output.merkleRoot,
-        lastBlockHash: output.lastBlockHash
-      }
-      claimTxList.push(claimData)
+  withdrawalTxs.map(async (withdrawalTx) => {
+    const output = await db.getRepository(ExecutorOutputEntity).findOne({
+      where: { outputIndex: withdrawalTx.outputIndex }
     })
 
-    const count = withdrawalTxs.length
-
-    let next: number | undefined
-
-    if (count > (offset + 1) * limit) {
-      next = offset + 1
+    if (!output) {
+      throw new APIError(ErrorTypes.NOT_FOUND_ERROR)
     }
 
-    return {
-      count,
-      next,
-      limit,
-      claimTxList
+    const claimData: ClaimTx = {
+      bridgeId: parseInt(withdrawalTx.bridgeId),
+      outputIndex: withdrawalTx.outputIndex,
+      merkleProof: withdrawalTx.merkleProof,
+      sender: withdrawalTx.sender,
+      receiver: withdrawalTx.receiver,
+      amount: parseInt(withdrawalTx.amount),
+      l2Denom: withdrawalTx.l2Denom,
+      version: sha3_256(withdrawalTx.outputIndex).toString('base64'),
+      stateRoot: output.stateRoot,
+      merkleRoot: output.merkleRoot,
+      lastBlockHash: output.lastBlockHash
     }
+    claimTxList.push(claimData)
+  })
+
+  const count = withdrawalTxs.length
+
+  let next: number | undefined
+
+  if (count > (offset + 1) * limit) {
+    next = offset + 1
+  }
+
+  return {
+    count,
+    next,
+    limit,
+    claimTxList
+  }
 }

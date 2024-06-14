@@ -46,14 +46,13 @@ export class OutputSubmitter {
     }
   }
 
-  async getOutputs(
-    manager: EntityManager
-  ): Promise<ExecutorOutputEntity[]> {
+  async getOutputs(manager: EntityManager): Promise<ExecutorOutputEntity[]> {
     try {
       const lastOutputInfo = await getLastOutputInfo(this.bridgeId)
       if (lastOutputInfo) {
         this.syncedOutputIndex = lastOutputInfo.output_index + 1
-        this.processedBlockNumber = lastOutputInfo.output_proposal.l2_block_number
+        this.processedBlockNumber =
+          lastOutputInfo.output_proposal.l2_block_number
       }
 
       const outputs = await this.helper.getAllOutput(
@@ -86,7 +85,7 @@ export class OutputSubmitter {
       }
 
       const chunkedOutputs: ExecutorOutputEntity[] = []
-      
+
       for (let i = 0; i < outputs.length; i += MAX_OUTPUT_PROPOSAL) {
         chunkedOutputs.push(...outputs.slice(i, i + MAX_OUTPUT_PROPOSAL))
         await this.proposeOutputs(chunkedOutputs)
@@ -101,7 +100,7 @@ export class OutputSubmitter {
 
   private async proposeOutputs(outputEntities: ExecutorOutputEntity[]) {
     const msgs: Msg[] = []
-    
+
     for (const output of outputEntities) {
       msgs.push(
         new MsgProposeOutput(
@@ -114,7 +113,10 @@ export class OutputSubmitter {
     }
 
     await this.submitter.transaction(msgs, undefined, 1000 * 60 * 10) // 10 minutes
-    this.processedBlockNumber = outputEntities[outputEntities.length - 1].endBlockNumber
-    logger.info(`succeed to propose ${outputEntities.length} outputs from ${outputEntities[0].outputIndex} to ${outputEntities[outputEntities.length - 1].outputIndex}, processed block number ${this.processedBlockNumber}`)
+    this.processedBlockNumber =
+      outputEntities[outputEntities.length - 1].endBlockNumber
+    logger.info(
+      `succeed to propose ${outputEntities.length} outputs from ${outputEntities[0].outputIndex} to ${outputEntities[outputEntities.length - 1].outputIndex}, processed block number ${this.processedBlockNumber}`
+    )
   }
 }

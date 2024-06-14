@@ -200,12 +200,11 @@ export class Challenger {
         : (await getOutputInfoByIndex(this.bridgeId, outputIndex - 1))
             .output_proposal.l2_block_number + 1
     const endBlockNumber = output.output_proposal.l2_block_number
-    
+
     const state = await manager.getRepository(StateEntity).findOne({
       where: { name: 'challenger_l2_monitor' }
     })
     if (!state || state.height < endBlockNumber) return null
-
 
     const blockInfo = await config.l2lcd.tendermint.blockInfo(endBlockNumber)
 

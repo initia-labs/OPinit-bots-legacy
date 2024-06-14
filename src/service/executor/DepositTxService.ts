@@ -20,42 +20,42 @@ export async function getDepositTxList(
   param: GetDepositTxListParam
 ): Promise<GetDepositTxListResponse> {
   const [db] = getDB()
-    const offset = param.offset ?? 0
-    const order = param.descending ? 'DESC' : 'ASC'
-    const limit = Number(param.limit) ?? 20
+  const offset = param.offset ?? 0
+  const order = param.descending ? 'DESC' : 'ASC'
+  const limit = Number(param.limit) ?? 20
 
-    const depositTxRepo = db.getRepository(ExecutorDepositTxEntity)
-    const depositTxWhereCond = {}
+  const depositTxRepo = db.getRepository(ExecutorDepositTxEntity)
+  const depositTxWhereCond = {}
 
-    if (param.sequence) {
-      depositTxWhereCond['sequence'] = param.sequence
-    }
+  if (param.sequence) {
+    depositTxWhereCond['sequence'] = param.sequence
+  }
 
-    if (param.address) {
-      depositTxWhereCond['sender'] = param.address
-    }
+  if (param.address) {
+    depositTxWhereCond['sender'] = param.address
+  }
 
-    const depositTxList = await depositTxRepo.find({
-      where: depositTxWhereCond,
-      order: {
-        sequence: order
-      },
-      skip: offset * limit,
-      take: limit
-    })
+  const depositTxList = await depositTxRepo.find({
+    where: depositTxWhereCond,
+    order: {
+      sequence: order
+    },
+    skip: offset * limit,
+    take: limit
+  })
 
-    const count = depositTxList.length
+  const count = depositTxList.length
 
-    let next: number | undefined
+  let next: number | undefined
 
-    if (count > (offset + 1) * limit) {
-      next = offset + 1
-    }
+  if (count > (offset + 1) * limit) {
+    next = offset + 1
+  }
 
-    return {
-      count,
-      next,
-      limit,
-      depositTxList
-    }
+  return {
+    count,
+    next,
+    limit,
+    depositTxList
+  }
 }

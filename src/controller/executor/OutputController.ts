@@ -1,5 +1,11 @@
 import { Context } from 'koa'
-import { KoaController, Get, Controller, Validator, Validate } from 'koa-joi-controllers'
+import {
+  KoaController,
+  Get,
+  Controller,
+  Validator,
+  Validate
+} from 'koa-joi-controllers'
 import { ErrorTypes } from '../../lib/error'
 import { error, success } from '../../lib/response'
 import { responses, routeConfig, z } from 'koa-swagger-decorator'

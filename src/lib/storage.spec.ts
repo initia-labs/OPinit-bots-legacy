@@ -82,8 +82,11 @@ describe('WithdrawStorage', () => {
         Buffer.from(tx.l1_denom, 'utf8'),
         Buffer.from('|'),
         amount_buf
-      ])).toString('base64')
-    expect(result == "F+mzhRVdcwLS5tk2NDB2MbgMm7A0nk39G+NGEjXpTV0=").toBeTruthy()
+      ])
+    ).toString('base64')
+    expect(
+      result == 'F+mzhRVdcwLS5tk2NDB2MbgMm7A0nk39G+NGEjXpTV0='
+    ).toBeTruthy()
   })
 
   it('verify v1', async () => {

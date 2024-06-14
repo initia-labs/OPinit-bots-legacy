@@ -20,42 +20,42 @@ export async function getWithdrawalTxList(
   param: GetWithdrawalTxListParam
 ): Promise<GetWithdrawalTxListResponse> {
   const [db] = getDB()
-    const offset = param.offset ?? 0
-    const order = param.descending ? 'DESC' : 'ASC'
-    const limit = Number(param.limit) ?? 20
+  const offset = param.offset ?? 0
+  const order = param.descending ? 'DESC' : 'ASC'
+  const limit = Number(param.limit) ?? 20
 
-    const withdrawalRepo = db.getRepository(ExecutorWithdrawalTxEntity)
-    const withdrawalWhereCond = {}
+  const withdrawalRepo = db.getRepository(ExecutorWithdrawalTxEntity)
+  const withdrawalWhereCond = {}
 
-    if (param.sequence) {
-      withdrawalWhereCond['sequence'] = param.sequence
-    }
+  if (param.sequence) {
+    withdrawalWhereCond['sequence'] = param.sequence
+  }
 
-    if (param.address) {
-      withdrawalWhereCond['receiver'] = param.address
-    }
+  if (param.address) {
+    withdrawalWhereCond['receiver'] = param.address
+  }
 
-    const withdrawalTxList = await withdrawalRepo.find({
-      where: withdrawalWhereCond,
-      order: {
-        sequence: order
-      },
-      skip: offset * limit,
-      take: limit
-    })
+  const withdrawalTxList = await withdrawalRepo.find({
+    where: withdrawalWhereCond,
+    order: {
+      sequence: order
+    },
+    skip: offset * limit,
+    take: limit
+  })
 
-    const count = withdrawalTxList.length
+  const count = withdrawalTxList.length
 
-    let next: number | undefined
+  let next: number | undefined
 
-    if (count > (offset + 1) * param.limit) {
-      next = offset + 1
-    }
+  if (count > (offset + 1) * param.limit) {
+    next = offset + 1
+  }
 
-    return {
-      count,
-      next,
-      limit: param.limit,
-      withdrawalTxList
-    }
+  return {
+    count,
+    next,
+    limit: param.limit,
+    withdrawalTxList
+  }
 }
