@@ -148,9 +148,12 @@ export class L2Monitor extends Monitor {
 
     // if submission interval not reached, wait for submission
     if (this.getCurTimeSec() < targetTimeSec) {
-      this.logger.info(
-        `[checkSubmissionInterval - ${this.name()}] need to wait for submission interval ${targetTimeSec - this.getCurTimeSec()}`
-      )
+      if (this.currentHeight % 10 === 0){
+        this.logger.info(
+          `[checkSubmissionInterval - ${this.name()}] need to wait for submission interval ${targetTimeSec - this.getCurTimeSec()} seconds`
+        )
+      }
+      
       return false
     }
 
@@ -162,13 +165,8 @@ export class L2Monitor extends Monitor {
   }
 
   async handleOutput(manager: EntityManager): Promise<void> {
-    if (!(await this.checkSubmissionInterval(manager))) {
-      if (this.currentHeight % 10 === 0)
-        this.logger.info(
-          `[handleOutput - ${this.name()}] Submission interval not reached`
-        )
-      return
-    }
+    if (!(await this.checkSubmissionInterval(manager))) return
+
 
     const lastOutput = await this.helper.getLastOutputFromDB(
       manager,
