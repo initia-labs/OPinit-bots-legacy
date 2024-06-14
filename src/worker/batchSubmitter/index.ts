@@ -2,7 +2,7 @@ import { initORM, finalizeORM } from '../../worker/batchSubmitter/db'
 import { executorLogger as logger } from '../../lib/logger'
 import { BatchSubmitter } from './batchSubmitter'
 import { initServer, finalizeServer, initMetricsServer } from '../../loader'
-import { batchController } from '../../controller'
+import { batchController, metricsController } from '../../controller'
 import { once } from 'lodash'
 import { config, isInvokedFromEntrypoint } from '../../config'
 
@@ -44,7 +44,7 @@ export async function startBatch(): Promise<void> {
   await initORM()
 
   await initServer(batchController, config.BATCH_PORT)
-  await initMetricsServer([], config.BATCH_METRICS_PORT)
+  await initMetricsServer(metricsController, config.BATCH_METRICS_PORT)
 
   if (!config.ENABLE_API_ONLY) {
     await runBot()

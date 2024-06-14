@@ -53,6 +53,7 @@ export class OutputSubmitter {
       const lastOutputInfo = await getLastOutputInfo(this.bridgeId)
       if (lastOutputInfo) {
         this.syncedOutputIndex = lastOutputInfo.output_index + 1
+        this.processedBlockNumber = lastOutputInfo.output_proposal.l2_block_number
       }
 
       const outputs = await this.helper.getAllOutput(

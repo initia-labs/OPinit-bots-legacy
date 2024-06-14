@@ -4,6 +4,7 @@ import { once } from 'lodash'
 import { initORM } from './db'
 import { initMetricsServer } from '../../loader'
 import { config, isInvokedFromEntrypoint } from '../../config'
+import { metricsController } from '../../controller'
 
 let jobs: OutputSubmitter[]
 
@@ -36,7 +37,7 @@ export async function stopOutput(): Promise<void> {
 export async function startOutput(): Promise<void> {
   await initORM()
 
-  await initMetricsServer([], config.OUTPUT_METRICS_PORT)
+  await initMetricsServer(metricsController, config.OUTPUT_METRICS_PORT)
 
   await runBot()
 

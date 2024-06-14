@@ -1,7 +1,7 @@
 import { RPCClient } from '../../lib/rpc'
 import { L1Monitor } from './monitor/l1'
 import { L2Monitor } from './monitor/l2'
-import { executorController } from '../../controller'
+import { executorController, metricsController } from '../../controller'
 
 import { executorLogger as logger } from '../../lib/logger'
 import { initORM, finalizeORM } from './db'
@@ -54,7 +54,7 @@ export async function startExecutor(): Promise<void> {
     await initORM()
 
     await initServer(executorController, config.EXECUTOR_PORT)
-    await initMetricsServer([], config.EXECUTOR_METRICS_PORT)
+    await initMetricsServer(metricsController, config.EXECUTOR_METRICS_PORT)
 
     if (!config.ENABLE_API_ONLY) {
       await runBot()
