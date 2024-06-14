@@ -2,14 +2,15 @@ import {
   ChallengerFinalizeDepositTxEntity,
   ChallengerOutputEntity,
   ChallengerWithdrawalTxEntity
-} from '../../orm'
+} from '../../../orm'
 import { OutputInfo } from 'initia-l2'
-import { Monitor } from '../bridgeExecutor/monitor'
+import { Monitor } from '../../bridgeExecutor/monitor'
 import { EntityManager } from 'typeorm'
-import { RPCClient } from '../../lib/rpc'
+import { RPCClient } from '../../../lib/rpc'
 import winston from 'winston'
-import { getDB } from './db'
-import { config } from '../../config'
+import { getDB } from '../db'
+import { config } from '../../../config'
+import { BOT_NAME } from '../../common/name'
 
 export class L2Monitor extends Monitor {
   outputIndex: number
@@ -26,7 +27,7 @@ export class L2Monitor extends Monitor {
   }
 
   public name(): string {
-    return 'challenger_l2_monitor'
+    return BOT_NAME.CHALLENGER_L2_MONITOR
   }
 
   private async handleInitiateTokenWithdrawalEvent(

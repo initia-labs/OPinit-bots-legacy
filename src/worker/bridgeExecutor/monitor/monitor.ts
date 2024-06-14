@@ -6,6 +6,7 @@ import MonitorHelper from './helper'
 import winston from 'winston'
 import { INTERVAL_MONITOR, config } from '../../../config'
 import { updateExecutorUsageMetrics } from '../../../lib/metrics'
+import { BOT_NAME } from '../../common/name'
 
 const MAX_BLOCKS = 20 // DO NOT CHANGE THIS, hard limit is 20 in cometbft.
 const MAX_RETRY_INTERVAL = 30_000
@@ -52,12 +53,16 @@ export abstract class Monitor {
     })
 
     this.syncedHeight = state?.height || 0
-
+    
     if (!state) {
-      if (this.name() === 'executor_l1_monitor') {
+      if (this.name() === BOT_NAME.EXECUTOR_L1_MONITOR) {
         this.syncedHeight = config.EXECUTOR_L1_MONITOR_HEIGHT
-      } else if (this.name() === 'executor_l2_monitor') {
+      } else if (this.name() === BOT_NAME.EXECUTOR_L2_MONITOR) {
         this.syncedHeight = config.EXECUTOR_L2_MONITOR_HEIGHT
+      } else if (this.name() === BOT_NAME.CHALLENGER_L1_MONITOR) {
+        this.syncedHeight = config.CHALLENGER_L1_MONITOR_HEIGHT
+      } else if (this.name() === BOT_NAME.CHALLENGER_L2_MONITOR) {
+        this.syncedHeight = config.CHALLENGER_L2_MONITOR_HEIGHT
       }
 
       await this.db

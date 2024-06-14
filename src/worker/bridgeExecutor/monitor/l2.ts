@@ -13,6 +13,7 @@ import {
   getWallet,
   initWallet
 } from '../../../lib/walletL2'
+import { BOT_NAME } from '../../common/name'
 
 export class L2Monitor extends Monitor {
   executorL2: TxWalletL2
@@ -32,7 +33,7 @@ export class L2Monitor extends Monitor {
   }
 
   public name(): string {
-    return 'executor_l2_monitor'
+    return BOT_NAME.EXECUTOR_L2_MONITOR
   }
 
   dateToSeconds(date: Date): number {
