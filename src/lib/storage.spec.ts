@@ -25,6 +25,30 @@ const v1 = [
     receiver: 'init174knscjg688ddtxj8smyjz073r3w5mmsp3m0m2',
     l1_denom: 'uinit',
     amount: BigInt(1000000)
+  },
+  {
+    bridge_id: BigInt(1),
+    sequence: BigInt(4),
+    sender: 'init1wzenw7r2t2ra39k4l9yqq95pw55ap4sm4vsa9g',
+    receiver: 'init174knscjg688ddtxj8smyjz073r3w5mmsp3m0m2',
+    l1_denom: 'uinit',
+    amount: BigInt(1000231200)
+  },
+  {
+    bridge_id: BigInt(1),
+    sequence: BigInt(5),
+    sender: 'init1wzenw7r2t2ra39k4l9yqq95pw55ap4sm4vsa9g',
+    receiver: 'init174knscjg688ddtxj8smyjz073r3w5mmsp3m0m2',
+    l1_denom: 'uinit',
+    amount: BigInt(32340000)
+  },
+  {
+    bridge_id: BigInt(1),
+    sequence: BigInt(6),
+    sender: 'init1wzenw7r2t2ra39k4l9yqq95pw55ap4sm4vsa9g',
+    receiver: 'init174knscjg688ddtxj8smyjz073r3w5mmsp3m0m2',
+    l1_denom: 'uinit',
+    amount: BigInt(101230000)
   }
 ]
 
@@ -38,6 +62,7 @@ describe('WithdrawStorage', () => {
     const version = 2
     const stateRoot = 'C2ZdjJ7uX41NaadA/FjlMiG6btiDfYnxE2ABqJocHxI='
     const lastBlockHash = 'tgmfQJT4uipVToW631xz0RXdrfzu7n5XxGNoPpX6isI='
+    console.log(sha3_256(version).toString('base64'))
     const outputRoot = sha3_256(
       Buffer.concat([
         sha3_256(version),
@@ -48,10 +73,12 @@ describe('WithdrawStorage', () => {
     ).toString('base64')
     expect(airdrop.verify(merkleProof, target)).toBeTruthy()
 
-    expect(merkleRoot).toEqual('EYgpXs1b+Z3AdGqjjtJHylrGzCjXtBKDD2UTPXelUk4=')
+    expect(merkleRoot).toEqual('VcN+0UZbTtGyyLfQtAHW+bCv5ixadyyT0ZZ26aUT1JY=')
     expect(merkleProof).toEqual([
-      '5eJNy8mEqvyhysgWCqi7JQ7K602FtSpz+wDRNQitQMc='
+      'gnUeNU3EnW4iBOk8wounvu98aTER0BP5dOD0lkuwBBE=',
+      'yE4zjliK5P9sfdzR2iNh6nYHmD+mjDK6dONuZ3QlVcA=',
+      'GQXXUQ5P/egGvbAHkYfWHIAfgyCEmnjz/fUMKrWCEn8='
     ])
-    expect(outputRoot).toEqual('euaoJcFRXfV/6F0AiC0vYwXUY4NPHfCn9LbFMPieNsA=')
+    expect(outputRoot).toEqual('0cg24XcpDwTIFXHY4jNyxg2EQS5RUqcMvlMJeuI5rf4=')
   })
 })
