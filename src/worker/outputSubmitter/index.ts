@@ -3,8 +3,8 @@ import { outputLogger as logger } from '../../lib/logger'
 import { once } from 'lodash'
 import { initORM } from './db'
 import { initMetricsServer } from '../../loader'
-import { metricsController } from '../../controller'
 import { config, isInvokedFromEntrypoint } from '../../config'
+import { metricsController } from '../../controller'
 
 let jobs: OutputSubmitter[]
 

@@ -1,12 +1,13 @@
-import { Monitor } from '../bridgeExecutor/monitor'
+import { Monitor } from '../../bridgeExecutor/monitor'
 import {
   ChallengerDepositTxEntity,
   ChallengerFinalizeWithdrawalTxEntity
-} from '../../orm'
+} from '../../../orm'
 import { EntityManager } from 'typeorm'
-import { RPCClient } from '../../lib/rpc'
-import { getDB } from './db'
+import { RPCClient } from '../../../lib/rpc'
+import { getDB } from '../db'
 import winston from 'winston'
+import { BOT_NAME } from '../../common/name'
 
 export class L1Monitor extends Monitor {
   constructor(
@@ -18,7 +19,7 @@ export class L1Monitor extends Monitor {
   }
 
   public name(): string {
-    return 'challenger_l1_monitor'
+    return BOT_NAME.CHALLENGER_L1_MONITOR
   }
 
   public async handleInitiateTokenDeposit(

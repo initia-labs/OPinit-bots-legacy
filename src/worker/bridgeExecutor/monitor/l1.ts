@@ -25,6 +25,7 @@ import {
   initWallet
 } from '../../../lib/walletL2'
 import { Resurrector } from './resurrector'
+import { BOT_NAME } from '../../common/name'
 
 export class L1Monitor extends Monitor {
   executorL2: TxWalletL2
@@ -44,7 +45,7 @@ export class L1Monitor extends Monitor {
   }
 
   public name(): string {
-    return 'executor_l1_monitor'
+    return BOT_NAME.EXECUTOR_L1_MONITOR
   }
 
   private async setBridgeInfo(

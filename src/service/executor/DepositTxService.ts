@@ -20,32 +20,32 @@ export async function getDepositTxList(
   param: GetDepositTxListParam
 ): Promise<GetDepositTxListResponse> {
   const [db] = getDB()
-  const queryRunner = db.createQueryRunner('slave')
-  try {
     const offset = param.offset ?? 0
-    const order = param.descending == 'true' ? 'DESC' : 'ASC'
-    const limit = Number(param.limit) ?? 10
+    const order = param.descending ? 'DESC' : 'ASC'
+    const limit = Number(param.limit) ?? 20
 
-    const qb = queryRunner.manager.createQueryBuilder(
-      ExecutorDepositTxEntity,
-      'tx'
-    )
+    const depositTxRepo = db.getRepository(ExecutorDepositTxEntity)
+    const depositTxWhereCond = {}
 
     if (param.sequence) {
-      qb.andWhere('tx.sequence = :sequence', { sequence: param.sequence })
+      depositTxWhereCond['sequence'] = param.sequence
     }
 
     if (param.address) {
-      qb.andWhere('tx.sender = :sender', { sender: param.address })
+      depositTxWhereCond['sender'] = param.address
     }
 
-    const depositTxList = await qb
-      .orderBy('tx.sequence', order)
-      .skip(offset * limit)
-      .take(limit)
-      .getMany()
+    const depositTxList = await depositTxRepo.find({
+      where: depositTxWhereCond,
+      order: {
+        sequence: order
+      },
+      skip: offset * limit,
+      take: limit
+    })
 
-    const count = await qb.getCount()
+    const count = depositTxList.length
+
     let next: number | undefined
 
     if (count > (offset + 1) * limit) {
@@ -58,7 +58,4 @@ export async function getDepositTxList(
       limit,
       depositTxList
     }
-  } finally {
-    queryRunner.release()
-  }
 }

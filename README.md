@@ -144,6 +144,8 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | L1_GAS_PRICES          | Gas prices for L1 chain                    | '0.15uinit'              |
 | BRIDGE_ID              | Bridge ID                                  | ''                       |
 | CHALLENGER_MNEMONIC    | Mnemonic seed for challenger               | ''                       |
+| CHALLENGER_L1_MONITOR_HEIGHT | L1 monitor start height (optional)     | 0                        |
+| CHALLENGER_L2_MONITOR_HEIGHT | L2 monitor start height (optional)     | 0                        |
 | DELETE_OUTPUT_PROPOSAL | Delete output proposal                     | false                    |
 | SLACK_WEB_HOOK         | Slack web hook for notification (optional) | ''                       |
 
