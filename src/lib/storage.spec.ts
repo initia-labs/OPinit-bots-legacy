@@ -62,7 +62,6 @@ describe('WithdrawStorage', () => {
     const version = 2
     const stateRoot = 'C2ZdjJ7uX41NaadA/FjlMiG6btiDfYnxE2ABqJocHxI='
     const lastBlockHash = 'tgmfQJT4uipVToW631xz0RXdrfzu7n5XxGNoPpX6isI='
-    console.log(sha3_256(version).toString('base64'))
     const outputRoot = sha3_256(
       Buffer.concat([
         sha3_256(version),
