@@ -121,7 +121,10 @@ export class L2Monitor extends Monitor {
       manager,
       ExecutorOutputEntity
     )
-    if (!lastOutputFromDB) return true
+    if (!lastOutputFromDB) {
+      this.logger.info(`[checkSubmissionInterval - ${this.name()}] No output from DB`)
+      return true
+    }
     if (lastOutputSubmitted) {
       if (lastOutputFromDB.outputIndex !== lastOutputSubmitted.output_index) return false
       const lastOutputSubmittedTime =
@@ -136,6 +139,7 @@ export class L2Monitor extends Monitor {
       )
         return false
     }
+    this.logger.info(`[checkSubmissionInterval - ${this.name()}] Submission interval reached`)
     return true
   }
 
@@ -191,7 +195,8 @@ export class L2Monitor extends Monitor {
       startBlockNumber,
       endBlockNumber
     )
-
+    
+    this.logger.info(`output entity created: ${startBlockNumber} - ${endBlockNumber}`)
     await this.helper.saveEntity(manager, ExecutorOutputEntity, outputEntity)
   }
 
