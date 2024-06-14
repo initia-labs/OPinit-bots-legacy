@@ -121,24 +121,36 @@ export class L2Monitor extends Monitor {
       manager,
       ExecutorOutputEntity
     )
+
+    // if no output from DB, create output
     if (!lastOutputFromDB) {
       this.logger.info(`[checkSubmissionInterval - ${this.name()}] No output from DB`)
       return true
     }
-    if (lastOutputSubmitted) {
-      if (lastOutputFromDB.outputIndex !== lastOutputSubmitted.output_index) return false
-      const lastOutputSubmittedTime =
-        lastOutputSubmitted.output_proposal.l1_block_time
+
+    // if no output submitted, wait for submission
+    if (!lastOutputSubmitted) return false
+
+    // if output index not matched, wait for submission
+    if (lastOutputSubmitted.output_index !== lastOutputFromDB.outputIndex) return false
+    
+    const lastOutputSubmittedTime =
+      lastOutputSubmitted.output_proposal.l1_block_time
       const bridgeInfo = await getBridgeInfo(this.bridgeId)
-      const submissionInterval =
-        bridgeInfo.bridge_config.submission_interval.seconds.toNumber()
-      if (
-        this.getCurTimeSec() <
-        this.dateToSeconds(lastOutputSubmittedTime) +
-          Math.floor(submissionInterval * config.SUBMISSION_THRESHOLD)
-      )
-        return false
+    const submissionInterval =
+      bridgeInfo.bridge_config.submission_interval.seconds.toNumber()
+    const targetTimeSec = this.dateToSeconds(lastOutputSubmittedTime) +
+        Math.floor(submissionInterval * config.SUBMISSION_THRESHOLD)
+
+    // if submission interval not reached, wait for submission
+    if (
+      this.getCurTimeSec() < targetTimeSec
+    ) {
+      this.logger.info(`[checkSubmissionInterval - ${this.name()}] need to wait for submission interval ${targetTimeSec - this.getCurTimeSec()}`)
+      return false
     }
+    
+    // if submission interval reached, create output
     this.logger.info(`[checkSubmissionInterval - ${this.name()}] Submission interval reached`)
     return true
   }
@@ -196,7 +208,7 @@ export class L2Monitor extends Monitor {
       endBlockNumber
     )
     
-    this.logger.info(`output entity created: ${startBlockNumber} - ${endBlockNumber}`)
+    this.logger.info(`output entity created: block height (${startBlockNumber} - ${endBlockNumber})`)
     await this.helper.saveEntity(manager, ExecutorOutputEntity, outputEntity)
   }
 
