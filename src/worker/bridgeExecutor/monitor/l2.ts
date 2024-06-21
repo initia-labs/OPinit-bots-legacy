@@ -1,7 +1,7 @@
 import { ExecutorOutputEntity, ExecutorWithdrawalTxEntity } from '../../../orm'
 import { Monitor } from './monitor'
 import { EntityManager } from 'typeorm'
-import { BlockInfo } from 'initia-l2'
+import { BlockInfo, OutputInfo } from 'initia-l2'
 import { getDB } from '../db'
 import { RPCClient } from '../../../lib/rpc'
 import winston from 'winston'
@@ -115,40 +115,77 @@ export class L2Monitor extends Monitor {
     return true
   }
 
-  async checkSubmissionInterval(): Promise<boolean> {
-    const lastOutputSubmitted = await getLastOutputInfo(this.bridgeId)
-    if (lastOutputSubmitted) {
-      const lastOutputSubmittedTime =
-        lastOutputSubmitted.output_proposal.l1_block_time
-      const bridgeInfo = await getBridgeInfo(this.bridgeId)
-      const submissionInterval =
-        bridgeInfo.bridge_config.submission_interval.seconds.toNumber()
-      if (
-        this.getCurTimeSec() <
-        this.dateToSeconds(lastOutputSubmittedTime) +
-          Math.floor(submissionInterval * config.SUBMISSION_THRESHOLD)
+  async checkSubmissionInterval(
+    lastOutputSubmitted: OutputInfo | null,
+    lastOutputFromDB: ExecutorOutputEntity | null
+  ): Promise<boolean> {
+    // if no output from DB, create output (first output)
+    if (!lastOutputFromDB) {
+      this.logger.info(
+        `[checkSubmissionInterval - ${this.name()}] No output from DB`
       )
-        return false
+      return true
     }
+
+    // if no output submitted, wait for submission
+    if (!lastOutputSubmitted) return false
+
+    // if output index should not be greater, wait for submission
+    if (lastOutputSubmitted.output_index < lastOutputFromDB.outputIndex) {
+      this.logger.info(
+        `[checkSubmissionInterval - ${this.name()}] Output index not matched`
+      )
+      return false
+    }
+
+    const lastOutputSubmittedTime =
+      lastOutputSubmitted.output_proposal.l1_block_time
+    const bridgeInfo = await getBridgeInfo(this.bridgeId)
+    const submissionInterval =
+      bridgeInfo.bridge_config.submission_interval.seconds.toNumber()
+    const targetTimeSec =
+      this.dateToSeconds(lastOutputSubmittedTime) +
+      Math.floor(submissionInterval * config.SUBMISSION_THRESHOLD)
+
+    // if submission interval not reached, wait for submission
+    if (this.getCurTimeSec() < targetTimeSec) {
+      if (this.currentHeight % 10 === 0) {
+        this.logger.info(
+          `[checkSubmissionInterval - ${this.name()}] need to wait for submission interval ${targetTimeSec - this.getCurTimeSec()} seconds`
+        )
+      }
+
+      return false
+    }
+
+    // if submission interval reached, create output
+    this.logger.info(
+      `[checkSubmissionInterval - ${this.name()}] Submission interval reached! try to create output...`
+    )
     return true
   }
 
   async handleOutput(manager: EntityManager): Promise<void> {
-    if (!(await this.checkSubmissionInterval())) {
-      if (this.currentHeight % 10 === 0)
-        this.logger.info(
-          `[handleOutput - ${this.name()}] Submission interval not reached`
-        )
-      return
-    }
-
-    const lastOutput = await this.helper.getLastOutputFromDB(
+    const lastOutputSubmitted = await getLastOutputInfo(this.bridgeId)
+    const lastOutputFromDB = await this.helper.getLastOutputFromDB(
       manager,
       ExecutorOutputEntity
     )
 
-    const lastOutputEndBlockNumber = lastOutput ? lastOutput.endBlockNumber : 0
-    const lastOutputIndex = lastOutput ? lastOutput.outputIndex : 0
+    if (
+      !(await this.checkSubmissionInterval(
+        lastOutputSubmitted,
+        lastOutputFromDB
+      ))
+    )
+      return
+
+    const lastOutputEndBlockNumber = lastOutputSubmitted
+      ? lastOutputSubmitted.output_proposal.l2_block_number
+      : 0
+    const lastOutputIndex = lastOutputSubmitted
+      ? lastOutputSubmitted.output_index
+      : 0
 
     const startBlockNumber = lastOutputEndBlockNumber + 1
     const endBlockNumber = this.currentHeight
@@ -156,7 +193,7 @@ export class L2Monitor extends Monitor {
 
     if (startBlockNumber > endBlockNumber) {
       this.logger.info(
-        `[handleOutput - ${this.name()}] No new block to process`
+        `[handleOutput - ${this.name()}] No new block to process ${startBlockNumber - endBlockNumber} block remaining...`
       )
       return
     }
@@ -186,6 +223,9 @@ export class L2Monitor extends Monitor {
       endBlockNumber
     )
 
+    this.logger.info(
+      `output entity created: block height (${startBlockNumber} - ${endBlockNumber})`
+    )
     await this.helper.saveEntity(manager, ExecutorOutputEntity, outputEntity)
   }
 
