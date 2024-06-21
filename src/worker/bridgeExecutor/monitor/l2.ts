@@ -130,7 +130,7 @@ export class L2Monitor extends Monitor {
     // if no output submitted, wait for submission
     if (!lastOutputSubmitted) return false
 
-    // if output index should not be greater, wait for submission
+    // if output index from db is greater, wait for submission
     if (lastOutputSubmitted.output_index < lastOutputFromDB.outputIndex) {
       this.logger.info(
         `[checkSubmissionInterval - ${this.name()}] Output index not matched`
