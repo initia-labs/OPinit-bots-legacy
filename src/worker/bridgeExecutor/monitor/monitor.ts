@@ -53,7 +53,7 @@ export abstract class Monitor {
     })
 
     this.syncedHeight = state?.height || 0
-    
+
     if (!state) {
       if (this.name() === BOT_NAME.EXECUTOR_L1_MONITOR) {
         this.syncedHeight = config.EXECUTOR_L1_MONITOR_HEIGHT
