@@ -1,7 +1,7 @@
 import { ExecutorOutputEntity, ExecutorWithdrawalTxEntity } from '../../../orm'
 import { Monitor } from './monitor'
 import { EntityManager } from 'typeorm'
-import { BlockInfo } from 'initia-l2'
+import { BlockInfo, OutputInfo } from 'initia-l2'
 import { getDB } from '../db'
 import { RPCClient } from '../../../lib/rpc'
 import winston from 'winston'
@@ -115,14 +115,11 @@ export class L2Monitor extends Monitor {
     return true
   }
 
-  async checkSubmissionInterval(manager: EntityManager): Promise<boolean> {
-    const lastOutputSubmitted = await getLastOutputInfo(this.bridgeId)
-    const lastOutputFromDB = await this.helper.getLastOutputFromDB(
-      manager,
-      ExecutorOutputEntity
-    )
-
-    // if no output from DB, create output
+  async checkSubmissionInterval(
+    lastOutputSubmitted: OutputInfo | null,
+    lastOutputFromDB: ExecutorOutputEntity | null
+  ): Promise<boolean> {
+    // if no output from DB, create output (first output)
     if (!lastOutputFromDB) {
       this.logger.info(
         `[checkSubmissionInterval - ${this.name()}] No output from DB`
@@ -133,9 +130,13 @@ export class L2Monitor extends Monitor {
     // if no output submitted, wait for submission
     if (!lastOutputSubmitted) return false
 
-    // if output index not matched, wait for submission
-    if (lastOutputSubmitted.output_index !== lastOutputFromDB.outputIndex)
+    // if output index from db is greater, wait for submission
+    if (lastOutputSubmitted.output_index < lastOutputFromDB.outputIndex) {
+      this.logger.info(
+        `[checkSubmissionInterval - ${this.name()}] Output index not matched`
+      )
       return false
+    }
 
     const lastOutputSubmittedTime =
       lastOutputSubmitted.output_proposal.l1_block_time
@@ -148,33 +149,43 @@ export class L2Monitor extends Monitor {
 
     // if submission interval not reached, wait for submission
     if (this.getCurTimeSec() < targetTimeSec) {
-      if (this.currentHeight % 10 === 0){
+      if (this.currentHeight % 10 === 0) {
         this.logger.info(
           `[checkSubmissionInterval - ${this.name()}] need to wait for submission interval ${targetTimeSec - this.getCurTimeSec()} seconds`
         )
       }
-      
+
       return false
     }
 
     // if submission interval reached, create output
     this.logger.info(
-      `[checkSubmissionInterval - ${this.name()}] Submission interval reached`
+      `[checkSubmissionInterval - ${this.name()}] Submission interval reached! try to create output...`
     )
     return true
   }
 
   async handleOutput(manager: EntityManager): Promise<void> {
-    if (!(await this.checkSubmissionInterval(manager))) return
-
-
-    const lastOutput = await this.helper.getLastOutputFromDB(
+    const lastOutputSubmitted = await getLastOutputInfo(this.bridgeId)
+    const lastOutputFromDB = await this.helper.getLastOutputFromDB(
       manager,
       ExecutorOutputEntity
     )
 
-    const lastOutputEndBlockNumber = lastOutput ? lastOutput.endBlockNumber : 0
-    const lastOutputIndex = lastOutput ? lastOutput.outputIndex : 0
+    if (
+      !(await this.checkSubmissionInterval(
+        lastOutputSubmitted,
+        lastOutputFromDB
+      ))
+    )
+      return
+
+    const lastOutputEndBlockNumber = lastOutputSubmitted
+      ? lastOutputSubmitted.output_proposal.l2_block_number
+      : 0
+    const lastOutputIndex = lastOutputSubmitted
+      ? lastOutputSubmitted.output_index
+      : 0
 
     const startBlockNumber = lastOutputEndBlockNumber + 1
     const endBlockNumber = this.currentHeight
@@ -182,7 +193,7 @@ export class L2Monitor extends Monitor {
 
     if (startBlockNumber > endBlockNumber) {
       this.logger.info(
-        `[handleOutput - ${this.name()}] No new block to process`
+        `[handleOutput - ${this.name()}] No new block to process ${startBlockNumber - endBlockNumber} block remaining...`
       )
       return
     }
