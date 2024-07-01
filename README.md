@@ -85,6 +85,7 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | EXECUTOR_L1_MONITOR_HEIGHT | L1 monitor start height (optional)         | 0                        |
 | EXECUTOR_L2_MONITOR_HEIGHT | L2 monitor start height (optional)         | 0                        |
 | ENABLE_API_ONLY            | Enable API only mode (optional)            | false                    |
+| ENABLE_KEEP_ALIVE          | Enable keep alive mode on axios (optional) | false                    |
 | SLACK_WEB_HOOK             | Slack web hook for notification (optional) | ''                       |
 | EXECUTOR_METRICS_PORT      | Executor metrics port                      | 8080                     |
 | PROMETHEUS_METRICS_MODE    | Prometheus metrics mode ['pull', 'push']   | 'pull'                   |
@@ -104,6 +105,7 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | OUTPUT_SUBMITTER_MNEMONIC | Mnemonic seed for output submitter         | ''                       |
 | SLACK_WEB_HOOK            | Slack web hook for notification (optional) | ''                       |
 | OUTPUT_METRICS_PORT       | Output metrics port                        | 8081                     |
+| ENABLE_KEEP_ALIVE         | Enable keep alive mode on axios (optional) | false                    |
 | PROMETHEUS_METRICS_MODE   | Prometheus metrics mode ['pull', 'push']   | 'pull'                   |
 | PROMETHEUS_GATEWAY_URI    | Prometheus push gateway URI                | 'http://127.0.0.1:9091' |
 | PROMETHEUS_TIME_OUT       | Prometheus push time out (unit: ms)        | 5000                     |
@@ -128,6 +130,7 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | CELESTIA_NAMESPACE_ID       | Celestia namespace id (optional)                             | ''                         |
 | PUBLISH_BATCH_TARGET        | Target chain to publish batch (supports: ['l1', 'celestia']) | 'l1'                       |
 | ENABLE_API_ONLY             | Enable API only mode (optional)                              | false                      |
+| ENABLE_KEEP_ALIVE           | Enable keep alive mode on axios (optional)                   | false                      |
 | BATCH_METRICS_PORT          | Batch metrics port                                           | 8082                       |
 | PROMETHEUS_METRICS_MODE     | Prometheus metrics mode ['pull', 'push']                     | 'pull'                     |
 | PROMETHEUS_GATEWAY_URI      | Prometheus push gateway URI                                  | 'http://127.0.0.1:9091'    |
@@ -148,6 +151,7 @@ TYPEORM_ENTITIES=dist/orm/*Entity.js      # entity path
 | CHALLENGER_L2_MONITOR_HEIGHT | L2 monitor start height (optional)     | 0                        |
 | DELETE_OUTPUT_PROPOSAL | Delete output proposal                     | false                    |
 | SLACK_WEB_HOOK         | Slack web hook for notification (optional) | ''                       |
+| ENABLE_KEEP_ALIVE      | Enable keep alive mode on axios (optional) | false                    |
 
 ### Step3. Run Bots
 
