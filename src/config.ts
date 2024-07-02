@@ -179,7 +179,7 @@ export const config = {
         gasAdjustment: '2',
         chainId: BATCH_CHAIN_ID ? BATCH_CHAIN_ID : L1_CHAIN_ID
       },
-      getRequesterInstance(getUri(L1_LCD_URI))
+      getRequesterInstance(getUri(uri))
     )
   })(),
   SLACK_WEB_HOOK: SLACK_WEB_HOOK ? SLACK_WEB_HOOK : '',
