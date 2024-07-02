@@ -86,6 +86,7 @@ export class L1Monitor extends Monitor {
 
     try {
       const bridgeInfoL2 = await this.executorL2.lcd.opchild.bridgeInfo()
+
       if (
         config.ENABLE_ORACLE &&
         config.L1_CLIENT_ID &&

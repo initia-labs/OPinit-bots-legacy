@@ -57,7 +57,7 @@ const {
   BATCH_SUBMITTER_ADDR,
   ENABLE_API_ONLY,
   ENABLE_ORACLE,
-  ENABLE_KEEP_ALIVE,
+  DISABLE_KEEP_ALIVE,
 
   // prometheus
   PROMETHEUS_METRICS_MODE,
@@ -69,6 +69,10 @@ const supportedPublishBatchTargets = ['l1', 'celestia']
 
 const getUri = (uri, defaultUri = 'http://127.0.0.1:1317') =>
   uri ? uri.split(',')[0] : defaultUri
+
+const getRequesterInstance = (uri: string) => {
+  return APIRequesterSingleton.getInstance(uri, DISABLE_KEEP_ALIVE != 'true')
+}
 
 export const config = {
   EXECUTOR_PORT: EXECUTOR_PORT ? parseInt(EXECUTOR_PORT) : 5000,
@@ -152,7 +156,7 @@ export const config = {
       gasAdjustment: '2',
       chainId: L1_CHAIN_ID
     },
-    APIRequesterSingleton.getInstance(getUri(L1_LCD_URI))
+    getRequesterInstance(getUri(L1_LCD_URI))
   ),
   l2lcd: new LCDClientL2(
     getUri(L2_LCD_URI),
@@ -161,7 +165,7 @@ export const config = {
       gasAdjustment: '2',
       chainId: L2_CHAIN_ID
     },
-    APIRequesterSingleton.getInstance(getUri(L2_LCD_URI))
+    getRequesterInstance(getUri(L2_LCD_URI))
   ),
   batchlcd: (() => {
     const uri =
@@ -175,7 +179,7 @@ export const config = {
         gasAdjustment: '2',
         chainId: BATCH_CHAIN_ID ? BATCH_CHAIN_ID : L1_CHAIN_ID
       },
-      APIRequesterSingleton.getInstance(getUri(uri))
+      getRequesterInstance(getUri(L1_LCD_URI))
     )
   })(),
   SLACK_WEB_HOOK: SLACK_WEB_HOOK ? SLACK_WEB_HOOK : '',
@@ -210,8 +214,7 @@ export const config = {
   BATCH_SUBMITTER_ADDR: BATCH_SUBMITTER_ADDR || '',
   ENABLE_API_ONLY: ENABLE_API_ONLY ? ENABLE_API_ONLY == 'true' : false,
   ENABLE_ORACLE: ENABLE_ORACLE ? ENABLE_ORACLE == 'true' : false,
-  ENABLE_KEEP_ALIVE: ENABLE_KEEP_ALIVE ? ENABLE_KEEP_ALIVE == 'true' : false,
-  
+  DISABLE_KEEP_ALIVE: DISABLE_KEEP_ALIVE ? DISABLE_KEEP_ALIVE == 'true' : false,
   // prometheus
   PROMETHEUS_METRICS_MODE: PROMETHEUS_METRICS_MODE
     ? PROMETHEUS_METRICS_MODE

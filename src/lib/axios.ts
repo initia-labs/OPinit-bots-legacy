@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios'
 import https from 'https'
 import http from 'http'
-import { config } from 'config'
+import { config } from '../config'
 
 class AxiosSingleton {
   private static instance: AxiosInstance
@@ -15,8 +15,8 @@ class AxiosSingleton {
           'Content-Type': 'application/json',
           'User-Agent': 'initia-rollup'
         },
-        httpsAgent: new https.Agent({ keepAlive: config.ENABLE_KEEP_ALIVE }),
-        httpAgent: new http.Agent({ keepAlive: config.ENABLE_KEEP_ALIVE })
+        httpsAgent: new https.Agent({ keepAlive: !config.DISABLE_KEEP_ALIVE }),
+        httpAgent: new http.Agent({ keepAlive: !config.DISABLE_KEEP_ALIVE })
       })
     }
     return AxiosSingleton.instance
