@@ -24,19 +24,17 @@ export class WithdrawStorage {
       amount_buf.writeBigInt64BE(tx.amount)
 
       return sha3_256(
-        sha3_256(
-          Buffer.concat([
-            bridge_id_buf,
-            sequence_buf,
-            AccAddress.toBuffer(tx.sender),
-            SPLITTER,
-            AccAddress.toBuffer(tx.receiver),
-            SPLITTER,
-            Buffer.from(tx.l1_denom, 'utf8'),
-            SPLITTER,
-            amount_buf
-          ])
-        )
+        Buffer.concat([
+          bridge_id_buf,
+          sequence_buf,
+          AccAddress.toBuffer(tx.sender),
+          SPLITTER,
+          AccAddress.toBuffer(tx.receiver),
+          SPLITTER,
+          Buffer.from(tx.l1_denom, 'utf8'),
+          SPLITTER,
+          amount_buf
+        ])
       )
     })
 
