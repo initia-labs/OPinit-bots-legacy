@@ -58,19 +58,17 @@ export class WithdrawStorage {
     return this.tree
       .getHexProof(
         sha3_256(
-          sha3_256(
-            Buffer.concat([
-              bridge_id_buf,
-              sequence_buf,
-              AccAddress.toBuffer(tx.sender),
-              SPLITTER,
-              AccAddress.toBuffer(tx.receiver),
-              SPLITTER,
-              Buffer.from(tx.l1_denom, 'utf8'),
-              SPLITTER,
-              amount_buf
-            ])
-          )
+          Buffer.concat([
+            bridge_id_buf,
+            sequence_buf,
+            AccAddress.toBuffer(tx.sender),
+            SPLITTER,
+            AccAddress.toBuffer(tx.receiver),
+            SPLITTER,
+            Buffer.from(tx.l1_denom, 'utf8'),
+            SPLITTER,
+            amount_buf
+          ])
         )
       )
       .map((v) => convertHexToBase64(v.replace('0x', '')))
@@ -97,19 +95,17 @@ export class WithdrawStorage {
     amount_buf.writeBigInt64BE(tx.amount)
 
     let hashBuf = sha3_256(
-      sha3_256(
-        Buffer.concat([
-          bridge_id_buf,
-          sequence_buf,
-          AccAddress.toBuffer(tx.sender),
-          SPLITTER,
-          AccAddress.toBuffer(tx.receiver),
-          SPLITTER,
-          Buffer.from(tx.l1_denom, 'utf8'),
-          SPLITTER,
-          amount_buf
-        ])
-      )
+      Buffer.concat([
+        bridge_id_buf,
+        sequence_buf,
+        AccAddress.toBuffer(tx.sender),
+        SPLITTER,
+        AccAddress.toBuffer(tx.receiver),
+        SPLITTER,
+        Buffer.from(tx.l1_denom, 'utf8'),
+        SPLITTER,
+        amount_buf
+      ])
     )
 
     proof.forEach((proofElem) => {
