@@ -20,45 +20,42 @@ export async function getWithdrawalTxList(
   param: GetWithdrawalTxListParam
 ): Promise<GetWithdrawalTxListResponse> {
   const [db] = getDB()
-  const queryRunner = db.createQueryRunner('slave')
-  try {
-    const offset = param.offset ?? 0
-    const order = param.descending == 'true' ? 'DESC' : 'ASC'
-    const limit = Number(param.limit) ?? 10
+  const offset = param.offset ?? 0
+  const order = param.descending ? 'DESC' : 'ASC'
+  const limit = Number(param.limit) ?? 20
 
-    const qb = queryRunner.manager.createQueryBuilder(
-      ExecutorWithdrawalTxEntity,
-      'tx'
-    )
+  const withdrawalRepo = db.getRepository(ExecutorWithdrawalTxEntity)
+  const withdrawalWhereCond = {}
 
-    if (param.sequence) {
-      qb.andWhere('tx.sequence = :sequence', { sequence: param.sequence })
-    }
+  if (param.sequence) {
+    withdrawalWhereCond['sequence'] = param.sequence
+  }
 
-    if (param.address) {
-      qb.andWhere('tx.sender = :sender', { sender: param.address })
-    }
+  if (param.address) {
+    withdrawalWhereCond['receiver'] = param.address
+  }
 
-    const withdrawalTxList = await qb
-      .orderBy('tx.sequence', order)
-      .skip(offset * limit)
-      .take(limit)
-      .getMany()
+  const withdrawalTxList = await withdrawalRepo.find({
+    where: withdrawalWhereCond,
+    order: {
+      sequence: order
+    },
+    skip: offset * limit,
+    take: limit
+  })
 
-    const count = await qb.getCount()
-    let next: number | undefined
+  const count = withdrawalTxList.length
 
-    if (count > (offset + 1) * param.limit) {
-      next = offset + 1
-    }
+  let next: number | undefined
 
-    return {
-      count,
-      next,
-      limit: param.limit,
-      withdrawalTxList
-    }
-  } finally {
-    queryRunner.release()
+  if (count > (offset + 1) * param.limit) {
+    next = offset + 1
+  }
+
+  return {
+    count,
+    next,
+    limit: param.limit,
+    withdrawalTxList
   }
 }

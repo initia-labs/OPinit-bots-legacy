@@ -8,8 +8,6 @@ import ExecutorUnconfirmedTxEntity from './executor/UnconfirmedTxEntity'
 import RecordEntity from './batch/RecordEntity'
 import BatchTxEntity from './batch/BatchTxEntity'
 
-import OutputTxEntity from './output/OutputTxEntity'
-
 import ChallengerDepositTxEntity from './challenger/DepositTxEntity'
 import ChallengerWithdrawalTxEntity from './challenger/WithdrawalTxEntity'
 import ChallengerFinalizeDepositTxEntity from './challenger/FinalizeDepositTxEntity'
@@ -18,7 +16,6 @@ import ChallengerOutputEntity from './challenger/OutputEntity'
 import ChallengedOutputEntity from './challenger/DeletedOutputEntity'
 import ChallengeEntity from './challenger/ChallengeEntity'
 
-export * from './output/OutputTxEntity'
 export * from './batch/RecordEntity'
 export * from './batch/BatchTxEntity'
 
@@ -40,7 +37,6 @@ export * from './challenger/ChallengeEntity'
 export {
   RecordEntity,
   BatchTxEntity,
-  OutputTxEntity,
   StateEntity,
   ExecutorWithdrawalTxEntity,
   ExecutorDepositTxEntity,

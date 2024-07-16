@@ -11,12 +11,12 @@ import dbg from 'debug'
 
 const debug = dbg('orm')
 
-import { ExecutorOutputEntity, OutputTxEntity } from '../../orm'
+import { ExecutorOutputEntity } from '../../orm'
 
 const staticOptions = {
   supportBigNumbers: true,
   bigNumberStrings: true,
-  entities: [ExecutorOutputEntity, OutputTxEntity]
+  entities: [ExecutorOutputEntity]
 }
 
 let DB: DataSource[] = []

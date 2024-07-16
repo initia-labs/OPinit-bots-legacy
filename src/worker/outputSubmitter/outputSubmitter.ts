@@ -1,4 +1,4 @@
-import { MsgProposeOutput } from 'initia-l1'
+import { Msg, MsgProposeOutput } from 'initia-l1'
 import { INTERVAL_OUTPUT } from '../../config'
 import { ExecutorOutputEntity } from '../../orm'
 import { delay } from 'bluebird'
@@ -16,6 +16,8 @@ import {
   initWallet
 } from '../../lib/walletL1'
 import { updateOutputUsageMetrics } from '../../lib/metrics'
+
+const MAX_OUTPUT_PROPOSAL = 50
 
 export class OutputSubmitter {
   private db: DataSource
@@ -44,31 +46,29 @@ export class OutputSubmitter {
     }
   }
 
-  async getOutput(
-    manager: EntityManager
-  ): Promise<ExecutorOutputEntity | null> {
+  async getOutputs(manager: EntityManager): Promise<ExecutorOutputEntity[]> {
     try {
       const lastOutputInfo = await getLastOutputInfo(this.bridgeId)
       if (lastOutputInfo) {
         this.syncedOutputIndex = lastOutputInfo.output_index + 1
+        this.processedBlockNumber =
+          lastOutputInfo.output_proposal.l2_block_number
       }
 
-      const output = await this.helper.getOutputByIndex(
+      const outputs = await this.helper.getAllOutput(
         manager,
         ExecutorOutputEntity,
         this.syncedOutputIndex
       )
 
-      if (!output) return null
-
-      return output
+      return outputs
     } catch (err) {
       if (err.response?.data.type === ErrorTypes.NOT_FOUND_ERROR) {
         logger.warn(
           `waiting for output index from L1: ${this.syncedOutputIndex}, processed block number: ${this.processedBlockNumber}`
         )
         await delay(INTERVAL_OUTPUT)
-        return null
+        return []
       }
       throw err
     }
@@ -76,18 +76,21 @@ export class OutputSubmitter {
 
   async processOutput() {
     await this.db.transaction(async (manager: EntityManager) => {
-      const output = await this.getOutput(manager)
-      if (!output) {
+      const outputs = await this.getOutputs(manager)
+      if (outputs.length === 0) {
         logger.info(
           `waiting for output index from DB: ${this.syncedOutputIndex}, processed block number: ${this.processedBlockNumber}`
         )
         return
       }
 
-      await this.proposeOutput(output)
-      logger.info(
-        `successfully submitted! output index: ${this.syncedOutputIndex}, output root: ${output.outputRoot} (${output.startBlockNumber}, ${output.endBlockNumber})`
-      )
+      const chunkedOutputs: ExecutorOutputEntity[] = []
+
+      for (let i = 0; i < outputs.length; i += MAX_OUTPUT_PROPOSAL) {
+        chunkedOutputs.push(...outputs.slice(i, i + MAX_OUTPUT_PROPOSAL))
+        await this.proposeOutputs(chunkedOutputs)
+        chunkedOutputs.length = 0
+      }
     })
   }
 
@@ -95,16 +98,25 @@ export class OutputSubmitter {
     this.isRunning = false
   }
 
-  private async proposeOutput(outputEntity: ExecutorOutputEntity) {
-    const msg = new MsgProposeOutput(
-      this.submitter.key.accAddress,
-      this.bridgeId,
-      outputEntity.endBlockNumber,
-      outputEntity.outputRoot
+  private async proposeOutputs(outputEntities: ExecutorOutputEntity[]) {
+    const msgs: Msg[] = []
+
+    for (const output of outputEntities) {
+      msgs.push(
+        new MsgProposeOutput(
+          this.submitter.key.accAddress,
+          this.bridgeId,
+          output.endBlockNumber,
+          output.outputRoot
+        )
+      )
+    }
+
+    await this.submitter.transaction(msgs, undefined, 1000 * 60 * 10) // 10 minutes
+    this.processedBlockNumber =
+      outputEntities[outputEntities.length - 1].endBlockNumber
+    logger.info(
+      `succeed to propose ${outputEntities.length} outputs from ${outputEntities[0].outputIndex} to ${outputEntities[outputEntities.length - 1].outputIndex}, processed block number ${this.processedBlockNumber}`
     )
-
-    await this.submitter.transaction([msg], undefined, 1000 * 60 * 10) // 10 minutes
-
-    this.processedBlockNumber = outputEntity.endBlockNumber
   }
 }

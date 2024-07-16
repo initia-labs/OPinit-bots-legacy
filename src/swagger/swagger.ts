@@ -7,7 +7,7 @@ import { ClaimTxController } from '../controller/executor/ClaimTxController'
 const router = new SwaggerRouter({
   spec: {
     info: {
-      title: 'Initia VIP API',
+      title: 'Initia OPinit API',
       version: 'v1.0'
     }
   },
