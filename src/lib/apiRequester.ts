@@ -7,11 +7,14 @@ class APIRequesterSingleton {
 
   private constructor() {}
 
-  public static getInstance(uri: string): APIRequester {
+  public static getInstance(
+    uri: string,
+    keepAlive: boolean | undefined
+  ): APIRequester {
     if (!APIRequesterSingleton.instances[uri]) {
       APIRequesterSingleton.instances[uri] = new APIRequester(uri, {
-        httpAgent: new http.Agent({ keepAlive: true }),
-        httpsAgent: new https.Agent({ keepAlive: true })
+        httpAgent: new http.Agent({ keepAlive }),
+        httpsAgent: new https.Agent({ keepAlive })
       })
     }
     return APIRequesterSingleton.instances[uri]
