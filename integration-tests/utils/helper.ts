@@ -1,6 +1,5 @@
 import {
   MnemonicKey,
-  BCS,
   Msg,
   MsgFinalizeTokenWithdrawal,
   Coin
@@ -12,7 +11,6 @@ import { ExecutorOutputEntity } from '../../src/orm/index'
 import WithdrawalTxEntity from '../../src/orm/executor/WithdrawalTxEntity'
 import { TxWalletL1 } from '../../src/lib/walletL1'
 
-export const bcs = BCS.getInstance()
 export const executorL1 = new TxWalletL1(
   config.l1lcd,
   new MnemonicKey({ mnemonic: config.EXECUTOR_MNEMONIC })
