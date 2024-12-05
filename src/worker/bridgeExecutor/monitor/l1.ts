@@ -248,7 +248,7 @@ export class L1Monitor extends Monitor {
 
       await this.executorL2.transaction(msgs)
       this.logger.info(
-        `[proccessMsgs - ${this.name()}] Succeeded to submit tx in height: ${this.currentHeight} Msgs length: ${msgs.length}`
+        `[processMsgs - ${this.name()}] Succeeded to submit tx in height: ${this.currentHeight} Msgs length: ${msgs.length}`
       )
     } catch (err) {
       const errMsg = this.helper.extractErrorMessage(err)
