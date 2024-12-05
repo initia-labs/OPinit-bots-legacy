@@ -13,7 +13,7 @@ const MAX_RESURRECT_SIZE = 100
 export class Resurrector {
   private db: DataSource
   unconfirmedTxs: UnconfirmedTxEntity[] = []
-  proccessedTxsNum: number
+  processedTxsNum: number
   isRunning = true
   helper: MonitorHelper = new MonitorHelper()
 
@@ -39,9 +39,9 @@ export class Resurrector {
       { processed: true }
     )
 
-    this.proccessedTxsNum++
+    this.processedTxsNum++
     this.logger.info(
-      `[updateProcessed - ${this.name()}] Resurrected failed tx sequence ${unconfirmedTx.sequence} current processed txs: ${this.proccessedTxsNum} / ${this.unconfirmedTxs.length}`
+      `[updateProcessed - ${this.name()}] Resurrected failed tx sequence ${unconfirmedTx.sequence} current processed txs: ${this.processedTxsNum} / ${this.unconfirmedTxs.length}`
     )
   }
 
@@ -130,7 +130,7 @@ export class Resurrector {
 
   public async resurrect(): Promise<void> {
     this.unconfirmedTxs = await this.getUnconfirmedTxs()
-    this.proccessedTxsNum = 0
+    this.processedTxsNum = 0
 
     if (this.unconfirmedTxs.length === 0) {
       this.logger.info(`[resurrect - ${this.name()}] No unconfirmed txs found`)
